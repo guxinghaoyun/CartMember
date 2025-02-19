@@ -1,5 +1,5 @@
 import pluginVue from 'eslint-plugin-vue'
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import typescript from '@vue/eslint-config-typescript'
 import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
 import prettier from 'eslint-plugin-prettier'
 
@@ -8,7 +8,7 @@ import prettier from 'eslint-plugin-prettier'
 // configureVueProject({ scriptLangs: ['ts', 'tsx'] })
 // More info at https://github.com/vuejs/eslint-config-typescript/#advanced-setup
 
-export default defineConfigWithVueTs(
+export default [
   {
     name: 'app/files-to-lint',
     files: ['**/*.{ts,mts,tsx,vue}'],
@@ -20,7 +20,7 @@ export default defineConfigWithVueTs(
   },
 
   pluginVue.configs['flat/essential'],
-  vueTsConfigs.recommended,
+  typescript,
   skipFormatting,
 
   {
@@ -34,4 +34,4 @@ export default defineConfigWithVueTs(
       'prefer-arrow-callback': 'off'
     }
   }
-)
+]
