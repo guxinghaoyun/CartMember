@@ -1,94 +1,97 @@
 <template>
   <div class="h-[calc(100vh-64px)] pr-4 overflow-y-auto space-y-6">
     <!-- 顶部信息栏 -->
-    <div class="bg-white rounded-lg p-3 shadow-sm">
-      <div class="flex items-center justify-between mb-6 bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-xl text-white relative overflow-hidden">
+    <div class="bg-white rounded-2xl p-3 shadow-sm">
+      <!-- 顶部统计卡片 -->
+      <div class="flex items-center justify-between mb-6 bg-gradient-to-br from-blue-500 to-blue-600 p-8 rounded-2xl text-white relative overflow-hidden">
         <!-- 装饰背景 -->
-        <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
-        <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full translate-y-24 -translate-x-24"></div>
+        <div class="absolute top-0 right-0 w-96 h-96 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
         
-        <div class="flex items-center space-x-8 relative">
+        <div class="flex items-center space-x-12 relative">
           <div>
-            <h2 class="text-2xl font-medium mb-3">商品列表</h2>
+            <h2 class="text-3xl font-bold mb-4">商品列表</h2>
             <div class="flex items-center space-x-4">
-              <div class="flex items-center bg-white bg-opacity-10 backdrop-blur-sm px-4 py-2 rounded-lg">
-                <font-awesome-icon icon="user" class="text-white mr-2" />
-                <span class="text-sm">当前会员：{{ currentMember?.name || '未选择' }}</span>
+              <div class="flex items-center bg-white/10 backdrop-blur-sm px-6 py-3 rounded-xl">
+                <font-awesome-icon icon="user" class="text-white/80 mr-3 text-xl" />
+                <div>
+                  <div class="text-xs text-white/60 mb-1">当前会员</div>
+                  <div class="font-medium">{{ currentMember?.name || '未选择' }}</div>
+                </div>
               </div>
-              <button class="!rounded-button bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 text-sm backdrop-blur-sm transition-all duration-300"
+              <button class="bg-white/15 hover:bg-white/25 px-6 py-3 rounded-xl backdrop-blur-sm transition-all duration-300 flex items-center space-x-2"
                       @click="handleReadCard">
-                <font-awesome-icon icon="id-card" class="mr-2" />
-                读取会员卡
+                <font-awesome-icon icon="id-card" class="text-xl" />
+                <span>读取会员卡</span>
               </button>
             </div>
           </div>
-          <div class="h-12 w-px bg-white bg-opacity-20"></div>
+          <div class="h-16 w-px bg-white/20"></div>
           <div class="flex items-center space-x-6">
-            <div class="bg-white bg-opacity-10 backdrop-blur-sm px-6 py-3 rounded-lg group hover:bg-opacity-20 transition-all duration-300">
-              <div class="text-xs text-white text-opacity-80 mb-1">购物车商品</div>
+            <div class="bg-white/10 backdrop-blur-sm px-8 py-4 rounded-xl group hover:bg-white/15 transition-all duration-300 cursor-pointer">
+              <div class="text-xs text-white/60 mb-2">购物车商品</div>
               <div class="flex items-center">
-                <font-awesome-icon icon="shopping-cart" class="text-white mr-2 group-hover:scale-110 transition-transform duration-300" />
-                <span class="text-xl font-medium">{{ cartItemCount }}</span>
-                <span class="text-sm ml-1">件</span>
+                <font-awesome-icon icon="shopping-cart" class="text-white/90 mr-3 text-xl group-hover:scale-110 transition-transform duration-300" />
+                <span class="text-2xl font-bold">{{ cartItemCount }}</span>
+                <span class="text-sm ml-1 text-white/80">件</span>
               </div>
             </div>
-            <div class="bg-white bg-opacity-10 backdrop-blur-sm px-6 py-3 rounded-lg group hover:bg-opacity-20 transition-all duration-300">
-              <div class="text-xs text-white text-opacity-80 mb-1">商品总额</div>
+            <div class="bg-white/10 backdrop-blur-sm px-8 py-4 rounded-xl group hover:bg-white/15 transition-all duration-300 cursor-pointer">
+              <div class="text-xs text-white/60 mb-2">商品总额</div>
               <div class="flex items-center">
-                <font-awesome-icon icon="coins" class="text-yellow-300 mr-2 group-hover:scale-110 transition-transform duration-300" />
-                <span class="text-xl font-medium">{{ totalAmount }}</span>
-                <span class="text-sm ml-1">积分</span>
-              </div>
-            </div>
-            <div class="bg-white bg-opacity-10 backdrop-blur-sm px-6 py-3 rounded-lg group hover:bg-opacity-20 transition-all duration-300">
-              <div class="text-xs text-white text-opacity-80 mb-1">预计积分</div>
-              <div class="flex items-center">
-                <font-awesome-icon icon="star" class="text-yellow-300 mr-2 group-hover:scale-110 transition-transform duration-300" />
-                <span class="text-xl font-medium">{{ expectedPoints }}</span>
-                <span class="text-sm ml-1">积分</span>
+                <font-awesome-icon icon="coins" class="text-yellow-300 mr-3 text-xl group-hover:scale-110 transition-transform duration-300" />
+                <span class="text-2xl font-bold">{{ totalAmount }}</span>
+                <span class="text-sm ml-1 text-white/80">积分</span>
               </div>
             </div>
           </div>
         </div>
-        <button class="!rounded-button bg-white text-blue-600 px-8 py-3 hover:bg-opacity-90 font-medium relative overflow-hidden group"
+        <button class="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-8 py-4 rounded-xl hover:from-yellow-500 hover:to-yellow-600 font-bold relative overflow-hidden group flex items-center space-x-3 shadow-lg shadow-yellow-500/20 scale-105"
                 @click="handleCheckout"
                 :disabled="cartItemCount === 0"
-                :class="{'opacity-50 cursor-not-allowed': cartItemCount === 0}">
-          <div class="absolute inset-0 bg-gradient-to-r from-blue-100 to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
-          <div class="relative flex items-center">
-            去结算
-            <font-awesome-icon icon="arrow-right" class="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-          </div>
+                :class="{'opacity-50 cursor-not-allowed from-gray-400 to-gray-500 shadow-none scale-100': cartItemCount === 0}">
+          <font-awesome-icon icon="shopping-cart" class="text-xl" />
+          <span>去结算</span>
+          <font-awesome-icon icon="arrow-right" class="group-hover:translate-x-1 transition-transform duration-300" />
         </button>
       </div>
 
       <!-- 商品分类 -->
-      <div class="flex items-center space-x-3 mb-6 bg-gray-50 p-4 rounded-xl">
+      <div class="flex items-center space-x-3 mb-8 bg-gray-50/50 p-4 rounded-xl">
         <button v-for="cat in categories" :key="cat.id"
                 :class="{'bg-blue-500 text-white shadow-lg scale-105': currentCategory === cat.id,
-                        'bg-white text-gray-600 hover:bg-blue-50': currentCategory !== cat.id}"
-                class="!rounded-button px-5 py-2.5 transition-all duration-300 text-sm font-medium"
+                        'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-500': currentCategory !== cat.id}"
+                class="px-6 py-3 rounded-xl transition-all duration-300 font-medium flex items-center space-x-2"
                 @click="currentCategory = cat.id">
-          {{ cat.name }}
+          <font-awesome-icon :icon="getCategoryIcon(cat.id)" />
+          <span>{{ cat.name }}</span>
         </button>
       </div>
 
       <!-- 商品列表 -->
-      <div class="grid grid-cols-5 gap-3">
+      <div class="grid grid-cols-5 gap-6">
         <div v-for="product in filteredProducts" :key="product.id"
-             class="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div class="relative pb-[80%]">
+             class="bg-white rounded-xl shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
+          <div class="relative pb-[100%] overflow-hidden">
             <img :src="product.image" 
                  :alt="product.name"
-                 class="absolute inset-0 w-full h-full object-cover"/>
-          </div>
-          <div class="p-2">
-            <h3 class="font-medium text-xs mb-1 truncate">{{ product.name }}</h3>
-            <div class="text-red-500 text-xs mb-1">{{ product.price }} 积分</div>
-            <button class="!rounded-button w-full bg-blue-500 text-white py-1 text-xs hover:bg-blue-600"
-                    @click="addToCart(product)">
-              加入购物车
-            </button>
+                 class="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"/>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div class="absolute bottom-0 left-0 right-0 p-4">
+                <div class="text-white font-medium mb-2">{{ product.name }}</div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-1">
+                    <font-awesome-icon icon="coins" class="text-yellow-300" />
+                    <span class="text-yellow-300 font-bold">{{ product.price }}</span>
+                    <span class="text-white/80 text-sm">积分</span>
+                  </div>
+                  <button class="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-3 py-1.5 rounded-lg text-white text-sm transition-colors duration-300"
+                          @click="addToCart(product)">
+                    加入购物车
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -197,10 +200,6 @@ const totalAmount = computed(() => {
   return cartStore.totalAmount
 })
 
-const expectedPoints = computed(() => {
-  return cartStore.expectedPoints
-})
-
 // 方法
 const handleReadCard = () => {
   // 模拟读取会员卡
@@ -233,19 +232,17 @@ const addToCart = (product: any) => {
     })
   }
   
-  // 计算新的总额和预期积分
+  // 计算新的总额
   const newTotalAmount = cartItems.value.reduce((sum, item) => {
     return sum + (item.product.price * item.quantity)
   }, 0)
   
-  const newExpectedPoints = Math.floor(newTotalAmount * 0.1)
-  
-  // 同步到 store
+  // 同步到 store，保持 expectedPoints 的计算
   cartStore.updateCart({
     items: cartItems.value,
     member: currentMember.value,
     totalAmount: newTotalAmount,
-    expectedPoints: newExpectedPoints
+    expectedPoints: Math.floor(newTotalAmount * 0.1)
   })
   
   ElMessage.success('已添加到购物车')
@@ -270,22 +267,33 @@ const handleCheckout = () => {
     return
   }
   
-  // 计算最新的总额和预期积分
+  // 计算最新的总额
   const newTotalAmount = cartItems.value.reduce((sum, item) => {
     return sum + (item.product.price * item.quantity)
   }, 0)
-  
-  const newExpectedPoints = Math.floor(newTotalAmount * 0.1)
   
   // 确保更新购物车 store 时包含完整的商品信息
   cartStore.updateCart({
     items: cartItems.value,
     member: currentMember.value,
     totalAmount: newTotalAmount,
-    expectedPoints: newExpectedPoints
+    expectedPoints: Math.floor(newTotalAmount * 0.1)
   })
   
   // 跳转到购物车页面
   router.push('/user/cart')
+}
+
+// 获取分类图标
+const getCategoryIcon = (categoryId: string) => {
+  const icons: Record<string, string> = {
+    'all': 'th-large',
+    'food': 'utensils',
+    'daily': 'home',
+    'fresh': 'apple-alt',
+    'snacks': 'cookie',
+    'drinks': 'glass-martini'
+  }
+  return icons[categoryId] || 'th-large'
 }
 </script> 

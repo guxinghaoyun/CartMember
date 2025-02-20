@@ -145,6 +145,36 @@
                 </div>
                 <div class="text-2xl font-medium">{{ finalAmount }} 积分</div>
               </div>
+
+              <!-- 操作员选择 -->
+              <div class="flex items-center justify-between p-4 bg-purple-50 rounded-xl">
+                <div class="flex items-center space-x-2">
+                  <font-awesome-icon icon="user-tie" class="text-purple-500" />
+                  <span class="text-gray-600">操作员</span>
+                </div>
+                <div class="w-48">
+                  <el-select
+                    v-model="selectedOperator"
+                    filterable
+                    placeholder="选择操作员"
+                    class="!w-full"
+                    popper-class="operator-select-dropdown">
+                    <el-option
+                      v-for="op in operators"
+                      :key="op.id"
+                      :value="op.id"
+                      :label="op.name">
+                      <div class="flex items-center space-x-2">
+                        <div class="w-5 h-5 bg-purple-50 rounded-full flex items-center justify-center">
+                          <font-awesome-icon icon="user" class="text-purple-500 text-xs" />
+                        </div>
+                        <span class="text-sm">{{ op.name }}</span>
+                        <span class="text-xs text-gray-400">({{ op.role }})</span>
+                      </div>
+                    </el-option>
+                  </el-select>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -187,6 +217,16 @@ const memberInfo = ref({
 })
 const notes = ref('')
 const discountAmount = ref<number>(0)
+const selectedOperator = ref('')
+
+// 操作员列表
+const operators = [
+  { id: 1, name: '李海燕', role: '主管' },
+  { id: 2, name: '王建国', role: '店员' },
+  { id: 3, name: '张晓芳', role: '店员' },
+  { id: 4, name: '刘明亮', role: '店员' },
+  { id: 5, name: '赵雪梅', role: '店员' }
+]
 
 // 计算属性
 const totalAmount = computed(() => {
@@ -199,12 +239,14 @@ const finalAmount = computed(() => {
 
 const canCheckout = computed(() => {
   if (!memberInfo.value.name) return false
+  if (!selectedOperator.value) return false
   const availablePoints = parseInt(memberInfo.value.points.replace(',', ''))
   return availablePoints >= finalAmount.value
 })
 
 const checkoutButtonText = computed(() => {
   if (!memberInfo.value.name) return '请先读取会员卡'
+  if (!selectedOperator.value) return '请选择操作员'
   if (!canCheckout.value) return '积分不足'
   return '确认支付'
 })
@@ -318,5 +360,20 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background-color: #D1D5DB;
+}
+
+:deep(.operator-select-dropdown) {
+  .el-select-dropdown__item {
+    padding: 8px 12px;
+  }
+
+  .el-select-dropdown__item.selected {
+    background-color: #F3E8FF;
+    color: #9333EA;
+    
+    .text-purple-500 {
+      color: #9333EA;
+    }
+  }
 }
 </style> 

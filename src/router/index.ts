@@ -42,6 +42,11 @@ const router = createRouter({
           component: () => import('@/views/user/recharge/RechargeForm.vue')
         },
         {
+          path: 'history',
+          name: 'user-recharge-history',
+          component: () => import('@/views/user/recharge/RechargeHistory.vue')
+        },
+        {
           path: 'pickup',
           name: 'user-pickup',
           component: () => import('@/views/user/pickup/PickupList.vue')

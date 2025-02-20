@@ -76,7 +76,25 @@ import {
   faImage,
   faCloudUploadAlt,
   faFolderOpen,
-  faTimes
+  faTimes,
+  faCircleInfo,
+  faDownload,
+  faRotate,
+  faMagnifyingGlass,
+  faCircleCheck,
+  faCircleNotch,
+  faCircleXmark,
+  faBan,
+  faCommentAlt,
+  faUserCog,
+  faClipboardList,
+  faMapMarkerAlt,
+  faCalendarCheck,
+  faCube,
+  faFileInvoice,
+  faHandHolding,
+  faLocationDot,
+  faBarcode
 } from '@fortawesome/free-solid-svg-icons'
 
 // 添加图标到库
@@ -156,7 +174,25 @@ library.add(
   faImage,
   faCloudUploadAlt,
   faFolderOpen,
-  faTimes
+  faTimes,
+  faCircleInfo,
+  faDownload,
+  faRotate,
+  faMagnifyingGlass,
+  faCircleCheck,
+  faCircleNotch,
+  faCircleXmark,
+  faBan,
+  faCommentAlt,
+  faUserCog,
+  faClipboardList,
+  faMapMarkerAlt,
+  faCalendarCheck,
+  faCube,
+  faFileInvoice,
+  faHandHolding,
+  faLocationDot,
+  faBarcode
 )
 
 export default FontAwesomeIcon 

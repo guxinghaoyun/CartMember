@@ -38,7 +38,7 @@
             <th class="px-4 py-4 text-left">电话</th>
             <th class="px-4 py-4 text-left">IC卡号</th>
             <th class="px-4 py-4 text-left">注册时间</th>
-            <th class="px-4 py-4 text-left">积分</th>
+            <th class="px-4 py-4 text-left">卡片状态</th>
             <th class="px-4 py-4 text-right">操作</th>
           </tr>
         </thead>
@@ -47,47 +47,70 @@
               :key="member.id"
               class="hover:bg-gray-50 transition-colors">
             <td class="px-4 py-4 text-base">
-              <div class="flex items-center">
-                <font-awesome-icon icon="user-circle" class="text-gray-400 mr-2" />
+              <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <font-awesome-icon icon="user" class="text-blue-500" />
+                </div>
                 {{ member.name }}
               </div>
             </td>
             <td class="px-4 py-4 text-base text-gray-600">
-              <div class="flex items-center">
-                <font-awesome-icon icon="phone" class="text-gray-400 mr-2" />
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                  <font-awesome-icon icon="phone" class="text-purple-500" />
+                </div>
                 {{ member.phone }}
               </div>
             </td>
             <td class="px-4 py-4 text-base text-gray-600">
-              <div class="flex items-center">
-                <font-awesome-icon icon="id-card" class="text-gray-400 mr-2" />
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                  <font-awesome-icon icon="credit-card" class="text-indigo-500" />
+                </div>
                 {{ member.icCard }}
               </div>
             </td>
             <td class="px-4 py-4 text-base text-gray-600">
-              <div class="flex items-center">
-                <font-awesome-icon icon="calendar-alt" class="text-gray-400 mr-2" />
+              <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center">
+                  <font-awesome-icon icon="calendar-days" class="text-green-500 text-lg" />
+                </div>
                 {{ member.registerDate }}
               </div>
             </td>
             <td class="px-4 py-4 text-base">
               <div class="flex items-center">
-                <font-awesome-icon icon="coins" class="text-yellow-500 mr-2" />
-                {{ member.points }}
+                <span
+                  class="inline-flex items-center px-3 py-1 rounded-lg text-sm"
+                  :class="member.status === '正常' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                >
+                  <span class="w-2 h-2 mr-2 rounded-full"
+                        :class="member.status === '正常' ? 'bg-green-500' : 'bg-red-500'"></span>
+                  {{ member.status }}
+                </span>
               </div>
             </td>
-            <td class="px-4 py-4 text-base text-right">
+            <td class="px-4 py-4 text-base text-right space-x-1">
+              <button 
+                @click="handleDetails(member)"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                title="查看详情"
+              >
+                <font-awesome-icon icon="info-circle" class="text-gray-500" />
+              </button>
               <button 
                 @click="handleEdit(member)"
-                class="text-blue-600 hover:text-blue-800 transition-colors px-2"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+                title="编辑"
               >
-                <font-awesome-icon icon="user-edit" class="text-base" />
+                <font-awesome-icon icon="edit" class="text-blue-500" />
               </button>
               <button 
                 @click="handleDelete(member)"
-                class="text-red-600 hover:text-red-800 transition-colors px-2"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 transition-colors"
+                title="删除"
               >
-                <font-awesome-icon icon="user-times" class="text-base" />
+                <font-awesome-icon icon="trash" class="text-red-500" />
               </button>
             </td>
           </tr>
@@ -144,6 +167,11 @@
       v-model:visible="showEditDialog"
       :member="currentMember"
       @success="handleEditSuccess" />
+
+    <!-- 会员详情弹窗 -->
+    <MemberDetail
+      v-model:visible="showDetailDialog"
+      :member="currentMember" />
   </div>
 </template>
 
@@ -152,6 +180,7 @@ import { ref, computed } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import MemberAdd from './MemberAdd.vue'
 import MemberEdit from './MemberEdit.vue'
+import MemberDetail from './MemberDetail.vue'
 import type { Member } from '@/types'
 
 // 会员数据
@@ -162,7 +191,17 @@ const members = ref<Member[]>([
     phone: '13812345678',
     icCard: '8800 2233 4455',
     registerDate: '2023-12-01',
-    points: '3,560'
+    status: '正常',
+    cardImages: {
+      front: 'https://example.com/card1-front.jpg',
+      back: 'https://example.com/card1-back.jpg'
+    },
+    remainingPoints: 2500,
+    notes: '优质会员',
+    remainingProducts: [
+      { id: 1, name: '精品咖啡', quantity: 20 },
+      { id: 2, name: '蛋糕券', quantity: 5 }
+    ]
   },
   {
     id: 2,
@@ -170,7 +209,16 @@ const members = ref<Member[]>([
     phone: '13987654321',
     icCard: '8800 2233 4466',
     registerDate: '2023-11-15',
-    points: '1,850'
+    status: '正常',
+    cardImages: {
+      front: 'https://example.com/card2-front.jpg',
+      back: 'https://example.com/card2-back.jpg'
+    },
+    remainingPoints: 1800,
+    notes: '商务人士',
+    remainingProducts: [
+      { id: 3, name: '下午茶套餐', quantity: 8 }
+    ]
   },
   {
     id: 3,
@@ -178,7 +226,9 @@ const members = ref<Member[]>([
     phone: '13567891234',
     icCard: '8800 2233 4477',
     registerDate: '2023-10-28',
-    points: '680'
+    status: '停用',
+    remainingPoints: 0,
+    notes: '卡片遗失，已补办'
   },
   {
     id: 4,
@@ -186,7 +236,15 @@ const members = ref<Member[]>([
     phone: '13789012345',
     icCard: '8800 2233 4488',
     registerDate: '2023-10-25',
-    points: '2,100'
+    status: '正常',
+    cardImages: {
+      front: 'https://example.com/card4-front.jpg'
+    },
+    remainingPoints: 3200,
+    remainingProducts: [
+      { id: 4, name: '精品茶叶', quantity: 2 },
+      { id: 5, name: '按摩券', quantity: 3 }
+    ]
   },
   {
     id: 5,
@@ -194,7 +252,8 @@ const members = ref<Member[]>([
     phone: '13601234567',
     icCard: '8800 2233 4499',
     registerDate: '2023-10-20',
-    points: '4,200'
+    status: '正常',
+    remainingPoints: 1500
   },
   {
     id: 6,
@@ -202,7 +261,9 @@ const members = ref<Member[]>([
     phone: '13912345678',
     icCard: '8800 2233 4500',
     registerDate: '2023-10-18',
-    points: '1,560'
+    status: '停用',
+    remainingPoints: 0,
+    notes: '长期未使用'
   },
   {
     id: 7,
@@ -210,7 +271,14 @@ const members = ref<Member[]>([
     phone: '13823456789',
     icCard: '8800 2233 4511',
     registerDate: '2023-10-15',
-    points: '890'
+    status: '正常',
+    cardImages: {
+      front: 'https://example.com/card7-front.jpg'
+    },
+    remainingPoints: 2800,
+    remainingProducts: [
+      { id: 6, name: '健身课程', quantity: 12 }
+    ]
   },
   {
     id: 8,
@@ -218,7 +286,8 @@ const members = ref<Member[]>([
     phone: '13934567890',
     icCard: '8800 2233 4522',
     registerDate: '2023-10-12',
-    points: '3,300'
+    status: '正常',
+    remainingPoints: 900
   },
   {
     id: 9,
@@ -226,7 +295,16 @@ const members = ref<Member[]>([
     phone: '13845678901',
     icCard: '8800 2233 4533',
     registerDate: '2023-10-10',
-    points: '2,780'
+    status: '正常',
+    cardImages: {
+      front: 'https://example.com/card9-front.jpg',
+      back: 'https://example.com/card9-back.jpg'
+    },
+    remainingPoints: 4500,
+    remainingProducts: [
+      { id: 7, name: '游泳券', quantity: 15 },
+      { id: 8, name: '瑜伽课程', quantity: 8 }
+    ]
   },
   {
     id: 10,
@@ -234,7 +312,9 @@ const members = ref<Member[]>([
     phone: '13756789012',
     icCard: '8800 2233 4544',
     registerDate: '2023-10-08',
-    points: '1,920'
+    status: '停用',
+    remainingPoints: 0,
+    notes: '客户要求停用'
   }
 ])
 
@@ -246,6 +326,7 @@ const pageSize = ref(10)
 // 弹窗控制
 const showAddDialog = ref(false)
 const showEditDialog = ref(false)
+const showDetailDialog = ref(false)
 const currentMember = ref<Member | undefined>(undefined)
 
 // 计算属性
@@ -270,6 +351,11 @@ const paginatedMembers = computed(() => {
 // 方法
 const handlePageChange = (page: number) => {
   currentPage.value = page
+}
+
+const handleDetails = (member: Member) => {
+  currentMember.value = member
+  showDetailDialog.value = true
 }
 
 const handleEdit = (member: Member) => {
@@ -343,26 +429,17 @@ const handleEditSuccess = (member: Member) => {
 }
 
 /* 操作按钮样式 */
-.fa-edit, .fa-trash {
-  font-size: 14px;
-}
-
-/* 分页按钮样式 */
-button {
-  transition: all 0.2s;
-}
-
 button:focus {
   outline: none;
   @apply ring-2 ring-offset-2 ring-blue-500;
 }
 
-.border-gray-200 {
-  border-color: #E5E7EB;
+.space-x-1 > * + * {
+  margin-left: 0.25rem;
 }
 
-.border-gray-300 {
-  border-color: #D1D5DB;
+.space-x-3 > * + * {
+  margin-left: 0.75rem;
 }
 
 /* 搜索框样式 */

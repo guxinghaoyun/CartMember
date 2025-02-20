@@ -5,8 +5,18 @@ export interface Member {
   phone: string
   icCard: string
   registerDate: string
-  points: string
+  status: '正常' | '停用'
+  cardImages?: {
+    front?: string
+    back?: string
+  }
   notes?: string
+  remainingPoints: number
+  remainingProducts?: {
+    id: number
+    name: string
+    quantity: number
+  }[]
 }
 
 // 商品相关类型

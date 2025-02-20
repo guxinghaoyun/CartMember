@@ -3,19 +3,49 @@
     <!-- 充值记录列表 -->
     <div class="bg-white rounded-lg p-6 shadow-sm">
       <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-xl font-medium">充值记录</h2>
-          <p class="text-gray-500 text-sm mt-1">查看会员充值历史记录</p>
+        <div class="flex items-center space-x-6">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-all duration-300">
+              <font-awesome-icon icon="fa-solid fa-credit-card" class="text-white text-xl" />
+            </div>
+            <div>
+              <h2 class="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">充值记录</h2>
+              <p class="text-gray-500 text-sm mt-1">查看会员充值历史记录</p>
+            </div>
+          </div>
         </div>
+
         <div class="flex items-center space-x-4">
+          <!-- 导出按钮 -->
+          <button @click="exportToExcel"
+                  :disabled="isExporting"
+                  class="flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-400 to-emerald-600 text-white rounded-xl transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
+            <font-awesome-icon icon="fa-solid fa-download" class="mr-2" />
+            <span class="font-medium">{{ isExporting ? '导出中...' : '导出表格' }}</span>
+          </button>
+          
+          <!-- 重置按钮 -->
+          <button @click="resetFilters"
+                  class="flex items-center px-5 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5">
+            <font-awesome-icon icon="fa-solid fa-rotate" class="mr-2" />
+            <span class="font-medium">重置筛选</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 筛选区域 -->
+      <div class="mb-6 bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <!-- 基础筛选 -->
+        <div class="flex items-center space-x-4 mb-4">
           <!-- 搜索框 -->
-          <div class="relative">
+          <div class="relative flex-1">
             <input type="text" 
                    v-model="searchQuery"
                    placeholder="搜索会员/操作员" 
-                   class="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-64">
-            <font-awesome-icon icon="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                   class="pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none w-full bg-white shadow-sm transition-all duration-300">
+            <font-awesome-icon icon="fa-solid fa-magnifying-glass" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
           </div>
+          
           <!-- 时间范围选择 -->
           <el-date-picker
             v-model="dateRange"
@@ -24,81 +54,117 @@
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             :shortcuts="dateShortcuts"
-            class="!w-[300px]"/>
-          <!-- 刷新按钮 -->
-          <button @click="refreshList" 
-                  class="!rounded-button bg-blue-50 text-blue-500 px-4 py-2 hover:bg-blue-100">
-            <font-awesome-icon icon="sync-alt" />
-          </button>
+            class="!w-[320px]"/>
+        </div>
+
+        <!-- 高级筛选 -->
+        <div class="grid grid-cols-3 gap-6">
+          <!-- 金额范围 -->
+          <div class="flex items-center space-x-3">
+            <input type="number"
+                   v-model="advancedFilters.minAmount"
+                   placeholder="最小积分"
+                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white shadow-sm transition-all duration-300" />
+            <span class="text-gray-500 font-medium">至</span>
+            <input type="number"
+                   v-model="advancedFilters.maxAmount"
+                   placeholder="最大积分"
+                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white shadow-sm transition-all duration-300" />
+          </div>
         </div>
       </div>
 
       <!-- 数据表格 -->
-      <DataTable
-        :columns="columns"
-        :data="filteredRecords"
-        :current-page="currentPage"
-        :total="totalRecords"
-        :page-size="pageSize"
-        @page-change="handlePageChange">
-        <!-- 会员信息列 -->
-        <template #member="{ item }">
-          <div class="flex items-center space-x-3">
-            <font-awesome-icon icon="user-circle" class="text-gray-400" />
-            <div>
-              <div class="font-medium">{{ item.memberName }}</div>
-              <div class="text-sm text-gray-500">{{ item.memberPhone }}</div>
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+        <DataTable
+          :columns="columns"
+          :data="filteredRecords"
+          :current-page="currentPage"
+          :total="totalRecords"
+          :page-size="pageSize"
+          @page-change="handlePageChange">
+          <!-- 会员信息列 -->
+          <template #member="{ item }">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                <font-awesome-icon icon="fa-solid fa-user" class="text-blue-500" />
+              </div>
+              <div>
+                <div class="font-medium text-gray-900">{{ item.memberName }}</div>
+                <div class="text-sm text-gray-500">{{ item.memberPhone }}</div>
+              </div>
             </div>
-          </div>
-        </template>
+          </template>
 
-        <!-- 充值金额列 -->
-        <template #amount="{ item }">
-          <div class="space-y-1">
-            <div class="font-medium text-blue-600">{{ item.amount }} 积分</div>
-            <div class="text-sm text-gray-500">¥{{ item.money }}</div>
-          </div>
-        </template>
+          <!-- IC卡面号列 -->
+          <template #icCard="{ item }">
+            <div class="flex items-center space-x-2">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <font-awesome-icon icon="fa-solid fa-credit-card" class="text-indigo-500" />
+              </div>
+              <span class="font-medium text-gray-900">{{ item.icCard }}</span>
+            </div>
+          </template>
 
-        <!-- 支付方式列 -->
-        <template #paymentMethod="{ item }">
-          <div class="flex items-center space-x-2">
-            <i :class="getPaymentIcon(item.paymentMethod)" class="text-gray-400"></i>
-            <span>{{ getPaymentText(item.paymentMethod) }}</span>
-          </div>
-        </template>
+          <!-- 充值金额列 -->
+          <template #amount="{ item }">
+            <div class="font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg inline-block">
+              {{ item.amount }} 积分
+            </div>
+          </template>
 
-        <!-- 状态列 -->
-        <template #status="{ item }">
-          <div :class="getStatusClass(item.status)"
-               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-            <i :class="getStatusIcon(item.status)" class="mr-1"></i>
-            {{ getStatusText(item.status) }}
-          </div>
-        </template>
+          <!-- 充值商品列 -->
+          <template #products="{ item }">
+            <el-select
+              v-model="item.selectedProduct"
+              placeholder="查看商品"
+              class="!w-full"
+              popper-class="!w-[240px]">
+              <el-option
+                v-for="product in item.products"
+                :key="product.id"
+                :label="product.name"
+                :value="product.id">
+                <div class="flex justify-between items-center p-1">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
+                      <font-awesome-icon icon="fa-solid fa-box" class="text-emerald-500" />
+                    </div>
+                    <span class="font-medium">{{ product.name }}</span>
+                  </div>
+                  <span class="text-blue-600 font-medium">{{ product.number }}</span>
+                </div>
+              </el-option>
+            </el-select>
+          </template>
 
-        <!-- 操作员列 -->
-        <template #operator="{ item }">
-          <div class="flex items-center space-x-2">
-            <font-awesome-icon icon="user-tie" class="text-gray-400" />
-            <span>{{ item.operator }}</span>
-          </div>
-        </template>
+          <!-- 操作员列 -->
+          <template #operator="{ item }">
+            <div class="flex items-center space-x-2">
+              <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                <font-awesome-icon icon="fa-solid fa-id-card" class="text-purple-500" />
+              </div>
+              <span class="font-medium text-gray-900">{{ item.operator }}</span>
+            </div>
+          </template>
 
-        <!-- 操作列 -->
-        <template #actions="{ item }">
-          <div class="flex justify-end space-x-2">
-            <button class="!rounded-button text-blue-600 hover:text-blue-800 px-2 py-1"
-                    @click="handleViewDetail(item)">
-              <font-awesome-icon icon="eye" />
-            </button>
-            <button class="!rounded-button text-green-600 hover:text-green-800 px-2 py-1"
-                    @click="handlePrint(item)">
-              <font-awesome-icon icon="print" />
-            </button>
-          </div>
-        </template>
-      </DataTable>
+          <!-- 操作列 -->
+          <template #actions="{ item }">
+            <div class="flex justify-end space-x-3">
+              <button class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-all duration-300"
+                      @click="handleViewDetail(item)"
+                      title="查看详情">
+                <font-awesome-icon icon="fa-solid fa-circle-info" />
+              </button>
+              <button class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 flex items-center justify-center transition-all duration-300"
+                      @click="handlePrint(item)"
+                      title="打印凭证">
+                <font-awesome-icon icon="fa-solid fa-print" />
+              </button>
+            </div>
+          </template>
+        </DataTable>
+      </div>
     </div>
 
     <!-- 详情弹窗 -->
@@ -135,20 +201,18 @@
           <h3 class="text-sm font-medium text-gray-700 mb-3">充值信息</h3>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <div class="text-sm text-gray-500">充值金额</div>
-              <div class="font-medium mt-1">¥{{ selectedRecord.money }}</div>
-            </div>
-            <div>
-              <div class="text-sm text-gray-500">获得积分</div>
+              <div class="text-sm text-gray-500">充值积分</div>
               <div class="font-medium mt-1">{{ selectedRecord.amount }} 积分</div>
             </div>
             <div>
-              <div class="text-sm text-gray-500">支付方式</div>
-              <div class="font-medium mt-1">{{ getPaymentText(selectedRecord.paymentMethod) }}</div>
-            </div>
-            <div>
-              <div class="text-sm text-gray-500">充值状态</div>
-              <div class="font-medium mt-1">{{ getStatusText(selectedRecord.status) }}</div>
+              <div class="text-sm text-gray-500">充值商品</div>
+              <div class="font-medium mt-1">
+                <ul class="list-disc list-inside">
+                  <li v-for="product in selectedRecord.products" :key="product.id" class="text-sm">
+                    {{ product.name }} ({{ product.price }}积分)
+                  </li>
+                </ul>
+              </div>
             </div>
             <div>
               <div class="text-sm text-gray-500">操作员</div>
@@ -172,20 +236,21 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { DateModelType } from 'element-plus'
 import DataTable from '@/components/common/DataTable.vue'
 import { useRouter } from 'vue-router'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const router = useRouter()
 
 // 表格列配置
 const columns = [
   { key: 'member', label: '会员信息' },
-  { key: 'amount', label: '充值金额' },
-  { key: 'paymentMethod', label: '支付方式' },
-  { key: 'status', label: '状态' },
+  { key: 'icCard', label: 'IC卡面号' },
+  { key: 'amount', label: '充值积分' },
+  { key: 'products', label: '充值商品' },
   { key: 'operator', label: '操作员' },
   { key: 'createTime', label: '充值时间' },
   { key: 'actions', label: '操作', class: 'text-right' }
@@ -200,8 +265,10 @@ const rechargeRecords = ref([
     icCard: '8800 2233 4455',
     currentPoints: '3,560',
     amount: 2000,
-    money: '200.00',
-    paymentMethod: 'wechat',
+    products: [
+      { id: 1, name: '精品茶叶礼盒', number: 688 },
+      { id: 2, name: '特级大米5kg', number: 99 }
+    ],
     status: 'success',
     operator: '李海燕',
     createTime: '2024-01-15',
@@ -209,42 +276,123 @@ const rechargeRecords = ref([
   },
   {
     id: 2,
-    memberName: '陈思悦',
-    memberPhone: '138****5678',
-    icCard: '8800 2233 4455',
-    currentPoints: '3,560',
+    memberName: '王小明',
+    memberPhone: '139****1234',
+    icCard: '8800 3344 5566',
+    currentPoints: '1,200',
     amount: 500,
-    money: '50.00',
-    paymentMethod: 'alipay',
-    status: 'success',
+    products: [
+      { id: 3, name: '有机蔬菜礼盒', number: 199 }
+    ],
+    status: 'pending',
     operator: '王建国',
-    createTime: '2024-01-10'
+    createTime: '2024-01-14',
+    notes: '系统处理中'
   },
   {
     id: 3,
-    memberName: '陈思悦',
-    memberPhone: '138****5678',
-    icCard: '8800 2233 4455',
-    currentPoints: '3,560',
+    memberName: '张三',
+    memberPhone: '137****4321',
+    icCard: '8800 4455 6677',
+    currentPoints: '800',
     amount: 1000,
-    money: '100.00',
-    paymentMethod: 'cash',
-    status: 'success',
+    products: [],
+    status: 'failed',
     operator: '张晓芳',
-    createTime: '2024-01-05'
+    createTime: '2024-01-13',
+    notes: '支付失败，请重新尝试'
   },
   {
     id: 4,
-    memberName: '陈思悦',
-    memberPhone: '138****5678',
-    icCard: '8800 2233 4455',
-    currentPoints: '3,560',
+    memberName: '李四',
+    memberPhone: '135****8765',
+    icCard: '8800 5566 7788',
+    currentPoints: '2,300',
     amount: 200,
-    money: '20.00',
-    paymentMethod: 'wechat',
+    products: [],
+    status: 'cancelled',
+    operator: '李海燕',
+    createTime: '2024-01-12',
+    notes: '用户取消充值'
+  },
+  {
+    id: 5,
+    memberName: '赵丽',
+    memberPhone: '136****2468',
+    icCard: '8800 6677 8899',
+    currentPoints: '5,800',
+    amount: 5000,
+    products: [],
+    status: 'success',
+    operator: '刘明亮',
+    createTime: '2024-01-11',
+    notes: '充值满500送50积分'
+  },
+  {
+    id: 6,
+    memberName: '周杰',
+    memberPhone: '133****1357',
+    icCard: '8800 7788 9900',
+    currentPoints: '1,500',
+    amount: 3000,
+    products: [],
+    status: 'success',
+    operator: '赵雪梅',
+    createTime: '2024-01-10',
+    notes: '节日活动充值双倍积分'
+  },
+  {
+    id: 7,
+    memberName: '吴婷婷',
+    memberPhone: '134****9876',
+    icCard: '8800 8899 0011',
+    currentPoints: '900',
+    amount: 800,
+    products: [],
+    status: 'pending',
+    operator: '王建国',
+    createTime: '2024-01-09',
+    notes: '等待银行处理'
+  },
+  {
+    id: 8,
+    memberName: '孙明',
+    memberPhone: '132****3579',
+    icCard: '8800 9900 1122',
+    currentPoints: '4,200',
+    amount: 1500,
+    products: [],
+    money: '150.00',
+    status: 'failed',
+    operator: '张晓芳',
+    createTime: '2024-01-08',
+    notes: '网络连接异常'
+  },
+  {
+    id: 9,
+    memberName: '林小华',
+    memberPhone: '131****2468',
+    icCard: '8800 0011 2233',
+    currentPoints: '2,800',
+    amount: 2500,
+    money: '250.00',
     status: 'success',
     operator: '李海燕',
-    createTime: '2024-01-01'
+    createTime: '2024-01-07',
+    notes: '生日特惠充值'
+  },
+  {
+    id: 10,
+    memberName: '郑海燕',
+    memberPhone: '130****1357',
+    icCard: '8800 1122 3344',
+    currentPoints: '1,600',
+    amount: 1200,
+    money: '120.00',
+    status: 'cancelled',
+    operator: '刘明亮',
+    createTime: '2024-01-06',
+    notes: '客户要求取消'
   }
 ])
 
@@ -285,6 +433,15 @@ const dateShortcuts = [
   }
 ]
 
+// 导出相关
+const isExporting = ref(false)
+
+// 高级筛选
+const advancedFilters = ref({
+  minAmount: '',
+  maxAmount: ''
+})
+
 // 计算属性
 const filteredRecords = computed(() => {
   let result = rechargeRecords.value
@@ -311,57 +468,18 @@ const filteredRecords = computed(() => {
     }
   }
 
+  // 高级筛选
+  if (advancedFilters.value.minAmount) {
+    result = result.filter(record => record.amount >= Number(advancedFilters.value.minAmount))
+  }
+  if (advancedFilters.value.maxAmount) {
+    result = result.filter(record => record.amount <= Number(advancedFilters.value.maxAmount))
+  }
+
   return result
 })
 
 const totalRecords = computed(() => filteredRecords.value.length)
-
-// 支付方式相关
-const getPaymentIcon = (method: string) => {
-  const icons = {
-    wechat: 'fab fa-weixin',
-    alipay: 'fab fa-alipay',
-    cash: 'fas fa-money-bill-wave'
-  }
-  return icons[method as keyof typeof icons]
-}
-
-const getPaymentText = (method: string) => {
-  const texts = {
-    wechat: '微信支付',
-    alipay: '支付宝',
-    cash: '现金'
-  }
-  return texts[method as keyof typeof texts]
-}
-
-// 状态相关
-const getStatusClass = (status: string) => {
-  const classes = {
-    success: 'bg-green-50 text-green-600',
-    pending: 'bg-yellow-50 text-yellow-600',
-    failed: 'bg-red-50 text-red-600'
-  }
-  return classes[status as keyof typeof classes]
-}
-
-const getStatusIcon = (status: string) => {
-  const icons = {
-    success: 'check-circle',
-    pending: 'clock',
-    failed: 'times-circle'
-  }
-  return icons[status as keyof typeof icons]
-}
-
-const getStatusText = (status: string) => {
-  const texts = {
-    success: '充值成功',
-    pending: '处理中',
-    failed: '充值失败'
-  }
-  return texts[status as keyof typeof texts]
-}
 
 // 详情弹窗
 const showDetailDialog = ref(false)
@@ -389,6 +507,53 @@ const handlePrint = (record: any) => {
 
 // 查看更多记录
 const viewMore = () => {
-  router.push('/recharge/history')
+  // 保存当前的筛选条件到 localStorage
+  const filterState = {
+    searchQuery: searchQuery.value,
+    dateRange: dateRange.value,
+    advancedFilters: advancedFilters.value,
+    currentPage: currentPage.value
+  }
+  localStorage.setItem('rechargeHistoryFilters', JSON.stringify(filterState))
+}
+
+// 初始化时恢复筛选条件
+onMounted(() => {
+  const savedFilters = localStorage.getItem('rechargeHistoryFilters')
+  if (savedFilters) {
+    const { searchQuery: savedQuery, dateRange: savedRange, advancedFilters: savedAdvanced, currentPage: savedPage } = JSON.parse(savedFilters)
+    searchQuery.value = savedQuery
+    dateRange.value = savedRange
+    advancedFilters.value = savedAdvanced
+    currentPage.value = savedPage
+    
+    // 清除保存的筛选条件
+    localStorage.removeItem('rechargeHistoryFilters')
+  }
+})
+
+// 导出Excel
+const exportToExcel = async () => {
+  try {
+    isExporting.value = true
+    // TODO: 实现导出逻辑
+    await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟导出延迟
+    ElMessage.success('导出成功')
+  } catch (error) {
+    ElMessage.error('导出失败')
+  } finally {
+    isExporting.value = false
+  }
+}
+
+// 重置筛选
+const resetFilters = () => {
+  searchQuery.value = ''
+  dateRange.value = []
+  advancedFilters.value = {
+    minAmount: '',
+    maxAmount: ''
+  }
+  currentPage.value = 1
 }
 </script> 

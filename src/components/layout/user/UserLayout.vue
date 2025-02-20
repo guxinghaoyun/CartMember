@@ -7,21 +7,6 @@
           <h1 class="text-lg sm:text-xl font-medium truncate">智慧零售管理系统</h1>
         </div>
         <div class="flex items-center space-x-6 pr-[60px]">
-          <!-- <div class="relative group">
-            <button class="flex items-center text-gray-600 text-sm sm:text-base hover:text-blue-500">
-              <font-awesome-icon icon="user" class="mr-2" />
-              <span class="hidden sm:inline">王店长</span>
-              <font-awesome-icon icon="chevron-down" class="ml-2 text-xs" />
-            </button>
-            <div class="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block">
-              <button 
-                @click="handleLogout"
-                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-500 flex items-center">
-                <font-awesome-icon icon="right-from-bracket" class="mr-2" />
-                退出登录
-              </button>
-            </div>
-          </div> -->
           <div class="flex items-center gap-6 pr-[30px]">
           
             <el-dropdown trigger="click">
@@ -104,7 +89,8 @@ const menuItems = [
   { path: '/user/shopping', name: '购物', icon: 'shopping-bag' },
   { path: '/user/cart', name: '购物车/结算', icon: 'shopping-cart' },
   { path: '/user/recharge', name: '充值管理', icon: 'wallet' },
-  { path: '/user/pickup', name: '取货管理', icon: 'box' },
+  { path: '/user/history', name: '充值记录', icon: 'credit-card' },
+  { path: '/user/pickup', name: '提货管理', icon: 'box' },
   { path: '/user/stats', name: '统计报表', icon: 'chart-bar' }
 ]
 

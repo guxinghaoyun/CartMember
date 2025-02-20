@@ -3,48 +3,199 @@
     :model-value="visible"
     @update:model-value="$emit('update:visible', $event)"
     title="编辑会员"
-    width="500px"
+    width="580px"
     :close-on-click-modal="false"
     @close="handleClose">
     <el-form
       ref="formRef"
       :model="form"
       :rules="rules"
-      label-width="80px">
-      <el-form-item label="姓名" prop="name">
-        <el-input v-model="form.name" placeholder="请输入会员姓名" />
-      </el-form-item>
-      <el-form-item label="手机号" prop="phone">
-        <el-input v-model="form.phone" placeholder="请输入手机号码" />
-      </el-form-item>
-      <el-form-item label="IC卡号" prop="icCard">
-        <div class="flex space-x-2">
-          <el-input v-model="form.icCard" placeholder="请输入IC卡号" />
-          <el-button type="primary" class="whitespace-nowrap" @click="handleReadCard">
-            读取卡号
-          </el-button>
-        </div>
-      </el-form-item>
-      <el-form-item label="当前积分" prop="points">
-        <div class="flex items-center space-x-4">
-          <el-input-number v-model="form.points" :min="0" class="!w-full" />
-          <div class="text-sm text-gray-500 whitespace-nowrap">
-            原积分: {{ originalPoints }}
+      label-width="84px"
+      class="space-y-8">
+      <!-- 基本信息 -->
+      <div class="space-y-4">
+        <h3 class="text-base font-medium text-gray-900 flex items-center">
+          <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center mr-2">
+            <font-awesome-icon icon="user" class="text-blue-500" />
+          </div>
+          基本信息
+        </h3>
+        <div class="bg-gray-50 rounded-lg p-5">
+          <div class="space-y-4">
+            <el-form-item label="姓名" prop="name" class="!mb-0">
+              <el-input v-model="form.name" placeholder="请输入会员姓名" />
+            </el-form-item>
+            <el-form-item label="手机号" prop="phone" class="!mb-0">
+              <el-input v-model="form.phone" placeholder="请输入手机号码" />
+            </el-form-item>
           </div>
         </div>
-      </el-form-item>
-      <el-form-item label="备注" prop="notes">
-        <el-input
-          v-model="form.notes"
-          type="textarea"
-          :rows="3"
-          placeholder="请输入备注信息" />
-      </el-form-item>
+      </div>
+
+      <!-- IC卡信息 -->
+      <div class="space-y-4">
+        <h3 class="text-base font-medium text-gray-900 flex items-center">
+          <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center mr-2">
+            <font-awesome-icon icon="credit-card" class="text-indigo-500" />
+          </div>
+          IC卡信息
+        </h3>
+        <div class="bg-gray-50 rounded-lg p-5">
+          <div class="space-y-4">
+            <el-form-item label="IC卡号" prop="icCard" class="!mb-0">
+              <el-input v-model="form.icCard" disabled class="!bg-gray-50" />
+            </el-form-item>
+            <el-form-item label="注册时间" prop="registerDate" class="!mb-0">
+              <el-input v-model="form.registerDate" disabled class="!bg-gray-50" />
+            </el-form-item>
+            <el-form-item label="卡片状态" prop="status" class="!mb-0">
+              <el-radio-group v-model="form.status" class="!w-full flex gap-4">
+                <el-radio label="正常" class="flex-1 !mr-0">
+                  <div class="flex items-center">
+                    <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                    正常
+                  </div>
+                </el-radio>
+                <el-radio label="停用" class="flex-1 !mr-0">
+                  <div class="flex items-center">
+                    <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                    停用
+                  </div>
+                </el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="卡片图片" prop="cardImages" class="!mb-0">
+              <div class="grid grid-cols-2 gap-4">
+                <!-- 正面图片 -->
+                <div class="space-y-2">
+                  <div class="text-sm text-gray-500">正面</div>
+                  <el-upload
+                    class="w-full"
+                    action="#"
+                    :auto-upload="false"
+                    :show-file-list="false"
+                    accept="image/*"
+                    :on-change="(file: UploadFile) => handleImageChange(file, 'front')">
+                    <template #trigger>
+                      <div 
+                        class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-white"
+                        :class="{'border-indigo-500': form.cardImages.front}">
+                        <div v-if="!form.cardImages.front" class="space-y-2">
+                          <font-awesome-icon icon="image" class="text-3xl text-gray-400" />
+                          <div class="text-sm text-gray-500">
+                            点击或拖拽上传正面图片
+                            <div class="text-xs">支持 jpg、png 格式，大小不超过 2MB</div>
+                          </div>
+                        </div>
+                        <div v-else class="relative group">
+                          <img 
+                            :src="form.cardImages.front" 
+                            class="w-full h-32 object-contain rounded-lg"
+                            alt="IC卡正面预览" 
+                          />
+                          <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="text-white text-sm">点击更换图片</span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </el-upload>
+                  <transition name="el-fade-in-linear">
+                    <div v-if="form.cardImages.front" class="flex justify-end">
+                      <el-button 
+                        type="danger" 
+                        link
+                        @click="handleRemoveImage('front')">
+                        <font-awesome-icon icon="trash" class="mr-1" />
+                        删除正面图片
+                      </el-button>
+                    </div>
+                  </transition>
+                </div>
+
+                <!-- 背面图片 -->
+                <div class="space-y-2">
+                  <div class="text-sm text-gray-500">背面</div>
+                  <el-upload
+                    class="w-full"
+                    action="#"
+                    :auto-upload="false"
+                    :show-file-list="false"
+                    accept="image/*"
+                    :on-change="(file: UploadFile) => handleImageChange(file, 'back')">
+                    <template #trigger>
+                      <div 
+                        class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-white"
+                        :class="{'border-indigo-500': form.cardImages.back}">
+                        <div v-if="!form.cardImages.back" class="space-y-2">
+                          <font-awesome-icon icon="image" class="text-3xl text-gray-400" />
+                          <div class="text-sm text-gray-500">
+                            点击或拖拽上传背面图片
+                            <div class="text-xs">支持 jpg、png 格式，大小不超过 2MB</div>
+                          </div>
+                        </div>
+                        <div v-else class="relative group">
+                          <img 
+                            :src="form.cardImages.back" 
+                            class="w-full h-32 object-contain rounded-lg"
+                            alt="IC卡背面预览" 
+                          />
+                          <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="text-white text-sm">点击更换图片</span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </el-upload>
+                  <transition name="el-fade-in-linear">
+                    <div v-if="form.cardImages.back" class="flex justify-end">
+                      <el-button 
+                        type="danger" 
+                        link
+                        @click="handleRemoveImage('back')">
+                        <font-awesome-icon icon="trash" class="mr-1" />
+                        删除背面图片
+                      </el-button>
+                    </div>
+                  </transition>
+                </div>
+              </div>
+            </el-form-item>
+          </div>
+        </div>
+      </div>
+
+      <!-- 其他信息 -->
+      <div class="space-y-4">
+        <h3 class="text-base font-medium text-gray-900 flex items-center">
+          <div class="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center mr-2">
+            <font-awesome-icon icon="note-sticky" class="text-green-500" />
+          </div>
+          其他信息
+        </h3>
+        <div class="bg-gray-50 rounded-lg p-5">
+          <el-form-item label="备注" prop="notes" class="!mb-0">
+            <el-input
+              v-model="form.notes"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入备注信息" />
+          </el-form-item>
+        </div>
+      </div>
     </el-form>
+
     <template #footer>
-      <div class="flex justify-end space-x-4">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="loading">确认</el-button>
+      <div class="flex justify-end space-x-3">
+        <el-button @click="handleClose" class="!border-gray-300">取消</el-button>
+        <el-button 
+          type="primary" 
+          @click="handleSubmit" 
+          :loading="loading"
+          class="!bg-blue-500 hover:!bg-blue-600">
+          <font-awesome-icon icon="check" class="mr-1" />
+          确认修改
+        </el-button>
       </div>
     </template>
   </el-dialog>
@@ -52,24 +203,18 @@
 
 <script lang="ts" setup>
 import { ref, watch } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
+import type { FormInstance, FormRules, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
+import type { Member } from '@/types'
 
 interface Props {
   visible: boolean
-  member?: {
-    id: number
-    name: string
-    phone: string
-    icCard: string
-    points: string
-    notes?: string
-  }
+  member?: Member
 }
 
 interface Emits {
   (e: 'update:visible', value: boolean): void
-  (e: 'success', member: any): void
+  (e: 'success', member: Member): void
 }
 
 const props = defineProps<Props>()
@@ -81,17 +226,35 @@ const formRef = ref<FormInstance>()
 // 加载状态
 const loading = ref(false)
 
-// 原始积分
-const originalPoints = ref('')
-
 // 表单数据
-const form = ref({
+interface FormData {
+  id: number
+  name: string
+  phone: string
+  icCard: string
+  registerDate: string
+  status: '正常' | '停用'
+  cardImages: {
+    front: string
+    back: string
+  }
+  notes: string
+  remainingPoints: number
+}
+
+const form = ref<FormData>({
   id: 0,
   name: '',
   phone: '',
   icCard: '',
-  points: 0,
-  notes: ''
+  registerDate: '',
+  status: '正常',
+  cardImages: {
+    front: '',
+    back: ''
+  },
+  notes: '',
+  remainingPoints: 0
 })
 
 // 监听会员数据变化
@@ -102,12 +265,17 @@ watch(() => props.member, (newMember) => {
       name: newMember.name,
       phone: newMember.phone,
       icCard: newMember.icCard,
-      points: parseInt(newMember.points.replace(/,/g, '')),
-      notes: newMember.notes || ''
+      registerDate: newMember.registerDate,
+      status: newMember.status,
+      cardImages: {
+        front: newMember.cardImages?.front || '',
+        back: newMember.cardImages?.back || ''
+      },
+      notes: newMember.notes || '',
+      remainingPoints: newMember.remainingPoints
     }
-    originalPoints.value = newMember.points
   }
-}, { immediate: true })
+}, { immediate: true, deep: true })
 
 // 表单验证规则
 const rules: FormRules = {
@@ -122,8 +290,8 @@ const rules: FormRules = {
   icCard: [
     { required: true, message: '请输入IC卡号', trigger: 'blur' }
   ],
-  points: [
-    { required: true, message: '请输入积分', trigger: 'blur' }
+  status: [
+    { required: true, message: '请选择卡片状态', trigger: 'change' }
   ]
 }
 
@@ -143,13 +311,19 @@ const handleSubmit = async () => {
     loading.value = true
     
     // 构造更新数据
-    const updatedMember = {
+    const updatedMember: Member = {
       id: form.value.id,
       name: form.value.name,
       phone: form.value.phone,
       icCard: form.value.icCard,
-      points: form.value.points.toString(),
-      notes: form.value.notes
+      registerDate: form.value.registerDate,
+      status: form.value.status,
+      cardImages: (form.value.cardImages.front || form.value.cardImages.back) 
+        ? form.value.cardImages 
+        : undefined,
+      notes: form.value.notes || undefined,
+      remainingPoints: form.value.remainingPoints,
+      remainingProducts: props.member?.remainingProducts
     }
     
     // TODO: 调用API更新会员数据
@@ -175,19 +349,60 @@ const handleClose = () => {
     name: '',
     phone: '',
     icCard: '',
-    points: 0,
-    notes: ''
+    registerDate: '',
+    status: '正常',
+    cardImages: {
+      front: '',
+      back: ''
+    },
+    notes: '',
+    remainingPoints: 0
   }
-  originalPoints.value = ''
   formRef.value?.resetFields()
+}
+
+// 处理图片变更
+const handleImageChange = (file: UploadFile, side: 'front' | 'back') => {
+  if (!file || !file.raw) return
+  
+  // 验证文件类型
+  const isImage = file.raw.type.startsWith('image/')
+  if (!isImage) {
+    ElMessage.error('请上传图片文件')
+    return
+  }
+  
+  // 验证文件大小（2MB）
+  const isLt2M = file.raw.size / 1024 / 1024 < 2
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return
+  }
+  
+  // 转换为 base64 用于预览
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    if (e.target?.result) {
+      form.value.cardImages[side] = e.target.result as string
+    }
+  }
+  reader.readAsDataURL(file.raw)
+}
+
+// 删除图片
+const handleRemoveImage = (side: 'front' | 'back') => {
+  form.value.cardImages[side] = ''
+  ElMessage.success('图片已删除')
 }
 </script>
 
 <style scoped>
+/* 输入框样式 */
 :deep(.el-input__wrapper),
 :deep(.el-textarea__inner) {
   box-shadow: none !important;
   border: 1px solid #e5e7eb !important;
+  background-color: white !important;
 }
 
 :deep(.el-input__wrapper:hover),
@@ -199,5 +414,77 @@ const handleClose = () => {
 :deep(.el-textarea__inner:focus) {
   border-color: #3b82f6 !important;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Dialog 样式 */
+:deep(.el-dialog) {
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+}
+
+:deep(.el-dialog__header) {
+  margin-right: 0 !important;
+  padding: 16px 20px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+:deep(.el-dialog__title) {
+  font-weight: 600 !important;
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px !important;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 12px 20px !important;
+  border-top: 1px solid #e5e7eb !important;
+}
+
+/* Radio 按钮样式 */
+:deep(.el-radio) {
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+:deep(.el-radio.is-checked) {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+:deep(.el-radio__input.is-checked .el-radio__inner) {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+:deep(.el-radio__label) {
+  padding-left: 4px;
+}
+
+/* 禁用输入框样式 */
+:deep(.el-input.is-disabled .el-input__wrapper) {
+  background-color: #f9fafb !important;
+  color: #374151 !important;
+  cursor: not-allowed;
+}
+
+:deep(.el-input.is-disabled .el-input__inner) {
+  color: #374151 !important;
+  -webkit-text-fill-color: #374151 !important;
+}
+
+/* Form Item Label */
+:deep(.el-form-item__label) {
+  font-size: 0.875rem !important;
+  color: #374151 !important;
+  font-weight: 500 !important;
+  padding-right: 12px !important;
 }
 </style> 
