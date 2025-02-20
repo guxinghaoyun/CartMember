@@ -94,7 +94,16 @@ import {
   faFileInvoice,
   faHandHolding,
   faLocationDot,
-  faBarcode
+  faBarcode,
+  faArrowLeft,
+  faChartPie,
+  faUserGroup,
+  faUserTag,
+  faUserShield,
+  faUserCheck,
+  faUserGear,
+  faUserClock,
+  faUserPen
 } from '@fortawesome/free-solid-svg-icons'
 
 // 添加图标到库
@@ -192,7 +201,16 @@ library.add(
   faFileInvoice,
   faHandHolding,
   faLocationDot,
-  faBarcode
+  faBarcode,
+  faArrowLeft,
+  faChartPie,
+  faUserGroup,
+  faUserTag,
+  faUserShield,
+  faUserCheck,
+  faUserGear,
+  faUserClock,
+  faUserPen
 )
 
 export default FontAwesomeIcon 

@@ -10,45 +10,31 @@
 
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">所属店铺</label>
-          <select
-            v-model="form.store"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">请选择店铺</option>
-            <option v-for="store in stores" :key="store.id" :value="store.name">
-              {{ store.name }}
-            </option>
-          </select>
+          <label class="block text-sm font-medium text-gray-700 mb-1">内部号码</label>
+          <div class="flex gap-2">
+            <input
+              v-model="form.internalNumber"
+              type="text"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="请读取IC卡"
+              readonly
+            >
+            <button
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              @click="handleReadCard"
+            >
+              读卡
+            </button>
+          </div>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">会员姓名</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">卡面号码</label>
           <input
-            v-model="form.memberName"
+            v-model="form.surfaceNumber"
             type="text"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="请输入会员姓名"
-          >
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">手机号码</label>
-          <input
-            v-model="form.memberPhone"
-            type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="请输入手机号码"
-          >
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">初始积分</label>
-          <input
-            v-model="form.points"
-            type="number"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="请输入初始积分"
+            placeholder="请输入卡面号码（NO.1）"
           >
         </div>
       </div>
@@ -60,6 +46,7 @@
         >取消</button>
         <button
           class="!rounded-button px-4 py-2 bg-blue-600 text-white"
+          :disabled="!form.internalNumber || !form.surfaceNumber"
           @click="handleSubmit"
         >确认初始化</button>
       </div>
@@ -71,10 +58,8 @@
 import { ref } from 'vue'
 
 interface CardForm {
-  store: string
-  memberName: string
-  memberPhone: string
-  points: number | null
+  surfaceNumber: string
+  internalNumber: string
 }
 
 interface Props {
@@ -87,24 +72,34 @@ const emit = defineEmits<{
   (e: 'submit', value: CardForm): void
 }>()
 
-const stores = [
-  { id: 1, name: '北京朝阳店' },
-  { id: 2, name: '上海浦东店' },
-  { id: 3, name: '广州天河店' }
-]
-
 const form = ref<CardForm>({
-  store: '',
-  memberName: '',
-  memberPhone: '',
-  points: null
+  surfaceNumber: '',
+  internalNumber: ''
 })
 
 const handleClose = () => {
   emit('update:show', false)
 }
 
+const handleReadCard = async () => {
+  try {
+    // 这里模拟读卡操作，实际项目中需要调用真实的读卡API
+    const mockInternalNumber = 'RF8A7B2C' + Math.random().toString(36).substr(2, 4).toUpperCase()
+    form.value.internalNumber = mockInternalNumber
+  } catch (error) {
+    console.error('读卡失败:', error)
+    // 这里可以添加错误提示
+  }
+}
+
 const handleSubmit = () => {
+  if (!form.value.internalNumber || !form.value.surfaceNumber) {
+    return
+  }
   emit('submit', form.value)
+  form.value = {
+    surfaceNumber: '',
+    internalNumber: ''
+  }
 }
 </script> 

@@ -14,18 +14,6 @@
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <p class="text-green-100 text-sm">总积分</p>
-            <p class="text-3xl font-semibold mt-2">{{ cards.reduce((sum, card) => sum + (card.points || 0), 0).toLocaleString() }}</p>
-          </div>
-          <div class="w-10 h-10 rounded-lg bg-green-400 bg-opacity-30 flex items-center justify-center">
-            <font-awesome-icon icon="coins" class="text-2xl text-green-200" />
-          </div>
-        </div>
-      </div>
-
       <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
         <div class="flex justify-between items-start mb-4">
           <div>
@@ -114,16 +102,19 @@
                   <font-awesome-icon icon="credit-card" class="text-blue-600 text-xl" />
                 </div>
                 <div>
-                  <h3 class="font-medium text-lg">{{ card.number }}</h3>
-                  <p class="text-gray-500 text-sm mt-1">{{ card.memberName }}</p>
+                  <h3 class="font-medium text-lg">{{ card.surfaceNumber }}</h3>
+                  <div class="flex flex-col gap-1">
+                    <p class="text-gray-500 text-sm">内部号: {{ card.internalNumber }}</p>
+                  </div>
                 </div>
               </div>
               <div class="opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   class="!rounded-lg p-2 text-blue-600 hover:bg-blue-50 transition-colors"
                   @click="toggleCardStatus(card)"
+                  v-if="card.store"
                 >
-                  <font-awesome-icon :icon="card.status === '正常' ? 'ban' : 'check'" :class="card.status === '正常' ? 'text-red-600' : 'text-green-600'" />
+                  <font-awesome-icon :icon="getStatusIcon(card.status)" :class="getStatusClass(card.status)" />
                 </button>
               </div>
             </div>
@@ -136,19 +127,19 @@
                 <span class="text-gray-500">手机号码</span>
                 <span class="font-medium">{{ card.memberPhone }}</span>
               </div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-500">当前积分</span>
-                <span class="font-medium text-blue-600">{{ card.points }} 分</span>
-              </div>
             </div>
           </div>
           <div class="px-6 py-4 bg-gray-50 flex justify-between items-center">
             <div class="flex items-center gap-2 text-sm">
               <span
                 class="inline-block w-2 h-2 rounded-full"
-                :class="card.status === '正常' ? 'bg-green-500' : 'bg-red-500'"
+                :class="{
+                  'bg-green-500': card.status === '正常',
+                  'bg-red-500': card.status === '停用',
+                  'bg-yellow-500': card.status === '未激活'
+                }"
               ></span>
-              <span class="text-gray-600">{{ card.status }}</span>
+              <span class="text-gray-600 min-w-[48px]">{{ card.status }}</span>
             </div>
             <span class="text-gray-500 text-sm">{{ card.initTime }}</span>
           </div>
@@ -164,7 +155,6 @@
               <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">所属店铺</th>
               <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">会员信息</th>
               <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">初始化时间</th>
-              <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">积分</th>
               <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">状态</th>
             </tr>
           </thead>
@@ -176,8 +166,8 @@
                     <font-awesome-icon icon="credit-card" class="text-blue-600" />
                   </div>
                   <div>
-                    <div class="font-medium">{{ card.number }}</div>
-                    <div class="text-sm text-gray-500">ID: {{ card.id }}</div>
+                    <div class="font-medium">{{ card.surfaceNumber }}</div>
+                    <div class="text-sm text-gray-500">内部号: {{ card.internalNumber }}</div>
                   </div>
                 </div>
               </td>
@@ -197,19 +187,25 @@
                 {{ card.initTime }}
               </td>
               <td class="px-6 py-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {{ card.points }} 分
-                </span>
-              </td>
-              <td class="px-6 py-4">
                 <button
-                  class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors"
-                  :class="card.status === '正常' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'"
+                  v-if="card.store"
+                  class="inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors min-w-[72px]"
+                  :class="{
+                    'bg-green-100 text-green-800 hover:bg-green-200': card.status === '正常',
+                    'bg-red-100 text-red-800 hover:bg-red-200': card.status === '停用'
+                  }"
                   @click="toggleCardStatus(card)"
                 >
-                  <font-awesome-icon :icon="card.status === '正常' ? 'check' : 'ban'" class="mr-1" />
+                  <font-awesome-icon :icon="getStatusIcon(card.status)" class="mr-1" />
                   {{ card.status }}
                 </button>
+                <span
+                  v-else
+                  class="inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-800 min-w-[72px]"
+                >
+                  <font-awesome-icon icon="clock" class="mr-1" />
+                  {{ card.status }}
+                </span>
               </td>
             </tr>
           </tbody>
@@ -280,53 +276,53 @@ const pageSize = ref(6)
 const cards = ref([
   {
     id: 1,
-    number: 'IC001',
+    surfaceNumber: 'NO.100001',
+    internalNumber: 'RF8A7B2C3D',
     store: '北京朝阳店',
     memberName: '陈思远',
     memberPhone: '13812345678',
     initTime: '2023-12-01',
-    status: '正常',
-    points: 2580
+    status: '正常'
   },
   {
     id: 2,
-    number: 'IC002',
+    surfaceNumber: 'NO.100002',
+    internalNumber: 'RF8A7B2C4E',
     store: '上海浦东店',
     memberName: '林雨婷',
     memberPhone: '13923456789',
     initTime: '2023-12-02',
-    status: '停用',
-    points: 1260
+    status: '停用'
   },
   {
     id: 3,
-    number: 'IC003',
+    surfaceNumber: 'NO.100003',
+    internalNumber: 'RF8A7B2C5F',
     store: '广州天河店',
     memberName: '王小明',
     memberPhone: '13534567890',
     initTime: '2023-12-03',
-    status: '正常',
-    points: 3450
+    status: '正常'
   },
   {
     id: 4,
-    number: 'IC004',
+    surfaceNumber: 'NO.100004',
+    internalNumber: 'RF8A7B2C6G',
     store: '深圳南山店',
     memberName: '张三丰',
     memberPhone: '13645678901',
     initTime: '2023-12-04',
-    status: '正常',
-    points: 890
+    status: '正常'
   },
   {
     id: 5,
-    number: 'IC005',
-    store: '杭州西湖店',
-    memberName: '李四',
-    memberPhone: '13756789012',
+    surfaceNumber: 'NO.100005',
+    internalNumber: 'RF8A7B2C7H',
+    store: '',
+    memberName: '',
+    memberPhone: '',
     initTime: '2023-12-05',
-    status: '停用',
-    points: 1780
+    status: '未激活'
   }
 ])
 
@@ -347,18 +343,55 @@ const validatePageNumber = () => {
   currentPage.value = page
 }
 
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case '正常':
+      return 'check'
+    case '停用':
+      return 'ban'
+    case '未激活':
+      return 'clock'
+    default:
+      return 'question'
+  }
+}
+
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case '正常':
+      return 'text-green-600'
+    case '停用':
+      return 'text-red-600'
+    case '未激活':
+      return 'text-yellow-600'
+    default:
+      return 'text-gray-600'
+  }
+}
+
 const toggleCardStatus = (card: any) => {
-  card.status = card.status === '正常' ? '停用' : '正常'
+  // 如果是未激活状态，不允许手动切换状态
+  if (card.status === '未激活') {
+    return
+  }
+  
+  // 只有在有店铺信息的情况下才能切换状态
+  if (card.store) {
+    card.status = card.status === '正常' ? '停用' : '正常'
+  }
 }
 
 const handleCardInit = (cardData: any) => {
+  const newId = cards.value.length + 1
   cards.value.push({
-    id: cards.value.length + 1,
-    number: `IC${String(cards.value.length + 1).padStart(3, '0')}`,
+    id: newId,
+    surfaceNumber: cardData.surfaceNumber,
+    internalNumber: cardData.internalNumber,
     initTime: new Date().toISOString().split('T')[0],
-    status: '正常',
-    points: 0,
-    ...cardData
+    status: '未激活',
+    store: '',
+    memberName: '',
+    memberPhone: ''
   })
   showInitCard.value = false
 }

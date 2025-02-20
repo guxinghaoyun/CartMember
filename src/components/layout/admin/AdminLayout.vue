@@ -87,6 +87,7 @@ const menuItems = [
   { name: '店铺管理', path: '/admin/store', icon: 'store' },
   { name: 'IC卡管理', path: '/admin/card', icon: 'credit-card' },
   { name: '商品管理', path: '/admin/product', icon: 'box-open' },
+  { name: '会员管理', path: '/admin/member', icon: 'users' },
   { name: '销售统计', path: '/admin/stats', icon: 'chart-line' },
   { name: '系统日志', path: '/admin/log', icon: 'history' }
 ]

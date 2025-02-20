@@ -1023,4 +1023,4 @@ const handleDelete = async (order: any) => {
 .card-hover {
   @apply transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px];
 }
-</style> 
+</style>
