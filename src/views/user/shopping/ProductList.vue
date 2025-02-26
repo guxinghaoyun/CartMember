@@ -86,9 +86,14 @@
                     <span class="text-white/80 text-sm">积分</span>
                   </div>
                   <button class="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-3 py-1.5 rounded-lg text-white text-sm transition-colors duration-300"
-                          @click="addToCart(product)">
-                    加入购物车
+                          @click="addToCart(product)"
+                          :disabled="product.status !== '在售' || product.stock <= 0">
+                    {{ getAddToCartButtonText(product) }}
                   </button>
+                </div>
+                <div class="mt-2 text-sm text-white/80">
+                  <span class="mr-2">库存: {{ product.stock }}{{ product.unit }}</span>
+                  <span>销量: {{ product.sales }}{{ product.unit }}</span>
                 </div>
               </div>
             </div>
@@ -100,10 +105,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { useCartStore } from '@/stores/cart'
+import { useCartStore } from '@/types/api/user/cart'
+import { shoppingApi } from '@/api/user/shopping'
+import type { Product } from '@/types/api/user/shopping'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -122,66 +129,39 @@ const categories = [
 ]
 
 const currentCategory = ref('all')
+const loading = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
 // 商品数据
-const products = ref([
-  {
-    id: 1,
-    name: '有机草莓 500g',
-    price: 399,
-    category: 'fresh',
-    image: 'https://ai-public.mastergo.com/ai/img_res/86f839615a018f782144b9ec9be235d4.jpg'
-  },
-  {
-    id: 2,
-    name: '进口纯牛奶 1L',
-    price: 680,
-    category: 'food',
-    image: 'https://ai-public.mastergo.com/ai/img_res/e4283893b198106bcb77f4a097397da1.jpg'
-  },
-  {
-    id: 3,
-    name: '日式牛奶面包',
-    price: 128,
-    category: 'food',
-    image: 'https://ai-public.mastergo.com/ai/img_res/e9a1e0da333cfaae1d427e157bad44d1.jpg'
-  },
-  {
-    id: 4,
-    name: '原味薯片 150g',
-    price: 99,
-    category: 'snacks',
-    image: 'https://ai-public.mastergo.com/ai/img_res/41371490288d2e4baab373dd26090f53.jpg'
-  },
-  {
-    id: 5,
-    name: '柠檬气泡水 330ml',
-    price: 69,
-    category: 'drinks',
-    image: 'https://ai-public.mastergo.com/ai/img_res/6727655713b31701481ece9fc2828521.jpg'
-  },
-  {
-    id: 6,
-    name: '蓝莓酸奶 250g',
-    price: 158,
-    category: 'food',
-    image: 'https://ai-public.mastergo.com/ai/img_res/f31932d1bd3fe0a4e3fd760b55213f51.jpg'
-  },
-  {
-    id: 7,
-    name: '红茶饼干 200g',
-    price: 225,
-    category: 'snacks',
-    image: 'https://ai-public.mastergo.com/ai/img_res/24d589eb6845ec569d1d4eea5a53deed.jpg'
-  },
-  {
-    id: 8,
-    name: '巧克力威化 160g',
-    price: 168,
-    category: 'snacks',
-    image: 'https://ai-public.mastergo.com/ai/img_res/d500d8c6ee25cb453766d6bd9dfa7102.jpg'
+const products = ref<Product[]>([])
+
+// 获取商品列表
+const fetchProducts = async () => {
+  try {
+    loading.value = true
+    const params = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      category: currentCategory.value === 'all' ? undefined : currentCategory.value
+    }
+    const response = await shoppingApi.getProducts(params)
+    products.value = response.data.data.items
+    total.value = response.data.data.total
+  } catch (error) {
+    ElMessage.error('获取商品列表失败')
+    console.error('Failed to fetch products:', error)
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 监听分类变化
+watch(currentCategory, () => {
+  currentPage.value = 1
+  fetchProducts()
+})
 
 // 购物车数据
 const cartItems = ref<Array<{ id: number; quantity: number; product: any }>>([])
@@ -259,6 +239,7 @@ const initCart = () => {
 // 在组件挂载时初始化
 onMounted(() => {
   initCart()
+  fetchProducts()
 })
 
 const handleCheckout = () => {
@@ -295,5 +276,12 @@ const getCategoryIcon = (categoryId: string) => {
     'drinks': 'glass-martini'
   }
   return icons[categoryId] || 'th-large'
+}
+
+// 获取添加到购物车按钮文本
+const getAddToCartButtonText = (product: Product) => {
+  if (product.status === '下架') return '已下架'
+  if (product.status === '缺货' || product.stock <= 0) return '缺货'
+  return '加入购物车'
 }
 </script> 

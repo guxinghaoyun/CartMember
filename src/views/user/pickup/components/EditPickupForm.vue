@@ -25,12 +25,12 @@
               </h3>
             </div>
             <div class="grid grid-cols-2 gap-6">
-              <el-form-item label="会员姓名" prop="memberName">
-                <el-input v-model="form.memberName" placeholder="请输入会员姓名" disabled/>
-              </el-form-item>
-              <el-form-item label="手机号码" prop="memberPhone">
-                <el-input v-model="form.memberPhone" placeholder="请输入手机号码" disabled/>
-              </el-form-item>
+              <div class="text-sm text-gray-600">
+                <span class="font-medium">{{ editData?.memberName }}</span>
+              </div>
+              <div class="text-sm text-gray-600">
+                <span class="font-medium">{{ editData?.memberPhone }}</span>
+              </div>
             </div>
           </div>
 
@@ -287,13 +287,38 @@ import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import dayjs from 'dayjs'
+import type { 
+  PickupOrder,
+  PickupOrderItem,
+  UpdatePickupOrderRequest, 
+  MemberPickupProduct,
+  PickupMethod
+} from '@/types/api/user/pickup'
+import type { ApiResponse } from '@/types/api/common'
+import { pickupApi } from '@/api/user/pickup'
 
-const props = defineProps<{
+interface Props {
   visible: boolean
-  editData: any
-}>()
+  editData: PickupOrder | null
+}
 
-const emit = defineEmits(['update:visible', 'submit'])
+interface Emits {
+  (e: 'update:visible', value: boolean): void
+  (e: 'submit', data: UpdatePickupOrderRequest): void
+}
+
+// 扩展的表单数据类型
+interface PickupFormData {
+  deliveryType: PickupMethod
+  deliveryAddress?: string
+  pickupTime: string
+  operator: string
+  notes?: string
+  items: PickupOrderItem[]
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
 
 // 对话框可见性
 const dialogVisible = computed({
@@ -317,21 +342,19 @@ const operators = [
 ]
 
 // 表单数据
-const form = reactive({
-  memberName: '',
-  memberPhone: '',
+const form = ref<PickupFormData>({
   deliveryType: 'store',
-  deliveryAddress: '',
   pickupTime: '',
-  items: [] as any[],
-  itemCount: 0,
   operator: '',
-  notes: ''
+  items: []
 })
+
+// 会员可提商品列表
+const memberProducts = ref<MemberPickupProduct[]>([])
 
 // 计算总数量
 const totalQuantity = computed(() => {
-  return form.items.reduce((total, item) => total + item.quantity, 0)
+  return form.value.items.reduce((total, item) => total + item.quantity, 0)
 })
 
 // 禁用过去的日期
@@ -344,18 +367,15 @@ const disabledHours = () => {
   return Array.from({ length: 24 }).map((_, i) => i).filter(h => h < 9 || h > 21)
 }
 
-// 会员可提商品列表
-const memberProducts = ref<any[]>([])
-
 // 检查商品是否已添加到提货列表
 const isProductAdded = (productId: number) => {
-  return form.items.some(item => item.id === productId)
+  return form.value.items.some(item => item.id === productId)
 }
 
 // 添加到提货列表
-const addToPickupList = (product: any) => {
+const addToPickupList = (product: MemberPickupProduct) => {
   if (!isProductAdded(product.id)) {
-    form.items.push({
+    form.value.items.push({
       id: product.id,
       name: product.name,
       sku: product.sku,
@@ -369,53 +389,28 @@ const addToPickupList = (product: any) => {
     if (memberProduct) {
       memberProduct.availableQuantity = product.availableQuantity - 1
     }
-    calculateTotal()
     ElMessage.success(`已添加商品：${product.name}`)
   }
 }
 
 // 移除商品
 const removeItem = (index: number) => {
-  const removedItem = form.items[index]
+  const removedItem = form.value.items[index]
   // 恢复可提商品的可提数量
   const memberProduct = memberProducts.value.find(p => p.id === removedItem.id)
   if (memberProduct) {
     memberProduct.availableQuantity = removedItem.originalQuantity
   }
-  form.items.splice(index, 1)
-  calculateTotal()
-}
-
-// 计算总数
-const calculateTotal = () => {
-  form.itemCount = totalQuantity.value
+  form.value.items.splice(index, 1)
 }
 
 // 表单校验规则
 const rules: FormRules = {
-  memberName: [
-    { required: true, message: '请输入会员姓名', trigger: 'blur' },
-    { min: 2, max: 20, message: '姓名长度应在 2-20 个字符之间', trigger: 'blur' }
-  ],
-  memberPhone: [
-    { required: true, message: '请输入手机号码', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
-  ],
   deliveryType: [
     { required: true, message: '请选择提货方式', trigger: 'change' }
   ],
   pickupTime: [
-    { required: true, message: '请选择提货时间', trigger: 'change' },
-    { 
-      validator: (rule: any, value: any, callback: any) => {
-        if (value && value < Date.now()) {
-          callback(new Error('提货时间不能早于当前时间'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'change'
-    }
+    { required: true, message: '请选择提货时间', trigger: 'change' }
   ],
   operator: [
     { required: true, message: '请选择操作员', trigger: 'change' }
@@ -425,59 +420,67 @@ const rules: FormRules = {
 // 监听编辑数据变化
 watch(() => props.editData, (newData) => {
   if (newData) {
-    // 填充表单数据
-    Object.assign(form, {
-      memberName: newData.memberName,
-      memberPhone: newData.memberPhone,
-      deliveryType: newData.deliveryType === '自提' ? 'store' : newData.deliveryType, // 转换提货方式
+    const formData: PickupFormData = {
+      deliveryType: newData.deliveryType,
       deliveryAddress: newData.deliveryAddress,
       pickupTime: newData.pickupTime,
-      items: newData.items,
       operator: newData.operator,
-      notes: newData.notes || ''
-    })
-
-    // 设置会员可提商品数据
-    memberProducts.value = newData.memberProducts || []
+      notes: newData.notes,
+      items: newData.items.map(item => ({
+        id: item.id,
+        name: item.name,
+        sku: item.sku,
+        image: item.image,
+        quantity: item.quantity,
+        maxQuantity: item.maxQuantity,
+        originalQuantity: item.originalQuantity
+      }))
+    }
+    form.value = formData
   }
-}, { immediate: true })
+}, { immediate: true, deep: true })
 
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
   
-  if (form.items.length === 0) {
-    ElMessage.warning('请至少添加一件商品')
-    return
-  }
-  
   try {
     await formRef.value.validate()
     loading.value = true
     
-    // 构造提交数据
-    const submitData = {
-      ...form,
-      pickupTime: dayjs(form.pickupTime).format('YYYY-MM-DD HH:mm'),
-      status: 'pending',
-      itemCount: totalQuantity.value
+    // 转换表单数据为提交格式
+    const submitData: UpdatePickupOrderRequest = {
+      deliveryType: form.value.deliveryType,
+      deliveryAddress: form.value.deliveryAddress,
+      pickupTime: form.value.pickupTime,
+      operator: form.value.operator,
+      notes: form.value.notes,
+      items: form.value.items.map(item => ({
+        id: item.id,
+        quantity: item.quantity
+      }))
     }
     
     emit('submit', submitData)
     handleClose()
-    ElMessage.success('提货单更新成功')
   } catch (error) {
-    // 表单验证失败
     console.error('表单验证失败:', error)
   } finally {
     loading.value = false
   }
 }
 
-// 关闭对话框
+// 关闭弹窗
 const handleClose = () => {
   emit('update:visible', false)
-  // 重置表单和会员可提商品
+  // 重置表单
+  const emptyForm: PickupFormData = {
+    deliveryType: 'store',
+    pickupTime: '',
+    operator: '',
+    items: []
+  }
+  form.value = emptyForm
   if (formRef.value) {
     formRef.value.resetFields()
   }
@@ -485,7 +488,7 @@ const handleClose = () => {
 }
 
 // 修改商品数量时检查限制
-const handleQuantityChange = (item: any, value: number) => {
+const handleQuantityChange = (item: PickupOrderItem, value: number) => {
   const memberProduct = memberProducts.value.find(p => p.id === item.id)
   if (!memberProduct) return
 
@@ -507,7 +510,6 @@ const handleQuantityChange = (item: any, value: number) => {
   // 更新可提商品的可提数量
   memberProduct.availableQuantity = item.originalQuantity - value
   item.quantity = value
-  calculateTotal()
 }
 </script>
 

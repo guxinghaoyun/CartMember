@@ -201,7 +201,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useCartStore } from '@/stores/cart'
+import { useCartStore } from '@/types/api/user/cart'
+import { memberApi } from '@/api/user/member'
+import { operatorApi } from '@/api/user/operator'
+import type { Member } from '@/types/api/user/member'
+import type { Operator } from '@/types/api/user/operator'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -211,7 +215,11 @@ const cartItems = computed(() => cartStore.items)
 
 // 结算相关数据
 const memberCardNo = ref('')
-const memberInfo = ref({
+const memberInfo = ref<{
+  name: string;
+  points: string;
+  id?: number;
+}>({
   name: '',
   points: ''
 })
@@ -220,13 +228,18 @@ const discountAmount = ref<number>(0)
 const selectedOperator = ref('')
 
 // 操作员列表
-const operators = [
-  { id: 1, name: '李海燕', role: '主管' },
-  { id: 2, name: '王建国', role: '店员' },
-  { id: 3, name: '张晓芳', role: '店员' },
-  { id: 4, name: '刘明亮', role: '店员' },
-  { id: 5, name: '赵雪梅', role: '店员' }
-]
+const operators = ref<Operator[]>([])
+
+// 获取操作员列表
+const fetchOperators = async () => {
+  try {
+    const response = await operatorApi.getCurrentStoreOperators()
+    operators.value = response.data.data
+  } catch (error) {
+    console.error('Failed to fetch operators:', error)
+    ElMessage.error('获取操作员列表失败')
+  }
+}
 
 // 计算属性
 const totalAmount = computed(() => {
@@ -293,23 +306,55 @@ const previewImage = (item: any) => {
   console.log('Preview image:', item.product.image)
 }
 
-const readMemberCard = () => {
-  // 如果 store 中已有会员信息，优先使用
-  if (cartStore.member) {
-    memberInfo.value = {
-      name: cartStore.member.name,
-      points: cartStore.member.points.toString()
-    }
-    ElMessage.success('已读取会员信息')
-    return
-  }
+const readMemberCard = async () => {
+  try {
+    // 模拟从IC读卡器获取卡号
+    // TODO: 替换为实际的IC读卡器接口调用
+    const icCardNo = await simulateReadICCard()
+    memberCardNo.value = icCardNo
 
-  // 否则模拟读取会员卡
-  memberInfo.value = {
-    name: '陈思悦',
-    points: '3,560'
+    // 并行请求会员信息和操作员列表
+    const [memberResponse, operatorResponse] = await Promise.all([
+      memberApi.getMemberById(parseInt(icCardNo)),
+      operatorApi.getCurrentStoreOperators()
+    ])
+
+    const memberData = memberResponse.data.data
+    operators.value = operatorResponse.data.data
+
+    // 更新会员信息显示
+    memberInfo.value = {
+      name: memberData.name,
+      points: memberData.remainingPoints.toString()
+    }
+
+    // 更新购物车store中的会员信息
+    cartStore.updateCart({
+      ...cartStore.$state,
+      member: {
+        name: memberData.name,
+        points: memberData.remainingPoints
+      }
+    })
+
+    ElMessage.success('会员卡读取成功')
+  } catch (error) {
+    console.error('Failed to read member card:', error)
+    ElMessage.error('会员卡读取失败，请重试')
   }
-  ElMessage.success('会员卡读取成功')
+}
+
+// 模拟IC读卡器读取卡号
+// TODO: 替换为实际的IC读卡器接口实现
+const simulateReadICCard = (): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    // 模拟读卡延迟
+    setTimeout(() => {
+      // 模拟生成会员卡号（实际应该从IC卡中读取）
+      const cardNo = '100001'
+      resolve(cardNo)
+    }, 500)
+  })
 }
 
 const handleCheckout = async () => {

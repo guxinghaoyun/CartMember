@@ -14,16 +14,11 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as echarts from 'echarts'
-
-interface CategoryData {
-  name: string
-  value: number
-  color: string
-}
+import type { ConsumptionStatistics } from '@/types/api/user/statistics'
 
 interface Props {
   loading?: boolean
-  data?: CategoryData[]
+  data?: ConsumptionStatistics['categories']
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -85,9 +80,9 @@ const updateChart = () => {
       },
       icon: 'roundRect',
       formatter: function(name: string) {
-        const item = props.data?.find(d => d.name === name)
+        const item = props.data?.find(d => d.category === name)
         if (!item) return name
-        return `${name}  ${((item.value / total) * 100).toFixed(1)}%`
+        return `${name}  ${item.percentage}%`
       }
     },
     series: [
@@ -118,18 +113,13 @@ const updateChart = () => {
           }
         },
         data: props.data?.map(item => ({
-          name: item.name,
-          value: item.value,
-          itemStyle: {
-            color: item.color
-          }
+          name: item.category,
+          value: item.amount,
+          percentage: item.percentage
         })) || []
       }
     ]
   }
-
-  // 计算总额
-  const total = props.data?.reduce((sum, item) => sum + item.value, 0) || 0
 
   // 设置加载状态
   if (props.loading) {

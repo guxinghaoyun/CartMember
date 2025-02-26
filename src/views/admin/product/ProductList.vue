@@ -159,23 +159,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineComponent } from 'vue'
+import { ref, computed, onMounted, watch, defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import ProductForm, { type ProductForm as IProductForm } from './components/ProductForm.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-
-// 定义类型
-interface Product extends IProductForm {
-  id: number
-  image: string
-  storeIds: number[]
-  category: string
-  quantity: number
-  description: string
-}
+import { productApi } from '@/api/admin/product'
+import type { Product, ProductCategoryType } from '@/types/api/admin/product'
 
 // 商品分类选项
-const categoryOptions = [
+const categoryOptions: Array<{
+  label: string
+  value: ProductCategoryType
+}> = [
   { label: '全部分类', value: '' },
   { label: '数码产品', value: 'digital' },
   { label: '办公用品', value: 'office' },
@@ -213,13 +208,16 @@ const ProductStatCard = defineComponent({
 })
 
 // 状态
+const loading = ref(false)
 const selectedStore = ref('')
-const selectedCategory = ref('')
+const selectedCategory = ref<ProductCategoryType>('')
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(8)
 const showAddProduct = ref(false)
 const editingProduct = ref<Product | null>(null)
+const allProducts = ref<Product[]>([])
+const total = ref(0)
 
 // 视图模式
 const viewMode = ref<'card' | 'list'>('card')
@@ -231,39 +229,24 @@ const stores = ref([
   { id: 3, name: '广州天河店' }
 ])
 
-// 商品数据
-const allProducts = ref<Product[]>([
-  {
-    id: 1,
-    name: '高级商务笔记本',
-    storeIds: [1],
-    price: 2990,
-    quantity: 50,
-    category: 'office',
-    description: '高品质真皮材质，经典商务设计',
-    image: 'https://ai-public.mastergo.com/ai/img_res/1992822aad5de0f09cd910a5041a3574.jpg'
-  },
-  {
-    id: 2,
-    name: '智能手表',
-    storeIds: [1],
-    price: 12990,
-    quantity: 30,
-    category: 'digital',
-    description: '多功能智能手表，支持心率监测',
-    image: 'https://ai-public.mastergo.com/ai/img_res/924e612b79d7463c48a3556240acc354.jpg'
-  },
-  {
-    id: 3,
-    name: '无线耳机',
-    storeIds: [2],
-    price: 8990,
-    quantity: 100,
-    category: 'digital',
-    description: '高音质无线耳机，支持降噪',
-    image: 'https://ai-public.mastergo.com/ai/img_res/7ea52ed06dffd0b8b472842d2448764e.jpg'
+// 获取商品列表
+const fetchProducts = async () => {
+  try {
+    loading.value = true
+    const params = {
+      category: selectedCategory.value || undefined,
+      storeId: selectedStore.value ? parseInt(selectedStore.value) : undefined,
+    }
+    const response = await productApi.getProducts(params)
+    allProducts.value = response.data.data.items
+    total.value = response.data.data.total
+  } catch (error) {
+    console.error('Failed to fetch products:', error)
+    ElMessage.error('获取商品列表失败')
+  } finally {
+    loading.value = false
   }
-])
+}
 
 // 计算属性
 const filteredProducts = computed(() => {
@@ -318,53 +301,69 @@ const handleEdit = (product: Product) => {
   showAddProduct.value = true
 }
 
-const handleDelete = (product: Product) => {
-  ElMessageBox.confirm(
-    '确定要删除该商品吗？此操作不可恢复。',
-    '删除确认',
-    {
-      confirmButtonText: '确定删除',
-      cancelButtonText: '取消',
-      type: 'warning',
-      confirmButtonClass: 'el-button--danger',
+// 删除商品
+const handleDelete = async (product: Product) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除该商品吗？此操作不可恢复。',
+      '删除确认',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger',
+      }
+    )
+    
+    await productApi.deleteProduct(product.id)
+    ElMessage.success('商品已删除')
+    fetchProducts() // 重新加载商品列表
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Failed to delete product:', error)
+      ElMessage.error('删除商品失败')
     }
-  ).then(() => {
-    const index = allProducts.value.findIndex(p => p.id === product.id)
-    if (index > -1) {
-      allProducts.value.splice(index, 1)
-      ElMessage.success('商品已删除')
-    }
-  }).catch(() => {
-    // 用户取消删除，不做任何操作
-  })
+  }
 }
 
-const handleProductSubmit = (formData: IProductForm) => {
-  if (editingProduct.value) {
-    // 更新现有商品
-    const index = allProducts.value.findIndex(p => p.id === editingProduct.value!.id)
-    if (index > -1) {
-      allProducts.value[index] = {
-        ...allProducts.value[index],
-        ...formData,
-        storeIds: Array.isArray(formData.storeIds) ? formData.storeIds : [formData.storeIds]
-      }
-      ElMessage.success('更新成功')
-    }
-  } else {
-    // 添加新商品
-    const newProduct: Product = {
+// 提交商品表单
+const handleProductSubmit = async (formData: IProductForm) => {
+  try {
+    const productData = {
       ...formData,
-      id: Math.max(0, ...allProducts.value.map(p => p.id)) + 1,
       storeIds: Array.isArray(formData.storeIds) ? formData.storeIds : [formData.storeIds],
-      image: 'https://ai-public.mastergo.com/ai/img_res/1992822aad5de0f09cd910a5041a3574.jpg' // 默认图片
+      status: '在售' as const, // 设置默认状态
+      category: formData.category as ProductCategoryType
     }
-    allProducts.value.push(newProduct)
-    ElMessage.success('添加成功')
+
+    if (editingProduct.value) {
+      // 更新现有商品
+      await productApi.updateProduct(editingProduct.value.id, productData)
+      ElMessage.success('商品更新成功')
+    } else {
+      // 添加新商品
+      await productApi.createProduct(productData)
+      ElMessage.success('商品添加成功')
+    }
+    showAddProduct.value = false
+    editingProduct.value = null
+    fetchProducts() // 重新加载商品列表
+  } catch (error) {
+    console.error('Failed to save product:', error)
+    ElMessage.error(editingProduct.value ? '更新商品失败' : '添加商品失败')
   }
-  showAddProduct.value = false
-  editingProduct.value = null
 }
+
+// 监听筛选条件变化
+watch([selectedStore, selectedCategory], () => {
+  currentPage.value = 1
+  fetchProducts()
+})
+
+// 在组件挂载时获取商品列表
+onMounted(() => {
+  fetchProducts()
+})
 </script>
 
 <style scoped>

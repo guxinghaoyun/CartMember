@@ -42,7 +42,6 @@ export interface RechargeRecord {
   currentPoints: string
   amount: number
   money: string
-  paymentMethod: 'wechat' | 'alipay' | 'cash'
   status: 'success' | 'pending' | 'failed'
   operator: string
   createTime: string

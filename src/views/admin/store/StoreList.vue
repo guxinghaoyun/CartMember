@@ -289,182 +289,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import StoreForm from './components/StoreForm.vue'
 import type { StoreForm as IStoreForm } from './components/StoreForm.vue'
+import { storeApi } from '@/api/admin/store'
+import type { Store, StoreStatus } from '@/types/api/admin/store'
 
-// 定义类型
-type StoreStatus = 'active' | 'paused' | 'renovating'
-
-interface Store extends IStoreForm {
-  id: number
-  status: StoreStatus
-}
+// 视图模式
+const viewMode = ref<'card' | 'list'>('card')
 
 // 状态
+const loading = ref(false)
 const showAddStore = ref(false)
 const editingStore = ref<Store | null>(null)
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(6)
-
-// 视图模式
-const viewMode = ref<'card' | 'list'>('card')
+const total = ref(0)
 
 // 店铺数据
-const stores = ref<Store[]>([
-  { 
-    id: 1, 
-    name: '北京朝阳店', 
-    location: '北京市朝阳区建国路88号', 
-    manager: '张明', 
-    phone: '13800138000',
-    staffList: [
-      { name: '李四', position: '销售' },
-      { name: '王五', position: '收银' }
-    ],
-    username: 'beijing_store',
-    password: '******',
-    status: 'active' 
-  },
-  { 
-    id: 2, 
-    name: '上海浦东店', 
-    location: '上海市浦东新区陆家嘴88号', 
-    manager: '李华', 
-    phone: '13900139000',
-    staffList: [
-      { name: '张三', position: '销售' },
-      { name: '李四', position: '收银' }
-    ],
-    username: 'shanghai_store',
-    password: '******',
-    status: 'active' 
-  },
-  { 
-    id: 3, 
-    name: '广州天河店', 
-    location: '广州市天河区天河路88号', 
-    manager: '王芳', 
-    phone: '13700137000',
-    staffList: [
-      { name: '王一', position: '销售' },
-      { name: '赵二', position: '收银' }
-    ],
-    username: 'guangzhou_store',
-    password: '******',
-    status: 'active' 
-  },
-  { 
-    id: 4, 
-    name: '深圳南山店', 
-    location: '深圳市南山区科技园88号', 
-    manager: '刘强', 
-    phone: '13600136000',
-    staffList: [
-      { name: '钱一', position: '销售' },
-      { name: '孙二', position: '收银' }
-    ],
-    username: 'shenzhen_store',
-    password: '******',
-    status: 'active' 
-  },
-  { 
-    id: 5, 
-    name: '杭州西湖店', 
-    location: '杭州市西湖区西湖路88号', 
-    manager: '陈静', 
-    phone: '13500135000',
-    staffList: [
-      { name: '周一', position: '销售' },
-      { name: '吴二', position: '收银' }
-    ],
-    username: 'hangzhou_store',
-    password: '******',
-    status: 'paused' 
-  },
-  { 
-    id: 6, 
-    name: '成都锦江店', 
-    location: '成都市锦江区春熙路88号', 
-    manager: '赵伟', 
-    phone: '13400134000',
-    staffList: [
-      { name: '郑一', position: '销售' },
-      { name: '王二', position: '收银' }
-    ],
-    username: 'chengdu_store',
-    password: '******',
-    status: 'renovating' 
+const stores = ref<Store[]>([])
+
+// 获取店铺列表
+const fetchStores = async () => {
+  try {
+    loading.value = true
+    const params = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      keyword: searchQuery.value || undefined,
+      status: undefined as StoreStatus | undefined
+    }
+    const response = await storeApi.getList(params)
+    stores.value = response.data.data.items
+    total.value = response.data.data.total
+  } catch (error) {
+    console.error('Failed to fetch stores:', error)
+    ElMessage.error('获取店铺列表失败')
+  } finally {
+    loading.value = false
   }
-])
+}
 
 // 计算店员数量
 const getStaffCount = (store: Store) => store.staffList.length
 
-// 搜索相关状态
-const showAdvancedSearch = ref(false)
-const searchForm = ref({
-  name: '',
-  manager: '',
-  staffCountRange: [0, 100],
-  status: 'all'
-})
-
-// 店铺状态选项
-const statusOptions = [
-  { label: '全部状态', value: 'all' },
-  { label: '正常运营', value: 'active' },
-  { label: '暂停营业', value: 'paused' },
-  { label: '装修中', value: 'renovating' }
-]
-
 // 筛选后的店铺列表
 const filteredStores = computed(() => {
-  let result = [...stores.value]
-  
-  // 快速搜索
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(store => 
-      store.name.toLowerCase().includes(query) ||
-      store.manager.toLowerCase().includes(query)
-    )
-  }
-  
-  // 高级搜索
-  if (showAdvancedSearch.value) {
-    if (searchForm.value.name) {
-      result = result.filter(store => 
-        store.name.toLowerCase().includes(searchForm.value.name.toLowerCase())
-      )
-    }
-    if (searchForm.value.manager) {
-      result = result.filter(store => 
-        store.manager.toLowerCase().includes(searchForm.value.manager.toLowerCase())
-      )
-    }
-    if (searchForm.value.status !== 'all') {
-      result = result.filter(store => store.status === searchForm.value.status)
-    }
-    result = result.filter(store => {
-      const staffCount = getStaffCount(store)
-      return staffCount >= searchForm.value.staffCountRange[0] &&
-             staffCount <= searchForm.value.staffCountRange[1]
-    })
-  }
-  
-  return result
+  return stores.value
 })
 
-// 计算属性
-const totalPages = computed(() => Math.ceil(filteredStores.value.length / pageSize.value))
-const paginatedStores = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredStores.value.slice(start, end)
-})
+// 分页数据
+const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
+const paginatedStores = computed(() => stores.value)
 
 // 方法
 const validatePageNumber = () => {
@@ -473,61 +351,66 @@ const validatePageNumber = () => {
   if (page < 1) page = 1
   if (page > totalPages.value) page = totalPages.value
   currentPage.value = page
+  fetchStores()
 }
 
-const handleEdit = (store: Store) => {
-  editingStore.value = store
-  showAddStore.value = true
+const handleEdit = async (store: Store) => {
+  try {
+    const response = await storeApi.getDetail(store.id)
+    editingStore.value = response.data.data
+    showAddStore.value = true
+  } catch (error) {
+    console.error('Failed to fetch store detail:', error)
+    ElMessage.error('获取店铺详情失败')
+  }
 }
 
-const handleDelete = (store: Store) => {
-  ElMessageBox.confirm('确定要删除该店铺吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    const index = stores.value.findIndex(s => s.id === store.id)
-    if (index > -1) {
-      stores.value.splice(index, 1)
-      ElMessage.success('删除成功')
+const handleDelete = async (store: Store) => {
+  try {
+    await ElMessageBox.confirm('确定要删除该店铺吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    await storeApi.delete(store.id)
+    ElMessage.success('删除成功')
+    fetchStores()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Failed to delete store:', error)
+      ElMessage.error('删除店铺失败')
     }
-  })
+  }
 }
 
-const handleStoreSubmit = (formData: IStoreForm) => {
-  if (editingStore.value) {
-    // 更新现有店铺
-    const index = stores.value.findIndex(s => s.id === editingStore.value!.id)
-    if (index > -1) {
-      stores.value[index] = { 
-        ...stores.value[index], 
-        ...formData
-      }
+const handleStoreSubmit = async (formData: IStoreForm) => {
+  try {
+    if (editingStore.value) {
+      // 更新现有店铺
+      await storeApi.update(editingStore.value.id, formData)
       ElMessage.success('更新成功')
+    } else {
+      // 添加新店铺
+      await storeApi.create(formData)
+      ElMessage.success('添加成功')
     }
-  } else {
-    // 添加新店铺
-    const newStore: Store = {
-      ...formData,
-      id: Math.max(0, ...stores.value.map(s => s.id)) + 1,
-      status: 'active' // 新店铺默认为正常运营状态
-    }
-    stores.value.push(newStore)
-    ElMessage.success('添加成功')
+    showAddStore.value = false
+    editingStore.value = null
+    fetchStores()
+  } catch (error) {
+    console.error('Failed to save store:', error)
+    ElMessage.error(editingStore.value ? '更新店铺失败' : '添加店铺失败')
   }
-  showAddStore.value = false
-  editingStore.value = null
 }
 
-// 重置搜索
-const resetSearch = () => {
-  searchQuery.value = ''
-  searchForm.value = {
-    name: '',
-    manager: '',
-    staffCountRange: [0, 100],
-    status: 'all'
-  }
-  currentPage.value = 1
-}
+// 监听分页和搜索变化
+watch([currentPage, pageSize, searchQuery], () => {
+  fetchStores()
+})
+
+// 在组件挂载时获取店铺列表
+onMounted(() => {
+  fetchStores()
+})
 </script> 

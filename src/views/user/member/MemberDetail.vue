@@ -169,22 +169,11 @@
 </template>
 
 <script lang="ts" setup>
+import type { Member } from '@/types/api/user/member'
+
 interface Props {
   visible: boolean
-  member?: {
-    id: number
-    name: string
-    phone: string
-    icCard: string
-    registerDate: string
-    status: '正常' | '停用'
-    cardImage?: string
-    notes?: string
-    remainingPoints?: number
-    icCardImage?: string
-    remainingProducts?: { id: number; name: string; quantity: number }[]
-    cardImages?: { front?: string; back?: string }
-  }
+  member?: Member
 }
 
 interface Emits {

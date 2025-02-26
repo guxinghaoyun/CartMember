@@ -260,79 +260,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import CardInitForm from './components/CardInitForm.vue'
+import type { CardForm } from '@/types/api/admin/card'
+import { cardApi } from '@/api/admin/card'
+import type { Card, CardStatus } from '@/types/api/admin/card'
 
 // 视图模式
 const viewMode = ref<'card' | 'list'>('card')
 
 // 状态
+const loading = ref(false)
 const showInitCard = ref(false)
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(6)
+const total = ref(0)
 
 // 卡片数据
-const cards = ref([
-  {
-    id: 1,
-    surfaceNumber: 'NO.100001',
-    internalNumber: 'RF8A7B2C3D',
-    store: '北京朝阳店',
-    memberName: '陈思远',
-    memberPhone: '13812345678',
-    initTime: '2023-12-01',
-    status: '正常'
-  },
-  {
-    id: 2,
-    surfaceNumber: 'NO.100002',
-    internalNumber: 'RF8A7B2C4E',
-    store: '上海浦东店',
-    memberName: '林雨婷',
-    memberPhone: '13923456789',
-    initTime: '2023-12-02',
-    status: '停用'
-  },
-  {
-    id: 3,
-    surfaceNumber: 'NO.100003',
-    internalNumber: 'RF8A7B2C5F',
-    store: '广州天河店',
-    memberName: '王小明',
-    memberPhone: '13534567890',
-    initTime: '2023-12-03',
-    status: '正常'
-  },
-  {
-    id: 4,
-    surfaceNumber: 'NO.100004',
-    internalNumber: 'RF8A7B2C6G',
-    store: '深圳南山店',
-    memberName: '张三丰',
-    memberPhone: '13645678901',
-    initTime: '2023-12-04',
-    status: '正常'
-  },
-  {
-    id: 5,
-    surfaceNumber: 'NO.100005',
-    internalNumber: 'RF8A7B2C7H',
-    store: '',
-    memberName: '',
-    memberPhone: '',
-    initTime: '2023-12-05',
-    status: '未激活'
+const cards = ref<Card[]>([])
+
+// 获取卡片列表
+const fetchCards = async () => {
+  try {
+    loading.value = true
+    const params = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      keyword: searchQuery.value || undefined,
+      status: undefined as CardStatus | undefined
+    }
+    const response = await cardApi.getList(params)
+    cards.value = response.data.data.items
+    total.value = response.data.data.total
+  } catch (error) {
+    console.error('Failed to fetch cards:', error)
+    ElMessage.error('获取卡片列表失败')
+  } finally {
+    loading.value = false
   }
-])
+}
 
 // 计算属性
-const totalPages = computed(() => Math.ceil(cards.value.length / pageSize.value))
-const paginatedCards = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return cards.value.slice(start, end)
-})
+const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
+const paginatedCards = computed(() => cards.value)
 
 // 方法
 const validatePageNumber = () => {
@@ -341,9 +313,10 @@ const validatePageNumber = () => {
   if (page < 1) page = 1
   if (page > totalPages.value) page = totalPages.value
   currentPage.value = page
+  fetchCards()
 }
 
-const getStatusIcon = (status: string) => {
+const getStatusIcon = (status: CardStatus) => {
   switch (status) {
     case '正常':
       return 'check'
@@ -356,7 +329,7 @@ const getStatusIcon = (status: string) => {
   }
 }
 
-const getStatusClass = (status: string) => {
+const getStatusClass = (status: CardStatus) => {
   switch (status) {
     case '正常':
       return 'text-green-600'
@@ -369,30 +342,62 @@ const getStatusClass = (status: string) => {
   }
 }
 
-const toggleCardStatus = (card: any) => {
+const toggleCardStatus = async (card: Card) => {
   // 如果是未激活状态，不允许手动切换状态
   if (card.status === '未激活') {
     return
   }
-  
-  // 只有在有店铺信息的情况下才能切换状态
-  if (card.store) {
-    card.status = card.status === '正常' ? '停用' : '正常'
+
+  try {
+    if (card.status === '正常') {
+      await cardApi.disable(card.id, '手动停用')
+      card.status = '停用'
+      ElMessage.success('卡片已停用')
+    } else {
+      await cardApi.activate(card.id, 0) // 0 表示不绑定会员
+      card.status = '正常'
+      ElMessage.success('卡片已启用')
+    }
+  } catch (error) {
+    console.error('Failed to toggle card status:', error)
+    ElMessage.error('操作失败')
+    // 恢复原状态
+    fetchCards()
   }
 }
 
-const handleCardInit = (cardData: any) => {
-  const newId = cards.value.length + 1
-  cards.value.push({
-    id: newId,
-    surfaceNumber: cardData.surfaceNumber,
-    internalNumber: cardData.internalNumber,
-    initTime: new Date().toISOString().split('T')[0],
-    status: '未激活',
-    store: '',
-    memberName: '',
-    memberPhone: ''
-  })
-  showInitCard.value = false
+const handleCardInit = async (formData: CardForm) => {
+  try {
+    const response = await cardApi.getList({
+      page: 1,
+      pageSize: 1,
+      keyword: formData.surfaceNumber
+    })
+    
+    // 检查卡号是否已存在
+    if (response.data.data.total > 0) {
+      ElMessage.error('卡面号码已存在')
+      return
+    }
+
+    // 创建新卡片
+    await cardApi.createCard(formData)
+    ElMessage.success('IC卡初始化成功')
+    showInitCard.value = false
+    fetchCards()
+  } catch (error) {
+    console.error('Failed to init card:', error)
+    ElMessage.error('IC卡初始化失败')
+  }
 }
+
+// 监听分页和搜索变化
+watch([currentPage, pageSize, searchQuery], () => {
+  fetchCards()
+})
+
+// 在组件挂载时获取卡片列表
+onMounted(() => {
+  fetchCards()
+})
 </script> 

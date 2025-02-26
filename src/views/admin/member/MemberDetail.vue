@@ -76,13 +76,13 @@
                         <div class="px-2.5 py-1.5 bg-orange-50 rounded-lg">
                           <div class="text-xs text-orange-600 mb-0.5">可提取商品</div>
                           <div class="text-sm font-medium text-gray-900">
-                            {{ memberInfo.products.reduce((total, product) => total + product.quantity, 0) }} 件
+                            {{ totalProducts }} 件
                           </div>
                         </div>
                         <div class="px-2.5 py-1.5 bg-purple-50 rounded-lg">
                           <div class="text-xs text-purple-600 mb-0.5">商品总积分</div>
                           <div class="text-sm font-medium text-gray-900">
-                            {{ memberInfo.products.reduce((total, product) => total + product.points * product.quantity, 0) }} 分
+                            {{ totalProductPoints }} 分
                           </div>
                         </div>
                       </div>
@@ -100,7 +100,7 @@
                     <div class="bg-gray-50 rounded-lg p-2.5">
                       <div class="text-xs text-gray-500 mb-1">IC卡号</div>
                       <template v-if="!isEditing">
-                        <div class="font-medium text-gray-900">{{ memberInfo.cardNo }}</div>
+                        <div class="font-medium text-gray-900">{{ memberInfo.surfaceNumber }}</div>
                       </template>
                       <template v-else>
                         <div class="flex gap-2">
@@ -118,7 +118,7 @@
                     <div class="bg-gray-50 rounded-lg p-2.5">
                       <div class="text-xs text-gray-500 mb-1">卡面号</div>
                       <template v-if="!isEditing">
-                        <div class="font-medium text-gray-900">{{ memberInfo.physicalNo }}</div>
+                        <div class="font-medium text-gray-900">{{ memberInfo.internalNumber }}</div>
                       </template>
                       <template v-else>
                         <el-input v-model="editForm.physicalNo" placeholder="卡面号" disabled />
@@ -171,7 +171,7 @@
                       <div class="space-y-1">
                         <div class="aspect-[1.586/1] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200">
                           <el-image
-                            :src="memberInfo.cardFrontImage || ''"
+                            :src="memberInfo.cardImages?.front || ''"
                             fit="cover"
                             class="w-full h-full"
                           >
@@ -202,7 +202,7 @@
                       <div class="space-y-1">
                         <div class="aspect-[1.586/1] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200">
                           <el-image
-                            :src="memberInfo.cardBackImage || ''"
+                            :src="memberInfo.cardImages?.back || ''"
                             fit="cover"
                             class="w-full h-full"
                           >
@@ -267,11 +267,11 @@
                   </div>
                   <div class="bg-purple-50 rounded-xl p-4">
                     <div class="text-sm text-purple-600">消费次数</div>
-                    <div class="text-2xl font-bold mt-2">{{ memberInfo.orderCount }}</div>
+                    <div class="text-2xl font-bold mt-2">{{ orderCount }}</div>
                   </div>
                   <div class="bg-orange-50 rounded-xl p-4">
                     <div class="text-sm text-orange-600">平均单次消费积分</div>
-                    <div class="text-2xl font-bold mt-2">{{ Math.round(memberInfo.totalPoints / memberInfo.orderCount) }}</div>
+                    <div class="text-2xl font-bold mt-2">{{ Math.round(memberInfo.totalPoints / orderCount) }}</div>
                   </div>
                 </div>
 
@@ -370,7 +370,7 @@
                             </button>
                             <button
                               class="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                              @click="handleDeleteProduct(product)"
+                              @click="handleDeleteProduct(product.id)"
                             >
                               <font-awesome-icon icon="trash" />
                             </button>
@@ -552,11 +552,11 @@
           <el-button 
             @click="() => { 
               showAdjustPointsDialog = false; 
-              adjustForm.points = undefined; 
+              adjustForm.points = 0; 
               adjustForm.type = 'add'; 
               adjustForm.reason = '';
               $nextTick(() => {
-                adjustForm.points = undefined;
+                adjustForm.points = 0;
               });
             }"
             class="!h-[44px] !rounded-xl !px-6"
@@ -599,7 +599,7 @@
                    class="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-100">
                 <div class="flex items-center gap-4 flex-1">
                   <el-checkbox 
-                    v-model="productForm.selectedProducts"
+                    v-model="productForm.products"
                     :label="item.id"
                     @change="(checked: boolean) => handleProductSelect(checked, item)"
                   />
@@ -640,10 +640,10 @@
         </div>
 
         <!-- 已选商品统计 -->
-        <div class="bg-blue-50 rounded-xl p-4" v-if="productForm.selectedProducts.length > 0">
+        <div class="bg-blue-50 rounded-xl p-4" v-if="productForm.products.length > 0">
           <div class="text-sm text-blue-600 font-medium mb-2">已选商品</div>
           <div class="text-sm text-gray-600">
-            共选择 {{ productForm.selectedProducts.length }} 种商品，
+            共选择 {{ productForm.products.length }} 种商品，
             总积分：{{ calculateTotalPoints() }}
           </div>
         </div>
@@ -652,7 +652,7 @@
       <template #footer>
         <div class="flex justify-end gap-3 px-1">
           <el-button 
-            @click="() => { showAddProductDialog = false; productForm.selectedProducts = [] }"
+            @click="() => { showAddProductDialog = false; productForm.products = [] }"
             class="!h-[44px] !rounded-xl !px-6"
             plain
           >取消</el-button>
@@ -660,7 +660,7 @@
             type="primary" 
             @click="handleAddProducts"
             class="!h-[44px] !rounded-xl !px-6 !bg-blue-500 !border-blue-500 hover:!bg-blue-600"
-            :disabled="productForm.selectedProducts.length === 0"
+            :disabled="productForm.products.length === 0"
           >
             <div class="flex items-center gap-2">
               <font-awesome-icon icon="plus-circle" />
@@ -751,11 +751,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadFile } from 'element-plus'
 import dayjs from 'dayjs'
+import { memberApi } from '@/api/admin/member'
+import type { Member, AdjustPointsRequest, AddProductsRequest } from '@/types/api/admin/member'
 
 const router = useRouter()
 const route = useRoute()
@@ -777,14 +779,14 @@ const editForm = reactive({
   registerStore: ''
 })
 
-const adjustForm = reactive({
+const adjustForm = reactive<AdjustPointsRequest>({
   type: 'add',
-  points: undefined as number | undefined,
+  points: 0,
   reason: ''
 })
 
-const productForm = reactive({
-  selectedProducts: [] as { id: number; quantity: number }[]
+const productForm = reactive<AddProductsRequest>({
+  products: []
 })
 
 const recordForm = reactive({
@@ -875,209 +877,59 @@ const availableProducts = ref([
   }
 ])
 
-interface Product {
-  id: number
-  name: string
-  quantity: number
-  points: number
-  image: string
-  stock: number
-}
-
-interface Order {
-  id: string
-  points: number
-  usedPoints: number
-  date: string
-  store: string
-}
-
-interface MemberInfo {
-  id: number
-  name: string
-  phone: string
-  points: number
-  totalPoints: number
-  registerDate: string
-  lastActive: string
-  orderCount: number
-  orders: Order[]
-  cardNo: string
-  physicalNo: string
-  products: Product[]
-  cardFrontImage?: string
-  cardBackImage?: string
-  pickupRecords?: { productId: number; quantity: number; date: string; store: string }[]
-  registerStore: string
-}
-
-// 定义API响应类型
-interface CardImagesResponse {
-  frontImage: string
-  backImage: string
-}
-
-// 模拟会员详情数据
-const memberInfo = ref<MemberInfo>({
+// 会员信息
+const memberInfo = ref<Member>({
   id: Number(route.params.id),
-  name: '张三',
-  phone: '13800138000',
-  points: 5000,
-  totalPoints: 15800,
-  registerDate: '2023-01-15',
-  lastActive: '2024-03-20',
-  orderCount: 12,
-  cardNo: '8888 8888 8888 8888',
-  physicalNo: '0123456789',
-  products: [
-    {
-      id: 1,
-      name: '高级面部护理套装',
-      quantity: 2,
-      points: 1000,
-      image: 'https://placeholder.com/150',
-      stock: 5
-    },
-    {
-      id: 2,
-      name: '美白精华液',
-      quantity: 1,
-      points: 500,
-      image: 'https://placeholder.com/150',
-      stock: 8
-    }
-  ],
-  orders: [
-    {
-      id: 'DD20240320001',
-      points: 258,
-      usedPoints: 2580,
-      date: '2024-03-20',
-      store: '天河城分店'
-    },
-    {
-      id: 'DD20240315002',
-      points: 168,
-      usedPoints: 1680,
-      date: '2024-03-15',
-      store: '天河城分店'
-    },
-    {
-      id: 'DD20240310003',
-      points: 98,
-      usedPoints: 980,
-      date: '2024-03-10',
-      store: '天河城分店'
-    },
-    {
-      id: 'DD20240305004',
-      points: 320,
-      usedPoints: 3200,
-      date: '2024-03-05',
-      store: '北京路分店'
-    },
-    {
-      id: 'DD20240301005',
-      points: 180,
-      usedPoints: 1800,
-      date: '2024-03-01',
-      store: '珠江新城分店'
-    },
-    {
-      id: 'DD20240225006',
-      points: 420,
-      usedPoints: 4200,
-      date: '2024-02-25',
-      store: '上下九分店'
-    },
-    {
-      id: 'DD20240220007',
-      points: 150,
-      usedPoints: 1500,
-      date: '2024-02-20',
-      store: '天河城分店'
-    },
-    {
-      id: 'DD20240215008',
-      points: 280,
-      usedPoints: 2800,
-      date: '2024-02-15',
-      store: '北京路分店'
-    },
-    {
-      id: 'DD20240210009',
-      points: 360,
-      usedPoints: 3600,
-      date: '2024-02-10',
-      store: '珠江新城分店'
-    },
-    {
-      id: 'DD20240205010',
-      points: 195,
-      usedPoints: 1950,
-      date: '2024-02-05',
-      store: '上下九分店'
-    }
-  ],
-  cardFrontImage: '',
-  cardBackImage: '',
-  pickupRecords: [
-    { productId: 1, quantity: 2, date: '2024-03-20', store: '天河城分店' },
-    { productId: 2, quantity: 1, date: '2024-03-20', store: '天河城分店' },
-    { productId: 3, quantity: 3, date: '2024-03-15', store: '北京路分店' },
-    { productId: 4, quantity: 1, date: '2024-03-10', store: '珠江新城分店' },
-    { productId: 5, quantity: 2, date: '2024-03-05', store: '上下九分店' },
-    { productId: 6, quantity: 1, date: '2024-02-28', store: '天河城分店' },
-    { productId: 7, quantity: 2, date: '2024-02-25', store: '北京路分店' },
-    { productId: 8, quantity: 1, date: '2024-02-20', store: '珠江新城分店' },
-    { productId: 9, quantity: 3, date: '2024-02-15', store: '上下九分店' },
-    { productId: 10, quantity: 2, date: '2024-02-10', store: '天河城分店' }
-  ],
-  registerStore: '天河城分店'
+  name: '',
+  phone: '',
+  points: 0,
+  totalPoints: 0,
+  surfaceNumber: '',
+  internalNumber: '',
+  registerDate: '',
+  status: '正常',
+  lastActive: '',
+  registerStore: '',
+  orderCount: 0,
+  products: [],
+  orders: [],
+  pickupRecords: [],
+  cardImages: {
+    front: '',
+    back: ''
+  }
 })
 
-// 获取IC卡照片
-const fetchCardImages = async () => {
+// 计算属性
+const totalProducts = computed(() => 
+  memberInfo.value.products?.reduce((total, product) => total + product.quantity, 0) ?? 0
+)
+
+const totalProductPoints = computed(() => 
+  memberInfo.value.products?.reduce((total, product) => total + product.points * product.quantity, 0) ?? 0
+)
+
+const orderCount = computed(() => memberInfo.value.orders?.length ?? 0)
+
+// 获取会员详情
+const fetchMemberDetail = async () => {
   try {
-    // 这里应该调用后端API获取IC卡照片
-    // 模拟API调用
-    const response = await new Promise<CardImagesResponse>(resolve => setTimeout(() => {
-      resolve({
-        frontImage: 'https://example.com/card-front.jpg',
-        backImage: 'https://example.com/card-back.jpg'
-      })
-    }, 1000))
-    
-    memberInfo.value.cardFrontImage = response.frontImage
-    memberInfo.value.cardBackImage = response.backImage
+    const response = await memberApi.getDetail(memberInfo.value.id)
+    memberInfo.value = response.data.data
   } catch (error) {
-    console.error('获取IC卡照片失败:', error)
+    console.error('获取会员详情失败:', error)
+    ElMessage.error('获取会员详情失败')
   }
 }
-
-// 在组件挂载时获取IC卡照片
-onMounted(() => {
-  fetchCardImages()
-})
-
-// 监听对话框显示状态，重置表单
-watch(showAdjustPointsDialog, (newVal) => {
-  if (newVal) {
-    // 打开对话框时重置表单
-    adjustForm.points = undefined
-    adjustForm.type = 'add'
-    adjustForm.reason = ''
-  }
-})
 
 // 开始编辑
 const handleEdit = () => {
   isEditing.value = true
   editForm.name = memberInfo.value.name
   editForm.phone = memberInfo.value.phone
-  editForm.cardNo = memberInfo.value.cardNo
-  editForm.physicalNo = memberInfo.value.physicalNo
-  editForm.registerStore = memberInfo.value.registerStore
+  editForm.cardNo = memberInfo.value.surfaceNumber
+  editForm.physicalNo = memberInfo.value.internalNumber
+  editForm.registerStore = memberInfo.value.registerStore || ''
 }
 
 // 取消编辑
@@ -1088,15 +940,14 @@ const handleCancel = () => {
 // 保存编辑
 const handleSave = async () => {
   try {
-    // 这里应该调用API保存数据
-    memberInfo.value = {
-      ...memberInfo.value,
+    const response = await memberApi.update(memberInfo.value.id, {
       name: editForm.name,
       phone: editForm.phone,
-      cardNo: editForm.cardNo,
-      physicalNo: editForm.physicalNo,
+      surfaceNumber: editForm.cardNo,
+      internalNumber: editForm.physicalNo,
       registerStore: editForm.registerStore
-    }
+    })
+    memberInfo.value = response.data.data
     isEditing.value = false
     ElMessage.success('保存成功')
   } catch (error) {
@@ -1107,23 +958,8 @@ const handleSave = async () => {
 // 调整积分
 const handleAdjustPoints = async () => {
   try {
-    if (adjustForm.points === undefined) {
-      ElMessage.warning('请输入调整积分')
-      return
-    }
-    const points = adjustForm.type === 'add' ? adjustForm.points : -adjustForm.points
-    memberInfo.value.points += points
-    memberInfo.value.totalPoints += points > 0 ? points : 0
-
-    // 添加积分记录
-    memberInfo.value.orders.unshift({
-      id: 'DD' + dayjs().format('YYYYMMDDHHmmss'),
-      points: points > 0 ? points : 0,
-      usedPoints: points < 0 ? -points : 0,
-      date: dayjs().format('YYYY-MM-DD'),
-      store: '系统调整'
-    })
-
+    const response = await memberApi.adjustPoints(memberInfo.value.id, adjustForm)
+    memberInfo.value = response.data.data
     showAdjustPointsDialog.value = false
     ElMessage.success('积分调整成功')
   } catch (error) {
@@ -1134,31 +970,31 @@ const handleAdjustPoints = async () => {
 // 处理商品选择
 const handleProductSelect = (checked: boolean, product: { id: number; points: number; stock: number }) => {
   if (checked) {
-    productForm.selectedProducts.push({
+    productForm.products.push({
       id: product.id,
       quantity: 1
     })
   } else {
-    const index = productForm.selectedProducts.findIndex(p => p.id === product.id)
+    const index = productForm.products.findIndex(p => p.id === product.id)
     if (index !== -1) {
-      productForm.selectedProducts.splice(index, 1)
+      productForm.products.splice(index, 1)
     }
   }
 }
 
 // 检查商品是否被选中
 const isProductSelected = (productId: number) => {
-  return productForm.selectedProducts.some(p => p.id === productId)
+  return productForm.products.some(p => p.id === productId)
 }
 
 // 获取已选商品的数据
 const getSelectedProduct = (productId: number) => {
-  return productForm.selectedProducts.find(p => p.id === productId) || { quantity: 1 }
+  return productForm.products.find(p => p.id === productId) || { quantity: 1 }
 }
 
 // 处理数量变更
 const handleQuantityChange = (productId: number, value: number | undefined) => {
-  const product = productForm.selectedProducts.find(p => p.id === productId)
+  const product = productForm.products.find(p => p.id === productId)
   if (product && value !== undefined) {
     product.quantity = value
   }
@@ -1166,7 +1002,7 @@ const handleQuantityChange = (productId: number, value: number | undefined) => {
 
 // 计算总积分
 const calculateTotalPoints = () => {
-  return productForm.selectedProducts.reduce((total, selected) => {
+  return productForm.products.reduce((total, selected) => {
     const product = availableProducts.value.find(p => p.id === selected.id)
     return total + (product ? product.points * selected.quantity : 0)
   }, 0)
@@ -1175,31 +1011,10 @@ const calculateTotalPoints = () => {
 // 添加商品
 const handleAddProducts = async () => {
   try {
-    if (productForm.selectedProducts.length === 0) {
-      ElMessage.warning('请选择商品')
-      return
-    }
-    
-    for (const selected of productForm.selectedProducts) {
-      const product = availableProducts.value.find(p => p.id === selected.id)
-      if (!product) continue
-
-      // 检查商品是否已存在
-      const existingProduct = memberInfo.value.products.find(p => p.id === product.id)
-      if (existingProduct) {
-        // 如果商品已存在，更新数量
-        existingProduct.quantity += selected.quantity
-      } else {
-        // 如果商品不存在，添加新商品
-        memberInfo.value.products.push({
-          ...product,
-          quantity: selected.quantity
-        })
-      }
-    }
-
+    const response = await memberApi.addProducts(memberInfo.value.id, productForm)
+    memberInfo.value = response.data.data
     showAddProductDialog.value = false
-    productForm.selectedProducts = []
+    productForm.products = []
     ElMessage.success('商品添加成功')
   } catch (error) {
     ElMessage.error('商品添加失败')
@@ -1207,26 +1022,32 @@ const handleAddProducts = async () => {
 }
 
 // 编辑商品
-const handleEditProduct = (product: Product) => {
+const handleEditProduct = (product: { id: number; quantity: number; points: number }) => {
   // TODO: 实现商品编辑功能
 }
 
 // 删除商品
-const handleDeleteProduct = async (product: Product) => {
+const handleDeleteProduct = async (productId: number) => {
   try {
     await ElMessageBox.confirm('确定要删除该商品吗？', '提示', {
       type: 'warning'
     })
-    memberInfo.value.products = memberInfo.value.products.filter(p => p.id !== product.id)
+    await memberApi.removeProduct(memberInfo.value.id, productId)
+    memberInfo.value.products = memberInfo.value.products?.filter(p => p.id !== productId)
     ElMessage.success('商品删除成功')
   } catch (error) {
-    // 用户取消删除
+    if (error !== 'cancel') {
+      ElMessage.error('商品删除失败')
+    }
   }
 }
 
 // 添加积分记录
 const handleAddRecord = async () => {
   try {
+    if (!memberInfo.value.orders) {
+      memberInfo.value.orders = []
+    }
     memberInfo.value.orders.unshift({
       id: 'DD' + dayjs().format('YYYYMMDDHHmmss'),
       points: recordForm.points,
@@ -1242,13 +1063,15 @@ const handleAddRecord = async () => {
 }
 
 // 删除积分记录
-const handleDeleteRecord = async (order: Order) => {
+const handleDeleteRecord = async (order: { id: string; points: number; usedPoints: number; date: string; store: string }) => {
   try {
     await ElMessageBox.confirm('确定要删除该记录吗？', '提示', {
       type: 'warning'
     })
-    memberInfo.value.orders = memberInfo.value.orders.filter(o => o.id !== order.id)
-    ElMessage.success('记录删除成功')
+    if (memberInfo.value.orders) {
+      memberInfo.value.orders = memberInfo.value.orders.filter(o => o.id !== order.id)
+      ElMessage.success('记录删除成功')
+    }
   } catch (error) {
     // 用户取消删除
   }
@@ -1258,18 +1081,10 @@ const handleDeleteRecord = async (order: Order) => {
 const handleReadCard = async () => {
   try {
     ElMessage.info('正在读取IC卡...')
-    // 模拟读卡延迟
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 模拟读卡结果
-    const cardInfo = {
-      cardNo: '8888 8888 8888 9999',
-      physicalNo: '0123456999'
-    }
-    
+    const response = await memberApi.readCardInfo()
+    const cardInfo = response.data.data
     editForm.cardNo = cardInfo.cardNo
     editForm.physicalNo = cardInfo.physicalNo
-    
     ElMessage.success('IC卡读取成功')
   } catch (error) {
     ElMessage.error('IC卡读取失败')
@@ -1308,29 +1123,39 @@ const handleImageChange = async (file: UploadFile, type: 'front' | 'back') => {
   }
   
   try {
-    // 转换为 base64 用于预览
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      if (e.target?.result) {
-        // 这里应该调用后端API上传图片
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        if (type === 'front') {
-          memberInfo.value.cardFrontImage = e.target.result as string
-          ElMessage.success('正面照片上传成功')
-        } else {
-          memberInfo.value.cardBackImage = e.target.result as string
-          ElMessage.success('背面照片上传成功')
-        }
+    const response = await memberApi.updateCardImage(memberInfo.value.id, type, file.raw)
+    if (type === 'front') {
+      memberInfo.value.cardImages = {
+        ...memberInfo.value.cardImages,
+        front: response.data.data.url
       }
+      ElMessage.success('正面照片上传成功')
+    } else {
+      memberInfo.value.cardImages = {
+        ...memberInfo.value.cardImages,
+        back: response.data.data.url
+      }
+      ElMessage.success('背面照片上传成功')
     }
-    reader.readAsDataURL(file.raw)
   } catch (error) {
     console.error('上传图片失败:', error)
     ElMessage.error('上传图片失败，请重试')
   }
 }
+
+// 在组件挂载时获取会员详情
+onMounted(() => {
+  fetchMemberDetail()
+})
+
+// 监听对话框显示状态，重置表单
+watch(showAdjustPointsDialog, (newVal) => {
+  if (newVal) {
+    adjustForm.points = 0
+    adjustForm.type = 'add'
+    adjustForm.reason = ''
+  }
+})
 </script>
 
 <style scoped>

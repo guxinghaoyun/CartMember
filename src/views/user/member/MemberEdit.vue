@@ -205,7 +205,8 @@
 import { ref, watch } from 'vue'
 import type { FormInstance, FormRules, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import type { Member } from '@/types'
+import type { Member, UpdateMemberRequest } from '@/types/api/user/member'
+import { memberApi } from '@/api/user/member'
 
 interface Props {
   visible: boolean
@@ -295,11 +296,37 @@ const rules: FormRules = {
   ]
 }
 
-// 读取IC卡
-const handleReadCard = () => {
-  // TODO: 实现读卡逻辑
-  form.value.icCard = '8800 2233 ' + Math.floor(Math.random() * 10000).toString().padStart(4, '0')
-  ElMessage.success('IC卡读取成功')
+// 处理图片变更
+const handleImageChange = async (file: UploadFile, side: 'front' | 'back') => {
+  if (!file || !file.raw) return
+  
+  // 验证文件类型
+  const isImage = file.raw.type.startsWith('image/')
+  if (!isImage) {
+    ElMessage.error('请上传图片文件')
+    return
+  }
+  
+  // 验证文件大小（2MB）
+  const isLt2M = file.raw.size / 1024 / 1024 < 2
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return
+  }
+  
+  try {
+    const response = await memberApi.uploadCardImage(file.raw)
+    const imageUrl = (response.data as unknown) as { url: string }
+    form.value.cardImages[side] = imageUrl.url
+  } catch (error) {
+    console.error('上传图片失败:', error)
+    ElMessage.error('上传图片失败')
+  }
+}
+
+// 删除图片
+const handleRemoveImage = (side: 'front' | 'back') => {
+  form.value.cardImages[side] = ''
 }
 
 // 提交表单
@@ -311,30 +338,26 @@ const handleSubmit = async () => {
     loading.value = true
     
     // 构造更新数据
-    const updatedMember: Member = {
-      id: form.value.id,
+    const updateData: UpdateMemberRequest = {
       name: form.value.name,
       phone: form.value.phone,
-      icCard: form.value.icCard,
-      registerDate: form.value.registerDate,
       status: form.value.status,
-      cardImages: (form.value.cardImages.front || form.value.cardImages.back) 
-        ? form.value.cardImages 
-        : undefined,
-      notes: form.value.notes || undefined,
-      remainingPoints: form.value.remainingPoints,
-      remainingProducts: props.member?.remainingProducts
+      cardImages: form.value.cardImages,
+      notes: form.value.notes
     }
     
-    // TODO: 调用API更新会员数据
-    await new Promise(resolve => setTimeout(resolve, 500)) // 模拟API调用
+    const response = await memberApi.updateMember(form.value.id, updateData)
+    const member = (response.data as unknown) as Member
     
-    emit('success', updatedMember)
+    emit('success', member)
     handleClose()
     ElMessage.success('会员信息更新成功')
     
   } catch (error) {
     console.error('表单验证失败:', error)
+    if (error !== 'cancel') {
+      ElMessage.error('更新会员信息失败')
+    }
   } finally {
     loading.value = false
   }
@@ -359,40 +382,6 @@ const handleClose = () => {
     remainingPoints: 0
   }
   formRef.value?.resetFields()
-}
-
-// 处理图片变更
-const handleImageChange = (file: UploadFile, side: 'front' | 'back') => {
-  if (!file || !file.raw) return
-  
-  // 验证文件类型
-  const isImage = file.raw.type.startsWith('image/')
-  if (!isImage) {
-    ElMessage.error('请上传图片文件')
-    return
-  }
-  
-  // 验证文件大小（2MB）
-  const isLt2M = file.raw.size / 1024 / 1024 < 2
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB!')
-    return
-  }
-  
-  // 转换为 base64 用于预览
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    if (e.target?.result) {
-      form.value.cardImages[side] = e.target.result as string
-    }
-  }
-  reader.readAsDataURL(file.raw)
-}
-
-// 删除图片
-const handleRemoveImage = (side: 'front' | 'back') => {
-  form.value.cardImages[side] = ''
-  ElMessage.success('图片已删除')
 }
 </script>
 

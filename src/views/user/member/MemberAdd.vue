@@ -65,15 +65,6 @@
               </div>
             </el-form-item>
 
-            <!-- 所属店铺 -->
-            <el-form-item label="所属店铺" prop="storeName" class="!mb-0">
-              <el-input 
-                v-model="form.storeName" 
-                placeholder="当前店铺"
-                :disabled="true"
-                class="!w-full !bg-gray-50" />
-            </el-form-item>
-
             <!-- 卡片状态 -->
             <el-form-item label="卡片状态" prop="status" class="!mb-0">
               <el-radio-group v-model="form.status" class="!w-full flex gap-4">
@@ -93,50 +84,101 @@
             </el-form-item>
 
             <!-- 卡面图片 -->
-            <el-form-item label="IC卡面图片" prop="cardImage" class="!mb-0">
-              <div class="space-y-2">
-                <el-upload
-                  class="w-full"
-                  action="#"
-                  :auto-upload="false"
-                  :show-file-list="false"
-                  accept="image/*"
-                  :on-change="handleImageChange">
-                  <template #trigger>
-                    <div 
-                      class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-white"
-                      :class="{'border-indigo-500': form.cardImage}">
-                      <div v-if="!form.cardImage" class="space-y-2">
-                        <font-awesome-icon icon="image" class="text-3xl text-gray-400" />
-                        <div class="text-sm text-gray-500">
-                          点击或拖拽图片上传
-                          <div class="text-xs">支持 jpg、png 格式，大小不超过 2MB</div>
+            <el-form-item label="IC卡面图片" prop="cardImages" class="!mb-0">
+              <div class="grid grid-cols-2 gap-4">
+                <!-- 正面图片 -->
+                <div class="space-y-2">
+                  <div class="text-sm text-gray-500">正面</div>
+                  <el-upload
+                    class="w-full"
+                    action="#"
+                    :auto-upload="false"
+                    :show-file-list="false"
+                    accept="image/*"
+                    :on-change="(file: UploadFile) => handleImageChange(file, 'front')">
+                    <template #trigger>
+                      <div 
+                        class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-white"
+                        :class="{'border-indigo-500': form.cardImages?.front}">
+                        <div v-if="!form.cardImages?.front" class="space-y-2">
+                          <font-awesome-icon icon="image" class="text-3xl text-gray-400" />
+                          <div class="text-sm text-gray-500">
+                            点击或拖拽上传正面图片
+                            <div class="text-xs">支持 jpg、png 格式，大小不超过 2MB</div>
+                          </div>
+                        </div>
+                        <div v-else class="relative group">
+                          <img 
+                            :src="form.cardImages.front" 
+                            class="w-full h-32 object-contain rounded-lg"
+                            alt="IC卡正面预览" 
+                          />
+                          <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="text-white text-sm">点击更换图片</span>
+                          </div>
                         </div>
                       </div>
-                      <div v-else class="relative group">
-                        <img 
-                          :src="form.cardImage" 
-                          class="w-full h-32 object-cover rounded-lg"
-                          alt="卡面预览" 
-                        />
-                        <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span class="text-white text-sm">点击更换图片</span>
-                        </div>
-                      </div>
+                    </template>
+                  </el-upload>
+                  <transition name="el-fade-in-linear">
+                    <div v-if="form.cardImages?.front" class="flex justify-end">
+                      <el-button 
+                        type="danger" 
+                        link
+                        @click="handleRemoveImage('front')">
+                        <font-awesome-icon icon="trash" class="mr-1" />
+                        删除正面图片
+                      </el-button>
                     </div>
-                  </template>
-                </el-upload>
-                <transition name="el-fade-in-linear">
-                  <div v-if="form.cardImage" class="flex justify-end">
-                    <el-button 
-                      type="danger" 
-                      link
-                      @click="handleRemoveImage">
-                      <font-awesome-icon icon="trash" class="mr-1" />
-                      删除图片
-                    </el-button>
-                  </div>
-                </transition>
+                  </transition>
+                </div>
+
+                <!-- 背面图片 -->
+                <div class="space-y-2">
+                  <div class="text-sm text-gray-500">背面</div>
+                  <el-upload
+                    class="w-full"
+                    action="#"
+                    :auto-upload="false"
+                    :show-file-list="false"
+                    accept="image/*"
+                    :on-change="(file: UploadFile) => handleImageChange(file, 'back')">
+                    <template #trigger>
+                      <div 
+                        class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-white"
+                        :class="{'border-indigo-500': form.cardImages?.back}">
+                        <div v-if="!form.cardImages?.back" class="space-y-2">
+                          <font-awesome-icon icon="image" class="text-3xl text-gray-400" />
+                          <div class="text-sm text-gray-500">
+                            点击或拖拽上传背面图片
+                            <div class="text-xs">支持 jpg、png 格式，大小不超过 2MB</div>
+                          </div>
+                        </div>
+                        <div v-else class="relative group">
+                          <img 
+                            :src="form.cardImages.back" 
+                            class="w-full h-32 object-contain rounded-lg"
+                            alt="IC卡背面预览" 
+                          />
+                          <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="text-white text-sm">点击更换图片</span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </el-upload>
+                  <transition name="el-fade-in-linear">
+                    <div v-if="form.cardImages?.back" class="flex justify-end">
+                      <el-button 
+                        type="danger" 
+                        link
+                        @click="handleRemoveImage('back')">
+                        <font-awesome-icon icon="trash" class="mr-1" />
+                        删除背面图片
+                      </el-button>
+                    </div>
+                  </transition>
+                </div>
               </div>
             </el-form-item>
           </div>
@@ -162,9 +204,10 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
+import type { FormInstance, FormRules, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import type { UploadFile } from 'element-plus'
+import type { Member, CreateMemberRequest } from '@/types/api/user/member'
+import { memberApi } from '@/api/user/member'
 
 interface Props {
   visible: boolean
@@ -172,7 +215,7 @@ interface Props {
 
 interface Emits {
   (e: 'update:visible', value: boolean): void
-  (e: 'success', member: any): void
+  (e: 'success', member: Member): void
 }
 
 const props = defineProps<Props>()
@@ -185,13 +228,15 @@ const formRef = ref<FormInstance>()
 const loading = ref(false)
 
 // 表单数据
-const form = ref({
+const form = ref<CreateMemberRequest>({
   name: '',
   phone: '',
   icCard: '',
-  storeName: '总店',
-  status: '正常' as '正常' | '停用',
-  cardImage: ''
+  status: '正常',
+  cardImages: {
+    front: '',
+    back: ''
+  }
 })
 
 // 表单验证规则
@@ -207,9 +252,6 @@ const rules: FormRules = {
   icCard: [
     { required: true, message: '请输入IC卡号', trigger: 'blur' }
   ],
-  storeName: [
-    { required: true, message: '店铺名称不能为空', trigger: 'blur' }
-  ],
   status: [
     { required: true, message: '请选择卡片状态', trigger: 'change' }
   ]
@@ -223,7 +265,7 @@ const handleReadCard = () => {
 }
 
 // 处理图片变更
-const handleImageChange = (file: UploadFile) => {
+const handleImageChange = async (file: UploadFile, side: 'front' | 'back') => {
   if (!file || !file.raw) return
   
   // 验证文件类型
@@ -240,17 +282,23 @@ const handleImageChange = (file: UploadFile) => {
     return
   }
   
-  // 转换为 base64 用于预览
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    form.value.cardImage = e.target?.result as string
+  try {
+    const response = await memberApi.uploadCardImage(file.raw)
+    const imageUrl = (response.data as unknown) as { url: string }
+    if (form.value.cardImages) {
+      form.value.cardImages[side] = imageUrl.url
+    }
+  } catch (error) {
+    console.error('上传图片失败:', error)
+    ElMessage.error('上传图片失败')
   }
-  reader.readAsDataURL(file.raw)
 }
 
 // 删除图片
-const handleRemoveImage = () => {
-  form.value.cardImage = ''
+const handleRemoveImage = (side: 'front' | 'back') => {
+  if (form.value.cardImages) {
+    form.value.cardImages[side] = ''
+  }
 }
 
 // 提交表单
@@ -261,21 +309,8 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     loading.value = true
     
-    // 构造会员数据
-    const currentDate = new Date().toISOString().split('T')[0]
-    const member = {
-      id: Date.now(),
-      name: form.value.name,
-      phone: form.value.phone,
-      icCard: form.value.icCard,
-      storeName: form.value.storeName,
-      registerDate: currentDate,
-      status: form.value.status,
-      cardImage: form.value.cardImage || undefined
-    }
-    
-    // TODO: 调用API保存会员数据
-    await new Promise(resolve => setTimeout(resolve, 500)) // 模拟API调用
+    const response = await memberApi.createMember(form.value)
+    const member = (response.data as unknown) as Member
     
     emit('success', member)
     handleClose()
@@ -283,6 +318,9 @@ const handleSubmit = async () => {
     
   } catch (error) {
     console.error('表单验证失败:', error)
+    if (error !== 'cancel') {
+      ElMessage.error('添加会员失败')
+    }
   } finally {
     loading.value = false
   }
@@ -296,9 +334,11 @@ const handleClose = () => {
     name: '',
     phone: '',
     icCard: '',
-    storeName: '总店',
     status: '正常',
-    cardImage: ''
+    cardImages: {
+      front: '',
+      back: ''
+    }
   }
   formRef.value?.resetFields()
 }

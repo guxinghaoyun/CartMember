@@ -6,7 +6,7 @@
         <div class="flex justify-between items-start">
           <div>
             <p class="text-blue-100 text-sm font-medium">会员总数</p>
-            <p class="text-4xl font-bold mt-3">{{ members.length }}</p>
+            <p class="text-4xl font-bold mt-3">{{ total }}</p>
           </div>
           <div class="w-12 h-12 rounded-xl bg-blue-400 bg-opacity-30 flex items-center justify-center backdrop-blur-sm">
             <font-awesome-icon icon="users" class="text-2xl" />
@@ -51,99 +51,97 @@
       </div>
     </div>
 
-    <!-- 会员列表 -->
-    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-      <!-- 顶部工具栏 -->
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center p-6 border-b border-gray-100 gap-4">
-        <div class="flex items-center gap-4">
-          <h2 class="text-xl font-medium flex items-center gap-3">
-            <font-awesome-icon icon="users" class="text-blue-600" />
-            会员管理
-          </h2>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-4">
+    <!-- 搜索和操作栏 -->
+    <div class="bg-white rounded-xl p-6 shadow-sm">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
           <div class="relative">
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="搜索会员姓名/手机号"
-              class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
-            >
+              placeholder="搜索会员姓名/手机号/卡号"
+              class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+              @keyup.enter="handleSearch"
+            />
             <font-awesome-icon icon="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
+          <button
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            @click="handleSearch"
+          >
+            搜索
+          </button>
         </div>
       </div>
+    </div>
 
-      <!-- 会员列表表格 -->
+    <!-- 会员列表 -->
+    <div class="bg-white rounded-xl shadow-sm">
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">IC卡信息</th>
-              <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">会员信息</th>
-              <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">手机号</th>
-              <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">当前积分</th>
-              <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">累计积分</th>
-              <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">注册时间</th>
-              <th class="px-6 py-4 text-left text-sm font-medium text-gray-500">操作</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                会员信息
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                卡号
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                积分
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                注册日期
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                操作
+              </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr v-for="member in filteredMembers" :key="member.id" class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <font-awesome-icon icon="credit-card" class="text-blue-600" />
-                  </div>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="member in filteredMembers" :key="member.id" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
                   <div>
-                    <div class="font-medium">{{ member.surfaceNumber }}</div>
-                    <div class="text-sm text-gray-500">内部号: {{ member.internalNumber }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ member.name }}</div>
+                    <div class="text-sm text-gray-500">{{ member.phone }}</div>
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <font-awesome-icon icon="user" class="text-blue-600" />
-                  </div>
-                  <div>
-                    <div class="font-medium">{{ member.name }}</div>
-                    <div class="text-sm text-gray-500">ID: {{ member.id }}</div>
-                  </div>
-                </div>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ member.surfaceNumber }}</div>
+                <div class="text-sm text-gray-500">{{ member.internalNumber }}</div>
               </td>
-              <td class="px-6 py-4">{{ member.phone }}</td>
-              <td class="px-6 py-4">{{ member.points }}</td>
-              <td class="px-6 py-4">{{ member.totalPoints }}</td>
-              <td class="px-6 py-4">{{ member.registerDate }}</td>
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-2">
-                  <button
-                    class="!rounded-lg px-3 py-1.5 text-blue-600 hover:bg-blue-50 transition-colors"
-                    @click="handleViewDetails(member)"
-                  >
-                    <font-awesome-icon icon="eye" class="mr-1" />
-                    查看
-                  </button>
-                </div>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">当前积分: {{ member.points }}</div>
+                <div class="text-sm text-gray-500">累计积分: {{ member.totalPoints }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ member.registerDate }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  class="text-blue-600 hover:text-blue-900"
+                  @click="handleViewDetail(member.id)"
+                >
+                  查看详情
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-
       <!-- 分页 -->
-      <div class="flex justify-between items-center px-6 py-4 bg-gray-50 border-t border-gray-100">
-        <div class="text-sm text-gray-600">
-          共 {{ members.length }} 条数据
-        </div>
+      <div class="px-6 py-4 flex justify-end">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
-          :total="members.length"
+          :total="total"
           :page-sizes="[10, 20, 50, 100]"
           layout="sizes, prev, pager, next"
           class="!text-sm"
+          @current-change="handlePageChange"
+          @size-change="handleSizeChange"
         />
       </div>
     </div>
@@ -151,60 +149,71 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import type { Member, MemberQueryParams } from '@/types/api/admin/member'
+import type { PaginationParams } from '@/types/api/common'
+import type { PaginatedData } from '@/types/api/response'
+import { memberApi } from '@/api/admin/member'
 
 const router = useRouter()
-
-interface Member {
-  id: number
-  name: string
-  phone: string
-  points: number
-  totalPoints: number
-  registerDate: string
-  surfaceNumber: string
-  internalNumber: string
-}
 
 // 状态
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
+const loading = ref(false)
+const total = ref(0)
+const members = ref<Member[]>([])
 
-// 模拟会员数据
-const members = ref<Member[]>([
-  {
-    id: 1,
-    name: '张三',
-    phone: '13800138000',
-    points: 5000,
-    totalPoints: 15800,
-    registerDate: '2023-01-15',
-    surfaceNumber: 'NO.100001',
-    internalNumber: 'RF8A7B2C3D'
-  },
-  {
-    id: 2,
-    name: '李四',
-    phone: '13900139000',
-    points: 3200,
-    totalPoints: 8600,
-    registerDate: '2023-02-20',
-    surfaceNumber: 'NO.100002',
-    internalNumber: 'RF8A7B2C4E'
-  },
-  {
-    id: 3,
-    name: '王五',
-    phone: '13700137000',
-    points: 1500,
-    totalPoints: 3500,
-    registerDate: '2023-03-10',
-    surfaceNumber: 'NO.100003',
-    internalNumber: 'RF8A7B2C5F'
+// 加载会员列表
+const loadMembers = async () => {
+  loading.value = true
+  try {
+    const params: PaginationParams & MemberQueryParams = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      name: searchQuery.value
+    }
+    const response = await memberApi.getList(params)
+    const paginatedData = response.data.data
+    members.value = paginatedData.items
+    total.value = paginatedData.total
+  } catch (error) {
+    console.error('加载会员列表失败:', error)
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 页码改变
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+  loadMembers()
+}
+
+// 每页条数改变
+const handleSizeChange = (size: number) => {
+  pageSize.value = size
+  currentPage.value = 1
+  loadMembers()
+}
+
+// 搜索
+const handleSearch = () => {
+  currentPage.value = 1
+  loadMembers()
+}
+
+// 查看详情
+const handleViewDetail = (id: number) => {
+  router.push(`/admin/member/${id}`)
+}
+
+// 初始化加载
+onMounted(() => {
+  loadMembers()
+})
 
 // 计算属性
 const newMembers = computed(() => {
@@ -222,21 +231,20 @@ const averagePoints = computed(() => {
 })
 
 const filteredMembers = computed(() => {
-  let result = members.value
+  let result = [...members.value]
+  
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    result = result.filter(member =>
+    result = result.filter(member => 
       member.name.toLowerCase().includes(query) ||
-      member.phone.includes(query)
+      member.phone.includes(query) ||
+      member.surfaceNumber.toLowerCase().includes(query) ||
+      member.internalNumber.toLowerCase().includes(query)
     )
   }
+  
   return result
 })
-
-// 方法
-const handleViewDetails = (member: Member) => {
-  router.push(`/admin/member/${member.id}`)
-}
 </script>
 
 <style scoped>

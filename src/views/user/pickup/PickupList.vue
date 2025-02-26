@@ -12,19 +12,20 @@
             </div>
             <div>
               <span class="text-gray-500 text-sm font-medium block">待提货订单</span>
-              <div class="text-2xl font-semibold text-gray-800 mt-1">24</div>
+              <div class="text-2xl font-semibold text-gray-800 mt-1">{{ statistics.pending }}</div>
             </div>
           </div>
           <div class="flex flex-col items-end">
             <div class="flex items-center text-xs text-blue-600 bg-gradient-to-r from-blue-50 to-blue-100/50 px-3 py-1 rounded-full font-medium">
               <font-awesome-icon icon="clock" class="mr-1.5" />
-              <span>3 笔待处理</span>
+              <span>{{ statistics.todayPending }} 笔待处理</span>
             </div>
             <div class="text-xs text-gray-400 mt-2">今日</div>
           </div>
         </div>
         <div class="h-1.5 w-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-full overflow-hidden">
-          <div class="h-full w-2/3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transform transition-transform duration-500 group-hover:translate-x-2"></div>
+          <div class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transform transition-transform duration-500 group-hover:translate-x-2"
+               :style="{ width: `${(statistics.todayPending / statistics.todayTotal * 100) || 0}%` }"></div>
         </div>
       </div>
 
@@ -37,13 +38,13 @@
             </div>
             <div>
               <span class="text-gray-600 text-sm block">已完成提货</span>
-              <div class="text-xl font-semibold text-gray-800 mt-0.5">186</div>
+              <div class="text-xl font-semibold text-gray-800 mt-0.5">{{ statistics.completed }}</div>
             </div>
           </div>
           <div class="flex flex-col items-end">
             <div class="flex items-center text-xs text-green-500 bg-green-50 px-2 py-0.5 rounded-lg">
               <font-awesome-icon icon="arrow-up" class="mr-1" />
-              <span>12 笔</span>
+              <span>{{ statistics.todayCompleted }} 笔</span>
             </div>
             <div class="text-xs text-gray-500 mt-1.5">今日</div>
           </div>
@@ -60,13 +61,13 @@
             </div>
             <div>
               <span class="text-gray-600 text-sm block">正在配送</span>
-              <div class="text-xl font-semibold text-gray-800 mt-0.5">8</div>
+              <div class="text-xl font-semibold text-gray-800 mt-0.5">{{ statistics.delivering }}</div>
             </div>
           </div>
           <div class="flex flex-col items-end">
             <div class="flex items-center text-xs text-yellow-500 bg-yellow-50 px-2 py-0.5 rounded-lg">
               <font-awesome-icon icon="check" class="mr-1" />
-              <span>2 笔已送达</span>
+              <span>{{ statistics.todayDelivering }} 笔配送中</span>
             </div>
             <div class="text-xs text-gray-500 mt-1.5">今日</div>
           </div>
@@ -74,22 +75,22 @@
         <div class="h-1 w-full bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full"></div>
       </div>
 
-      <!-- 门店自提 -->
+      <!-- 总订单量 -->
       <div class="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center space-x-3">
             <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
-              <font-awesome-icon icon="hand-holding" class="text-purple-500 text-lg" />
+              <font-awesome-icon icon="chart-line" class="text-purple-500 text-lg" />
             </div>
             <div>
-              <span class="text-gray-600 text-sm block">门店自提</span>
-              <div class="text-xl font-semibold text-gray-800 mt-0.5">16</div>
+              <span class="text-gray-600 text-sm block">总订单量</span>
+              <div class="text-xl font-semibold text-gray-800 mt-0.5">{{ statistics.total }}</div>
             </div>
           </div>
           <div class="flex flex-col items-end">
             <div class="flex items-center text-xs text-purple-500 bg-purple-50 px-2 py-0.5 rounded-lg">
               <font-awesome-icon icon="check" class="mr-1" />
-              <span>5 笔已完成</span>
+              <span>{{ statistics.todayTotal }} 笔</span>
             </div>
             <div class="text-xs text-gray-500 mt-1.5">今日</div>
           </div>
@@ -292,7 +293,7 @@
                     <div class="text-xs text-gray-500 flex items-center mt-1.5">
                       <div class="flex items-center px-2 py-1 rounded-full bg-blue-50 text-blue-600">
                         <font-awesome-icon icon="box" class="text-blue-400 mr-1.5 text-xs" />
-                        <span>{{ order.itemCount }} 件商品</span>
+                        <span>{{ getItemCount(order) }} 件商品</span>
                       </div>
                     </div>
                   </div>
@@ -429,16 +430,29 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted, watch } from 'vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import type { DateModelType } from 'element-plus'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import isBetween from 'dayjs/plugin/isBetween'
 import 'dayjs/locale/zh-cn'
 import AddPickupForm from './components/AddPickupForm.vue'
 import EditPickupForm from './components/EditPickupForm.vue'
-import type { DateModelType } from 'element-plus'
+import { pickupApi } from '@/api/user/pickup'
+import type { 
+  PickupOrder, 
+  PickupStatus, 
+  PickupMethod,
+  PickupOrderQueryParams,
+  PickupStatistics,
+  CreatePickupOrderRequest,
+  UpdatePickupOrderRequest
+} from '@/types/api/user/pickup'
+import type { PaginationParams } from '@/types/api/common'
 
 dayjs.extend(relativeTime)
+dayjs.extend(isBetween)
 dayjs.locale('zh-cn')
 
 // 表格列配置
@@ -488,11 +502,16 @@ const dateShortcuts = [
   }
 ]
 
-// 排序配置类型
+// 排序配置
 interface SortConfig {
-  key: keyof Order | ''
-  order: 'asc' | 'desc' | ''
+  key: keyof PickupOrder | ''
+  order: 'asc' | 'desc'
 }
+
+const sortConfig = ref<SortConfig>({
+  key: '',
+  order: 'asc'
+})
 
 // 状态
 const currentTab = ref('all')
@@ -500,7 +519,6 @@ const searchQuery = ref('')
 const showFilter = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
-const sortConfig = ref<SortConfig>({ key: '', order: '' })
 
 // 筛选条件
 const filters = ref({
@@ -605,103 +623,67 @@ interface Order {
 }
 
 // 订单数据
-const orders = ref<Order[]>([
-  {
-    id: 1,
-    orderNo: 'PK20240115001',
-    itemCount: 3,
-    memberName: '张三',
-    memberPhone: '13800138000',
-    deliveryType: '自提',
-    pickupTime: '2024-01-15',
-    status: '待提货',
-    operator: '王经理'
-  },
-  {
-    id: 2,
-    orderNo: 'PK24010515002',
-    itemCount: 2,
-    memberName: '张锦明',
-    memberPhone: '139****4321',
-    deliveryType: 'delivery',
-    pickupTime: '2024-01-05 15:00',
-    status: 'delivering',
-    operator: '王建国'
-  },
-  {
-    id: 3,
-    orderNo: 'PK24010515003',
-    itemCount: 5,
-    memberName: '林美玲',
-    memberPhone: '135****1234',
-    deliveryType: 'store',
-    pickupTime: '2024-01-05 16:30',
-    status: 'completed',
-    operator: '张晓芳'
-  },
-  {
-    id: 4,
-    orderNo: 'PK24010515004',
-    itemCount: 1,
-    memberName: '赵子涵',
-    memberPhone: '137****2345',
-    deliveryType: 'delivery',
-    pickupTime: '2024-01-05 17:00',
-    status: 'delivering',
-    operator: '刘明亮'
-  },
-  {
-    id: 5,
-    orderNo: 'PK24010515005',
-    itemCount: 4,
-    memberName: '吴雨轩',
-    memberPhone: '136****4567',
-    deliveryType: 'store',
-    pickupTime: '2024-01-05 17:30',
-    status: 'pending',
-    operator: '赵雪梅'
-  }
-])
+const loading = ref(false)
+const total = ref(0)
+const statistics = ref<PickupStatistics>({
+  total: 0,
+  pending: 0,
+  delivering: 0,
+  completed: 0,
+  todayPending: 0,
+  todayCompleted: 0,
+  todayDelivering: 0,
+  todayTotal: 0
+})
 
-// 过滤和排序后的订单列表
-const filteredOrders = computed<Order[]>(() => {
+const orders = ref<PickupOrder[]>([])
+const editData = ref<PickupOrder | null>(null)
+
+// 排序和过滤后的订单列表
+const filteredOrders = computed<PickupOrder[]>(() => {
   let result = [...orders.value]
 
-  // 标签页筛选
+  // 关键字搜索
+  if (searchQuery.value) {
+    const keyword = searchQuery.value.toLowerCase()
+    result = result.filter(order => 
+      order.orderNo.toLowerCase().includes(keyword) ||
+      order.memberName.toLowerCase().includes(keyword) ||
+      order.memberPhone.toLowerCase().includes(keyword)
+    )
+  }
+
+  // 状态过滤
   if (currentTab.value !== 'all') {
     result = result.filter(order => order.status === currentTab.value)
   }
 
-  // 搜索过滤
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(order => 
-      order.orderNo.toLowerCase().includes(query) ||
-      order.memberName.toLowerCase().includes(query) ||
-      order.memberPhone.includes(query)
-    )
-  }
-
-  // 高级筛选
+  // 配送方式过滤
   if (filters.value.deliveryType) {
     result = result.filter(order => order.deliveryType === filters.value.deliveryType)
   }
-  if (filters.value.dateRange && filters.value.dateRange.length === 2) {
-    const [start, end] = filters.value.dateRange
-    result = result.filter(order => {
-      const orderDate = dayjs(order.pickupTime)
-      return orderDate.isAfter(start) && orderDate.isBefore(end)
-    })
-  }
+
+  // 操作员过滤
   if (filters.value.operator) {
     result = result.filter(order => order.operator === filters.value.operator)
+  }
+
+  // 日期范围过滤
+  if (filters.value.dateRange && filters.value.dateRange.length === 2) {
+    const startDate = dayjs(filters.value.dateRange[0]).startOf('day')
+    const endDate = dayjs(filters.value.dateRange[1]).endOf('day')
+    result = result.filter(order => {
+      const orderDate = dayjs(order.pickupTime)
+      return orderDate.isBetween(startDate, endDate, null, '[]')
+    })
   }
 
   // 排序
   if (sortConfig.value.key && sortConfig.value.order) {
     result.sort((a, b) => {
-      const aValue = a[sortConfig.value.key as keyof Order] || ''
-      const bValue = b[sortConfig.value.key as keyof Order] || ''
+      if (sortConfig.value.key === '') return 0
+      const aValue = String(a[sortConfig.value.key])
+      const bValue = String(b[sortConfig.value.key])
       const factor = sortConfig.value.order === 'asc' ? 1 : -1
       return aValue > bValue ? factor : -factor
     })
@@ -722,7 +704,7 @@ const handleSort = (key: string) => {
   if (sortConfig.value.key === key) {
     sortConfig.value.order = sortConfig.value.order === 'asc' ? 'desc' : 'asc'
   } else {
-    sortConfig.value.key = key as keyof Order
+    sortConfig.value.key = key as keyof PickupOrder
     sortConfig.value.order = 'asc'
   }
 }
@@ -785,7 +767,6 @@ const getStatusText = (status: string) => {
 // 新增提货单对话框
 const addVisible = ref(false)
 const editVisible = ref(false)
-const editData = ref<Order | null>(null)
 
 // 处理新增提货单
 const handleNewPickup = () => {
@@ -793,45 +774,23 @@ const handleNewPickup = () => {
 }
 
 // 处理编辑提货单
-const handleEdit = (row: Order) => {
-  // 构造编辑数据，包含必要的会员商品信息
-  editData.value = {
-    ...row,
-    memberProducts: [
-      {
-        id: 1,
-        name: '高级面部护理套装',
-        sku: 'SKU001',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 2
-      },
-      {
-        id: 2,
-        name: '美白精华液',
-        sku: 'SKU002',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 1
-      }
-    ],
-    items: [
-      {
-        id: 1,
-        name: '高级面部护理套装',
-        sku: 'SKU001',
-        image: 'https://placeholder.com/150',
-        quantity: 1,
-        maxQuantity: 2,
-        originalQuantity: 2
-      }
-    ]
+const handleEdit = async (order: PickupOrder) => {
+  try {
+    const response = await pickupApi.getOrderById(order.id)
+    if (response.data) {
+      editData.value = response.data.data
+      editVisible.value = true
+    }
+  } catch (error) {
+    console.error('获取提货单详情失败:', error)
+    ElMessage.error('获取提货单详情失败')
   }
-  editVisible.value = true
 }
 
 // 添加提交处理函数
 const handleAddSubmit = (data: any) => {
   // 添加新订单
-  const newOrder: Order = {
+  const newOrder: PickupOrder = {
     id: orders.value.length + 1,
     orderNo: 'PK' + dayjs().format('YYMMDDHHmmss'),
     ...data
@@ -931,6 +890,53 @@ const handleDelete = async (order: any) => {
   } catch {
     // 用户取消删除操作
   }
+}
+
+// 获取提货单列表
+const fetchOrders = async () => {
+  try {
+    loading.value = true
+    const params: PaginationParams & PickupOrderQueryParams = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      keyword: searchQuery.value || undefined,
+      status: currentTab.value === 'all' ? undefined : currentTab.value as PickupStatus,
+      deliveryType: filters.value.deliveryType as PickupMethod | undefined,
+      operator: filters.value.operator || undefined,
+      dateRange: filters.value.dateRange ? [
+        dayjs(filters.value.dateRange[0]).format('YYYY-MM-DD'),
+        dayjs(filters.value.dateRange[1]).format('YYYY-MM-DD')
+      ] : undefined
+    }
+    
+    const response = await pickupApi.getOrders(params)
+    if (response.data) {
+      orders.value = response.data.data.items
+      total.value = response.data.data.total
+    }
+  } catch (error) {
+    console.error('获取提货单列表失败:', error)
+    ElMessage.error('获取提货单列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 获取统计数据
+const fetchStatistics = async () => {
+  try {
+    const response = await pickupApi.getStatistics()
+    if (response.data) {
+      statistics.value = response.data.data
+    }
+  } catch (error) {
+    console.error('获取统计数据失败:', error)
+  }
+}
+
+// 获取商品总数的计算属性
+const getItemCount = (order: PickupOrder) => {
+  return order.items.reduce((total, item) => total + item.quantity, 0)
 }
 </script>
 

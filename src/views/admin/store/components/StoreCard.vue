@@ -11,9 +11,23 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+interface Props {
   title: string
   value: string | number
   icon: string
   color: 'blue' | 'green' | 'purple' | 'orange'
-}>()</script> 
+  trend?: number
+}
+
+defineProps<Props>()
+</script>
+
+<style scoped>
+.stat-card {
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+</style> 

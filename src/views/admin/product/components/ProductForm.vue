@@ -235,6 +235,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { productApi } from '@/api/admin/product'
+import type { CreateProductRequest, UpdateProductRequest, ProductCategoryType, Product } from '@/types/api/admin/product'
 
 export interface ProductForm {
   name: string
@@ -242,23 +245,20 @@ export interface ProductForm {
   price: number
   image: string
   quantity: number
-  category: string
+  category: ProductCategoryType
   description: string
+  status?: '在售' | '下架' | '缺货'
 }
 
 interface Props {
   show: boolean
   editMode: boolean
-  productData?: Partial<ProductForm> | null
+  productData?: Product | null
   stores: { id: number; name: string }[]
-  categoryOptions: { label: string; value: string }[]
+  categoryOptions: { label: string; value: ProductCategoryType }[]
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  show: false,
-  editMode: false,
-  productData: () => ({})
-})
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
@@ -273,7 +273,7 @@ const form = ref<ProductForm>({
   price: 0,
   image: '',
   quantity: 0,
-  category: props.categoryOptions[1]?.value || '',
+  category: 'digital',
   description: ''
 })
 
@@ -335,34 +335,62 @@ const triggerFileInput = () => {
   fileInput.value?.click()
 }
 
-const handleFileChange = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  if (input.files && input.files[0]) {
-    const file = input.files[0]
-    if (file.size > 5 * 1024 * 1024) {
-      alert('文件大小不能超过 5MB')
-      return
-    }
+// 表单验证规则
+const validateForm = (form: ProductForm): string | null => {
+  if (!form.name.trim()) return '请输入商品名称'
+  if (form.storeIds.length === 0) return '请选择所属店铺'
+  if (!form.category) return '请选择商品分类'
+  if (form.price <= 0) return '请输入有效的积分价格'
+  if (form.quantity < 0) return '请输入有效的库存数量'
+  if (!form.description.trim()) return '请输入商品描述'
+  if (!form.image) return '请上传商品图片'
+  return null
+}
+
+// 处理图片上传
+const handleImageUpload = async (file: File): Promise<string> => {
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('图片大小不能超过 5MB')
+  }
+
+  const allowedTypes = ['image/jpeg', 'image/png']
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('只支持 JPG、PNG 格式的图片')
+  }
+
+  return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = (e) => {
-      form.value.image = e.target?.result as string
+      if (e.target?.result) {
+        resolve(e.target.result as string)
+      } else {
+        reject(new Error('图片读取失败'))
+      }
     }
+    reader.onerror = () => reject(new Error('图片读取失败'))
     reader.readAsDataURL(file)
+  })
+}
+
+const handleFileChange = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    try {
+      form.value.image = await handleImageUpload(input.files[0])
+    } catch (error) {
+      ElMessage.error(error instanceof Error ? error.message : '图片上传失败')
+    }
   }
 }
 
-const handleFileDrop = (event: DragEvent) => {
+const handleFileDrop = async (event: DragEvent) => {
   const file = event.dataTransfer?.files[0]
   if (file) {
-    if (file.size > 5 * 1024 * 1024) {
-      alert('文件大小不能超过 5MB')
-      return
+    try {
+      form.value.image = await handleImageUpload(file)
+    } catch (error) {
+      ElMessage.error(error instanceof Error ? error.message : '图片上传失败')
     }
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      form.value.image = e.target?.result as string
-    }
-    reader.readAsDataURL(file)
   }
 }
 
@@ -370,12 +398,33 @@ const handleClose = () => {
   emit('update:show', false)
 }
 
-const handleSubmit = () => {
-  if (!form.value.name || !form.value.price || !form.value.image || !form.value.quantity || !form.value.category || !form.value.description) {
-    alert('请填写完整信息')
+const handleSubmit = async () => {
+  const error = validateForm(form.value)
+  if (error) {
+    ElMessage.warning(error)
     return
   }
-  emit('submit', form.value)
+
+  try {
+    const productData: CreateProductRequest = {
+      ...form.value,
+      status: '在售'
+    }
+
+    if (props.editMode && props.productData?.id) {
+      await productApi.updateProduct(props.productData.id, productData as UpdateProductRequest)
+      ElMessage.success('商品更新成功')
+    } else {
+      await productApi.createProduct(productData)
+      ElMessage.success('商品添加成功')
+    }
+
+    emit('submit', form.value)
+    handleClose()
+  } catch (error) {
+    console.error('Failed to save product:', error)
+    ElMessage.error(props.editMode ? '更新商品失败' : '添加商品失败')
+  }
 }
 </script>
 

@@ -33,7 +33,7 @@ image.png<template>
           <div class="flex items-center space-x-4">
             <div class="flex-[2]">
               <div class="text-sm opacity-80">可用积分</div>
-              <div class="text-3xl font-medium mt-1">{{ currentMember ? currentMember.points.toLocaleString() : '0' }}</div>
+              <div class="text-3xl font-medium mt-1">{{ currentMember ? currentMember.remainingPoints.toLocaleString() : '0' }}</div>
             </div>
             <div class="w-px h-12 bg-white bg-opacity-20"></div>
             <div class="flex-[8]">
@@ -293,9 +293,15 @@ image.png<template>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElDialog, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
+import type { RechargeProduct, CreateRechargeOrderRequest } from '@/types/api/user/recharge'
+import type { Member } from '@/types/api/user/member'
+import type { Operator } from '@/types/api/user/operator'
+import { memberApi } from '@/api/user/member'
+import { operatorApi } from '@/api/user/operator'
+import { shoppingApi } from '@/api/user/shopping'
 
 const router = useRouter()
 
@@ -303,167 +309,62 @@ const router = useRouter()
 const rechargeAmounts = [100, 200, 500, 1000, 2000, 5000, 10000, 20000]
 const selectedAmount = ref(0)
 const customAmount = ref('')
-const selectedOperator = ref('')
+const selectedOperator = ref<number>()
 
 // 商品相关
 const showProductSelector = ref(false)
 const productSearch = ref('')
-const productCategory = ref<number>(0)
-const selectedProducts = ref<any[]>([])
+const productCategory = ref<string>('0')
+const selectedProducts = ref<RechargeProduct[]>([])
 
-// 定义商品类型
-interface Product {
-  id: number
-  name: string
-  price: number
-  image: string
-  category: number
-  quantity?: number
-}
+// 会员相关
+const currentMember = ref<{
+  id?: number;
+  name: string;
+  phone: string;
+  remainingPoints: number;
+  lastRechargeDate?: string;
+} | null>(null)
+const isReading = ref(false)
 
 // 商品分类
 const categories = [
-  { id: 1, name: '饮品' },
-  { id: 2, name: '零食' },
-  { id: 3, name: '生活用品' },
-  { id: 4, name: '其他' }
+  { id: '1', name: '饮品' },
+  { id: '2', name: '零食' },
+  { id: '3', name: '生活用品' },
+  { id: '4', name: '其他' }
 ]
 
-// 模拟商品数据
-const products = ref<Product[]>([
-  // 饮品类别
-  { 
-    id: 1, 
-    name: '可口可乐', 
-    price: 3.5, 
-    image: '/products/cola.jpg',
-    category: 1,
-    quantity: 0
-  },
-  { 
-    id: 2, 
-    name: '雀巢咖啡', 
-    price: 15, 
-    image: '/products/coffee.jpg',
-    category: 1,
-    quantity: 0
-  },
-  { 
-    id: 3, 
-    name: '矿泉水', 
-    price: 2, 
-    image: '/products/water.jpg',
-    category: 1,
-    quantity: 0
-  },
-  { 
-    id: 4, 
-    name: '果粒橙', 
-    price: 4.5, 
-    image: '/products/orange.jpg',
-    category: 1,
-    quantity: 0
-  },
-  // 零食类别
-  { 
-    id: 5, 
-    name: '乐事薯片', 
-    price: 6.5, 
-    image: '/products/chips.jpg',
-    category: 2,
-    quantity: 0
-  },
-  { 
-    id: 6, 
-    name: '奥利奥饼干', 
-    price: 8, 
-    image: '/products/oreo.jpg',
-    category: 2,
-    quantity: 0
-  },
-  { 
-    id: 7, 
-    name: '德芙巧克力', 
-    price: 12.5, 
-    image: '/products/chocolate.jpg',
-    category: 2,
-    quantity: 0
-  },
-  { 
-    id: 8, 
-    name: '旺旺仙贝', 
-    price: 5.5, 
-    image: '/products/snack.jpg',
-    category: 2,
-    quantity: 0
-  },
-  // 生活用品类别
-  { 
-    id: 9, 
-    name: '牙膏', 
-    price: 12.8, 
-    image: '/products/toothpaste.jpg',
-    category: 3,
-    quantity: 0
-  },
-  { 
-    id: 10, 
-    name: '香皂', 
-    price: 5.5, 
-    image: '/products/soap.jpg',
-    category: 3,
-    quantity: 0
-  },
-  { 
-    id: 11, 
-    name: '洗发水', 
-    price: 28.8, 
-    image: '/products/shampoo.jpg',
-    category: 3,
-    quantity: 0
-  },
-  { 
-    id: 12, 
-    name: '纸巾', 
-    price: 8.8, 
-    image: '/products/tissue.jpg',
-    category: 3,
-    quantity: 0
-  },
-  // 其他类别
-  { 
-    id: 13, 
-    name: '一次性口罩', 
-    price: 9.9, 
-    image: '/products/mask.jpg',
-    category: 4,
-    quantity: 0
-  },
-  { 
-    id: 14, 
-    name: '充电宝', 
-    price: 59.9, 
-    image: '/products/powerbank.jpg',
-    category: 4,
-    quantity: 0
-  },
-  { 
-    id: 15, 
-    name: '雨伞', 
-    price: 19.9, 
-    image: '/products/umbrella.jpg',
-    category: 4,
-    quantity: 0
-  },
-  { 
-    id: 16, 
-    name: '便携风扇', 
-    price: 15.9, 
-    image: '/products/fan.jpg',
-    category: 4,
-    quantity: 0
+// 操作员数据
+const operators = ref<Operator[]>([])
+
+// 商品数据
+const products = ref<RechargeProduct[]>([])
+
+// 获取商品列表
+const fetchProducts = async () => {
+  try {
+    const params = {
+      page: 1,
+      pageSize: 100,
+      category: productCategory.value === '0' ? undefined : productCategory.value
+    }
+    const response = await shoppingApi.getProducts(params)
+    products.value = response.data.data.items.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+      category: item.category || '未分类',
+      status: item.status || '在售',
+      stock: item.stock || 0,
+      image: item.image
+    }))
+  } catch (error) {
+    console.error('Failed to fetch products:', error)
+    ElMessage.error('获取商品列表失败')
   }
-])
+}
 
 // 修改过滤商品的计算属性
 const filteredProducts = computed(() => {
@@ -472,10 +373,6 @@ const filteredProducts = computed(() => {
   if (productSearch.value) {
     const search = productSearch.value.toLowerCase()
     result = result.filter(p => p.name.toLowerCase().includes(search))
-  }
-  
-  if (productCategory.value !== 0) {
-    result = result.filter(p => p.category === productCategory.value)
   }
   
   return result
@@ -491,18 +388,6 @@ const totalAmount = computed(() => {
 const totalPoints = computed(() => {
   return Math.floor((Number(totalAmount.value) * 10))
 })
-
-// 会员相关
-const currentMember = ref<{
-  id: number;
-  name: string;
-  points: number;
-  cardNo?: string;
-  level?: string;
-  lastRechargeDate?: string;
-} | null>(null)
-
-const isReading = ref(false)
 
 // 重置会员卡
 const resetCard = () => {
@@ -526,8 +411,20 @@ const resetCardAndForm = () => {
   selectedAmount.value = 0
   customAmount.value = ''
   selectedProducts.value = []
-  selectedOperator.value = ''
+  selectedOperator.value = undefined
   ElMessage.success('已重置会员卡')
+}
+
+// 模拟IC读卡器读取卡号
+const simulateReadICCard = (): Promise<string> => {
+  return new Promise((resolve) => {
+    // 模拟读卡延迟
+    setTimeout(() => {
+      // 模拟生成会员卡号（实际应该从IC卡中读取）
+      const cardNo = '100001'
+      resolve(cardNo)
+    }, 500)
+  })
 }
 
 // 读卡方法
@@ -536,26 +433,50 @@ const handleReadCard = async () => {
   
   isReading.value = true
   try {
-    // 模拟读卡操作
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 模拟从IC读卡器获取卡号
+    const icCardNo = await simulateReadICCard()
     
-    // 模拟读卡成功
+    // 并行请求会员信息、操作员列表和商品列表
+    const [memberResponse, operatorResponse, productsResponse] = await Promise.all([
+      memberApi.getMemberById(parseInt(icCardNo)),
+      operatorApi.getCurrentStoreOperators(),
+      shoppingApi.getProducts({ page: 1, pageSize: 100 })
+    ])
+
+    const memberData = memberResponse.data.data
+    operators.value = operatorResponse.data.data
+    // 更新会员信息
     currentMember.value = {
-      id: 1001,
-      name: '陈思悦',
-      points: 3560,
-      cardNo: 'VIP88888888',
-      lastRechargeDate: '2024-01-15'
+      id: memberData.id,
+      name: memberData.name,
+      phone: memberData.phone,
+      remainingPoints: memberData.remainingPoints,
+      lastRechargeDate: new Date().toISOString().split('T')[0]
     }
-    
+
+    // 更新商品列表
+    products.value = productsResponse.data.data.items.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+      category: item.category || '未分类',
+      status: item.status || '在售',
+      stock: item.stock || 0,
+      image: item.image
+    }))
+
     ElMessage.success('会员卡读取成功')
   } catch (error) {
-    ElMessage.error('读卡失败，请重试')
-    currentMember.value = null
-  } finally {
-    isReading.value = false
+    console.error('Failed to read member card:', error)
+    ElMessage.error('会员卡读取失败')
   }
 }
+
+// 监听分类变化，重新获取商品列表
+watch(productCategory, () => {
+  fetchProducts()
+})
 
 // 处理自定义金额输入
 const handleCustomAmountInput = (event: Event) => {
@@ -613,7 +534,7 @@ const handleRecharge = async () => {
     // 更新会员积分和可提商品
     if (currentMember.value) {
       // 更新积分
-      currentMember.value.points += totalPointsToAdd
+      currentMember.value.remainingPoints += totalPointsToAdd
       currentMember.value.lastRechargeDate = new Date().toISOString().split('T')[0]
       
       // 更新可提商品列表
@@ -652,7 +573,7 @@ const handleRecharge = async () => {
     selectedAmount.value = 0
     customAmount.value = ''
     selectedProducts.value = []
-    selectedOperator.value = ''
+    selectedOperator.value = undefined
     
   } catch (error) {
     ElMessage.error('充值失败，请重试')
@@ -660,15 +581,6 @@ const handleRecharge = async () => {
     isLoading.value = false
   }
 }
-
-// 操作员数据
-const operators = [
-  { id: 1, name: '李海燕', role: '主管' },
-  { id: 2, name: '王建国', role: '店员' },
-  { id: 3, name: '张晓芳', role: '店员' },
-  { id: 4, name: '刘明亮', role: '店员' },
-  { id: 5, name: '赵雪梅', role: '店员' }
-]
 
 // 商品操作方法
 const addProduct = (product: any) => {
@@ -702,7 +614,7 @@ const removeProduct = (product: any) => {
 
 // 是否可以充值
 const canRecharge = computed(() => {
-  return currentMember.value && (selectedAmount.value > 0 || customAmount.value || selectedProducts.value.length > 0) && selectedOperator.value
+  return currentMember.value && (selectedAmount.value > 0 || customAmount.value || selectedProducts.value.length > 0) && selectedOperator.value !== undefined
 })
 
 const isLastProduct = (product: any) => {
@@ -712,7 +624,7 @@ const isLastProduct = (product: any) => {
 // 可提商品列表
 const availableProducts = computed(() => {
   return products.value
-    .filter((p: Product) => (p.quantity || 0) > 0)
+    .filter((p: RechargeProduct) => (p.quantity || 0) > 0)
     .slice(0, 8)
 })
 </script>

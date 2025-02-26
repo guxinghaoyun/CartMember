@@ -19,15 +19,12 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as echarts from 'echarts'
+import type { ConsumptionStatistics } from '@/types/api/user/statistics'
 
 interface Props {
   modelValue: string
   loading?: boolean
-  data?: {
-    xAxis: string[]
-    sales: number[]
-    orders: number[]
-  }
+  data?: ConsumptionStatistics['trend']
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -109,7 +106,7 @@ const updateChart = () => {
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: props.data?.xAxis || [],
+      data: props.data?.dates || [],
       axisLine: {
         lineStyle: {
           color: '#e5e7eb'
@@ -184,7 +181,7 @@ const updateChart = () => {
         smooth: true,
         symbolSize: 8,
         showSymbol: false,
-        data: props.data?.sales || [],
+        data: props.data?.amounts || [],
         areaStyle: {
           color: {
             type: 'linear',

@@ -100,19 +100,14 @@
                    ]">
                 <span class="text-base font-medium">{{ index + 1 }}</span>
               </div>
-              <div class="relative w-12 h-12 mr-3">
-                <img :src="product.image" 
-                     :alt="product.name"
-                     class="w-full h-full rounded-lg object-cover shadow-sm group-hover:shadow-md transition-all duration-300"/>
-              </div>
               <div class="flex-1">
                 <div class="font-medium group-hover:text-blue-500 transition-colors duration-200">{{ product.name }}</div>
-                <div class="text-sm text-gray-500 mt-1">销量 {{ product.sales }}</div>
+                <div class="text-sm text-gray-500 mt-1">销量 {{ product.count }}</div>
               </div>
               <div class="text-right">
-                <div class="font-medium text-lg">{{ product.amount }}</div>
-                <div class="text-sm mt-1" :class="product.trend.includes('↑') ? 'text-green-500' : 'text-red-500'">
-                  {{ product.trend }}
+                <div class="font-medium text-lg">¥{{ product.amount.toLocaleString() }}</div>
+                <div class="text-sm mt-1 text-gray-500">
+                  {{ product.lastPurchaseTime }}
                 </div>
               </div>
             </div>
@@ -157,136 +152,90 @@ import { ElMessage } from 'element-plus'
 import StatCard from '@/components/common/StatCard.vue'
 import * as echarts from 'echarts'
 import dayjs from 'dayjs'
+import type { ConsumptionStatistics, UserOverview } from '@/types/api/user/statistics'
 
 // 图表实例
 let salesTrendChart: echarts.ECharts | null = null
 let categoryPieChart: echarts.ECharts | null = null
 
+// 用户概览数据
+const userOverview = ref<UserOverview>({
+  totalPoints: 12580,
+  totalBalance: 256,
+  totalOrders: 389,
+  totalSpent: 8650,
+  availableCoupons: 5,
+  unfinishedOrders: 2
+})
+
 // 销售趋势周期
 const salesTrendPeriod = ref('week')
 
-// 生成模拟销售数据
-const generateSalesData = (period: string) => {
-  const now = dayjs()
-  let dates: string[] = []
-  let data: number[] = []
-  
-  switch (period) {
-    case 'week':
-      // 生成最近7天的数据
-      for (let i = 6; i >= 0; i--) {
-        const date = now.subtract(i, 'day')
-        dates.push(date.format('MM-DD'))
-        // 生成 5000-15000 之间的随机数，并保持一定的趋势性
-        const base = 10000
-        const random = Math.random() * 5000
-        const trend = i < 3 ? 2000 : 0 // 最近几天有上升趋势
-        data.push(Math.floor(base + random + trend))
-      }
-      break
-    case 'month':
-      // 生成最近30天的数据，按5天聚合
-      for (let i = 5; i >= 0; i--) {
-        const date = now.subtract(i * 5, 'day')
-        dates.push(date.format('MM-DD'))
-        const base = 40000
-        const random = Math.random() * 20000
-        const trend = i < 2 ? 10000 : 0
-        data.push(Math.floor(base + random + trend))
-      }
-      break
-    case 'year':
-      // 生成最近12个月的数据
-      for (let i = 11; i >= 0; i--) {
-        const date = now.subtract(i, 'month')
-        dates.push(date.format('YYYY-MM'))
-        const base = 150000
-        const seasonal = Math.sin(i * Math.PI / 6) * 50000 // 季节性波动
-        const random = Math.random() * 30000
-        const trend = (12 - i) * 5000 // 整体上升趋势
-        data.push(Math.floor(base + seasonal + random + trend))
-      }
-      break
-  }
-  
-  return { dates, data }
-}
-
 // 商品分类数据
-const categoryData = [
+const categoryData: ConsumptionStatistics['categories'] = [
   { 
-    value: 2580, 
-    name: '食品饮料',
-    percentage: '32%',
-    itemStyle: { color: '#3b82f6' }
+    category: '食品饮料',
+    amount: 2580,
+    percentage: 32
   },
   { 
-    value: 1850, 
-    name: '生鲜水果',
-    percentage: '23%',
-    itemStyle: { color: '#10b981' }
+    category: '生鲜水果',
+    amount: 1850,
+    percentage: 23
   },
   { 
-    value: 1420, 
-    name: '休闲零食',
-    percentage: '18%',
-    itemStyle: { color: '#f59e0b' }
+    category: '休闲零食',
+    amount: 1420,
+    percentage: 18
   },
   { 
-    value: 1260, 
-    name: '日用百货',
-    percentage: '16%',
-    itemStyle: { color: '#6366f1' }
+    category: '日用百货',
+    amount: 1260,
+    percentage: 16
   },
   { 
-    value: 890, 
-    name: '酒水饮料',
-    percentage: '11%',
-    itemStyle: { color: '#ec4899' }
+    category: '酒水饮料',
+    amount: 890,
+    percentage: 11
   }
 ]
 
 // 热销商品数据
-const topProducts = ref([
+const topProducts = ref<ConsumptionStatistics['frequentProducts']>([
   {
     id: 1,
     name: '有机草莓',
-    sales: 156,
-    amount: '¥15,600',
-    trend: '↑ 12.5%',
-    image: 'https://ai-public.mastergo.com/ai/img_res/86f839615a018f782144b9ec9be235d4.jpg'
+    count: 156,
+    amount: 15600,
+    lastPurchaseTime: '2024-03-16'
   },
   {
     id: 2,
     name: '进口牛奶',
-    sales: 142,
-    amount: '¥14,200',
-    trend: '↑ 8.3%',
-    image: 'https://ai-public.mastergo.com/ai/img_res/e4283893b198106bcb77f4a097397da1.jpg'
+    count: 142,
+    amount: 14200,
+    lastPurchaseTime: '2024-03-16'
   },
   {
     id: 3,
     name: '日式面包',
-    sales: 98,
-    amount: '¥9,800',
-    trend: '↓ 2.1%',
-    image: 'https://ai-public.mastergo.com/ai/img_res/e9a1e0da333cfaae1d427e157bad44d1.jpg'
+    count: 98,
+    amount: 9800,
+    lastPurchaseTime: '2024-03-15'
   },
   {
     id: 4,
     name: '柠檬气泡水',
-    sales: 89,
-    amount: '¥8,900',
-    trend: '↑ 5.6%',
-    image: 'https://ai-public.mastergo.com/ai/img_res/6727655713b31701481ece9fc2828521.jpg'
+    count: 89,
+    amount: 8900,
+    lastPurchaseTime: '2024-03-15'
   },
   {
     id: 5,
     name: '蓝莓酸奶',
-    sales: 76,
-    amount: '¥7,600',
-    trend: '↑ 3.2%',
-    image: 'https://ai-public.mastergo.com/ai/img_res/f31932d1bd3fe0a4e3fd760b55213f51.jpg'
+    count: 76,
+    amount: 7600,
+    lastPurchaseTime: '2024-03-14'
   }
 ])
 
@@ -353,6 +302,57 @@ const getActivityIcon = (type: string) => {
   return icons[type as keyof typeof icons]
 }
 
+// 生成模拟销售数据
+const generateSalesData = (period: string): ConsumptionStatistics['trend'] => {
+  const now = dayjs()
+  let dates: string[] = []
+  let amounts: number[] = []
+  let orders: number[] = []
+  
+  switch (period) {
+    case 'week':
+      // 生成最近7天的数据
+      for (let i = 6; i >= 0; i--) {
+        const date = now.subtract(i, 'day')
+        dates.push(date.format('MM-DD'))
+        // 生成 5000-15000 之间的随机数，并保持一定的趋势性
+        const base = 10000
+        const random = Math.random() * 5000
+        const trend = i < 3 ? 2000 : 0 // 最近几天有上升趋势
+        amounts.push(Math.floor(base + random + trend))
+        orders.push(Math.floor((base + random + trend) / 100))
+      }
+      break
+    case 'month':
+      // 生成最近30天的数据，按5天聚合
+      for (let i = 5; i >= 0; i--) {
+        const date = now.subtract(i * 5, 'day')
+        dates.push(date.format('MM-DD'))
+        const base = 40000
+        const random = Math.random() * 20000
+        const trend = i < 2 ? 10000 : 0
+        amounts.push(Math.floor(base + random + trend))
+        orders.push(Math.floor((base + random + trend) / 100))
+      }
+      break
+    case 'year':
+      // 生成最近12个月的数据
+      for (let i = 11; i >= 0; i--) {
+        const date = now.subtract(i, 'month')
+        dates.push(date.format('YYYY-MM'))
+        const base = 150000
+        const seasonal = Math.sin(i * Math.PI / 6) * 50000 // 季节性波动
+        const random = Math.random() * 30000
+        const trend = (12 - i) * 5000 // 整体上升趋势
+        amounts.push(Math.floor(base + seasonal + random + trend))
+        orders.push(Math.floor((base + seasonal + random + trend) / 100))
+      }
+      break
+  }
+  
+  return { dates, amounts, orders }
+}
+
 // 监听销售趋势周期变化
 watch(salesTrendPeriod, (newPeriod) => {
   updateSalesTrendChart(newPeriod)
@@ -362,7 +362,7 @@ watch(salesTrendPeriod, (newPeriod) => {
 const updateSalesTrendChart = (period: string) => {
   if (!salesTrendChart) return
   
-  const { dates, data } = generateSalesData(period)
+  const { dates, amounts, orders } = generateSalesData(period)
   
   const option = {
     tooltip: {
@@ -414,7 +414,7 @@ const updateSalesTrendChart = (period: string) => {
         name: '销售额',
         type: 'line',
         smooth: true,
-        data: data,
+        data: amounts,
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: 'rgba(59, 130, 246, 0.2)' },
@@ -467,7 +467,7 @@ const initCategoryPieChart = () => {
       borderWidth: 1,
       textStyle: { color: '#666' },
       formatter: (params: any) => {
-        return `${params.name}<br/>销售额：¥${params.value.toLocaleString()}<br/>占比：${params.data.percentage}`
+        return `${params.name}<br/>销售额：¥${params.value.toLocaleString()}<br/>占比：${params.data.percentage}%`
       }
     },
     legend: {
@@ -476,8 +476,8 @@ const initCategoryPieChart = () => {
       top: 'center',
       textStyle: { color: '#666' },
       formatter: (name: string) => {
-        const item = categoryData.find(item => item.name === name)
-        return `${name} ${item?.percentage}`
+        const item = categoryData.find(item => item.category === name)
+        return `${name} ${item?.percentage}%`
       }
     },
     series: [

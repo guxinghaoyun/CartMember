@@ -105,9 +105,17 @@
                 <el-select v-model="form.operator" placeholder="请选择操作员" class="!w-full">
                   <el-option
                     v-for="op in operators"
-                    :key="op"
-                    :label="op"
-                    :value="op"/>
+                    :key="op.id"
+                    :value="op.id"
+                    :label="op.name">
+                    <div class="flex items-center space-x-2">
+                      <div class="w-5 h-5 bg-purple-50 rounded-full flex items-center justify-center">
+                        <font-awesome-icon icon="user" class="text-purple-500 text-xs" />
+                      </div>
+                      <span class="text-sm">{{ op.name }}</span>
+                      <span class="text-xs text-gray-400">({{ op.role }})</span>
+                    </div>
+                  </el-option>
                 </el-select>
               </el-form-item>
               <el-form-item label="备注" prop="notes" class="!mb-0">
@@ -289,16 +297,44 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import dayjs from 'dayjs'
+import type { 
+  CreatePickupOrderRequest, 
+  MemberPickupProduct,
+  PickupMethod,
+  PickupOrderItem
+} from '@/types/api/user/pickup'
+import type { ApiResponse } from '@/types/api/common'
+import type { Operator } from '@/types/api/user/operator'
+import { pickupApi } from '@/api/user/pickup'
+import { operatorApi } from '@/api/user/operator'
 
-const props = defineProps<{
+interface Props {
   visible: boolean
-}>()
+}
 
-const emit = defineEmits(['update:visible', 'submit'])
+interface Emits {
+  (e: 'update:visible', value: boolean): void
+  (e: 'submit', data: CreatePickupOrderRequest): void
+}
+
+// 扩展的表单数据类型
+interface PickupFormData {
+  memberName: string
+  memberPhone: string
+  deliveryType: PickupMethod
+  deliveryAddress?: string
+  pickupTime: string
+  operator: string
+  notes?: string
+  items: PickupOrderItem[]
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
 
 // 对话框可见性
 const dialogVisible = computed({
@@ -313,30 +349,40 @@ const formRef = ref<FormInstance>()
 const loading = ref(false)
 
 // 操作员列表
-const operators = [
-  '李海燕',
-  '王建国',
-  '张晓芳',
-  '刘明亮',
-  '赵雪梅'
-]
+const operators = ref<Operator[]>([])
+
+// 获取操作员列表
+const fetchOperators = async () => {
+  try {
+    const response = await operatorApi.getCurrentStoreOperators()
+    operators.value = response.data.data
+  } catch (error) {
+    console.error('Failed to fetch operators:', error)
+    ElMessage.error('获取操作员列表失败')
+  }
+}
+
+// 在组件挂载时获取操作员列表
+onMounted(() => {
+  fetchOperators()
+})
 
 // 表单数据
-const form = reactive({
+const form = ref<PickupFormData>({
   memberName: '',
   memberPhone: '',
   deliveryType: 'store',
-  deliveryAddress: '',
   pickupTime: '',
-  items: [] as any[],
-  itemCount: 0,
   operator: '',
-  notes: ''
+  items: []
 })
+
+// 会员可提商品列表
+const memberProducts = ref<MemberPickupProduct[]>([])
 
 // 计算总数量
 const totalQuantity = computed(() => {
-  return form.items.reduce((total, item) => total + item.quantity, 0)
+  return form.value.items.reduce((total, item) => total + item.quantity, 0)
 })
 
 // 禁用过去的日期
@@ -349,58 +395,47 @@ const disabledHours = () => {
   return Array.from({ length: 24 }).map((_, i) => i).filter(h => h < 9 || h > 21)
 }
 
-// 会员可提商品列表
-const memberProducts = ref<any[]>([])
-
 // 检查商品是否已添加到提货列表
 const isProductAdded = (productId: number) => {
-  return form.items.some(item => item.id === productId)
+  return form.value.items.some(item => item.id === productId)
 }
 
 // 添加到提货列表
-const addToPickupList = (product: any) => {
+const addToPickupList = (product: MemberPickupProduct) => {
   if (!isProductAdded(product.id)) {
-    form.items.push({
+    form.value.items.push({
       id: product.id,
       name: product.name,
       sku: product.sku,
       image: product.image,
       quantity: 1,
       maxQuantity: product.availableQuantity,
-      originalQuantity: product.availableQuantity // 保存原始可提数量
+      originalQuantity: product.availableQuantity
     })
     // 更新可提商品的可提数量
     const memberProduct = memberProducts.value.find(p => p.id === product.id)
     if (memberProduct) {
       memberProduct.availableQuantity = product.availableQuantity - 1
     }
-    calculateTotal()
     ElMessage.success(`已添加商品：${product.name}`)
   }
 }
 
 // 移除商品
 const removeItem = (index: number) => {
-  const removedItem = form.items[index]
+  const removedItem = form.value.items[index]
   // 恢复可提商品的可提数量
   const memberProduct = memberProducts.value.find(p => p.id === removedItem.id)
   if (memberProduct) {
     memberProduct.availableQuantity = removedItem.originalQuantity
   }
-  form.items.splice(index, 1)
-  calculateTotal()
-}
-
-// 计算总数
-const calculateTotal = () => {
-  form.itemCount = totalQuantity.value
+  form.value.items.splice(index, 1)
 }
 
 // 表单校验规则
 const rules: FormRules = {
   memberName: [
-    { required: true, message: '请输入会员姓名', trigger: 'blur' },
-    { min: 2, max: 20, message: '姓名长度应在 2-20 个字符之间', trigger: 'blur' }
+    { required: true, message: '请输入会员姓名', trigger: 'blur' }
   ],
   memberPhone: [
     { required: true, message: '请输入手机号码', trigger: 'blur' },
@@ -410,17 +445,7 @@ const rules: FormRules = {
     { required: true, message: '请选择提货方式', trigger: 'change' }
   ],
   pickupTime: [
-    { required: true, message: '请选择提货时间', trigger: 'change' },
-    { 
-      validator: (rule: any, value: any, callback: any) => {
-        if (value && value < Date.now()) {
-          callback(new Error('提货时间不能早于当前时间'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'change'
-    }
+    { required: true, message: '请选择提货时间', trigger: 'change' }
   ],
   operator: [
     { required: true, message: '请选择操作员', trigger: 'change' }
@@ -431,91 +456,20 @@ const rules: FormRules = {
 const handleReadCard = async () => {
   try {
     loading.value = true
-    // 模拟异步操作
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // 模拟读取会员信息和可提商品
-    form.memberName = '陈思悦'
-    form.memberPhone = '13812345678'
-    
-    // 模拟会员可提商品数据
-    memberProducts.value = [
-      {
-        id: 1,
-        name: '高级面部护理套装',
-        sku: 'SKU001',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 2
-      },
-      {
-        id: 2,
-        name: '美白精华液',
-        sku: 'SKU002',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 1
-      },
-      {
-        id: 3,
-        name: '保湿面霜',
-        sku: 'SKU003',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 3
-      },
-      {
-        id: 4,
-        name: '玻尿酸原液',
-        sku: 'SKU004',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 2
-      },
-      {
-        id: 5,
-        name: '维生素C精华',
-        sku: 'SKU005',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 4
-      },
-      {
-        id: 6,
-        name: '胶原蛋白面膜',
-        sku: 'SKU006',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 10
-      },
-      {
-        id: 7,
-        name: '舒缓修护喷雾',
-        sku: 'SKU007',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 3
-      },
-      {
-        id: 8,
-        name: '眼部精华液',
-        sku: 'SKU008',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 2
-      },
-      {
-        id: 9,
-        name: '深层清洁面膜',
-        sku: 'SKU009',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 5
-      },
-      {
-        id: 10,
-        name: '防晒隔离乳',
-        sku: 'SKU010',
-        image: 'https://placeholder.com/150',
-        availableQuantity: 3
-      }
-    ]
-    
+    const response = await pickupApi.readMemberCard()
+    const cardData = (response.data as unknown) as {
+      memberId: number
+      memberName: string
+      memberPhone: string
+      products: MemberPickupProduct[]
+    }
+    form.value.memberName = cardData.memberName
+    form.value.memberPhone = cardData.memberPhone
+    memberProducts.value = cardData.products
     ElMessage.success('会员卡读取成功')
   } catch (error) {
+    console.error('会员卡读取失败:', error)
     ElMessage.error('会员卡读取失败')
-    memberProducts.value = []
   } finally {
     loading.value = false
   }
@@ -525,38 +479,47 @@ const handleReadCard = async () => {
 const handleSubmit = async () => {
   if (!formRef.value) return
   
-  if (form.items.length === 0) {
-    ElMessage.warning('请至少添加一件商品')
-    return
-  }
-  
   try {
     await formRef.value.validate()
     loading.value = true
     
-    // 构造提交数据
-    const submitData = {
-      ...form,
-      pickupTime: dayjs(form.pickupTime).format('YYYY-MM-DD HH:mm'),
-      status: 'pending',
-      itemCount: totalQuantity.value
+    // 转换表单数据为提交格式
+    const submitData: CreatePickupOrderRequest = {
+      memberName: form.value.memberName,
+      memberPhone: form.value.memberPhone,
+      deliveryType: form.value.deliveryType,
+      deliveryAddress: form.value.deliveryAddress,
+      pickupTime: form.value.pickupTime,
+      operator: form.value.operator,
+      notes: form.value.notes,
+      items: form.value.items.map(item => ({
+        id: item.id,
+        quantity: item.quantity
+      }))
     }
     
     emit('submit', submitData)
     handleClose()
-    ElMessage.success('提货单创建成功')
   } catch (error) {
-    // 表单验证失败
     console.error('表单验证失败:', error)
   } finally {
     loading.value = false
   }
 }
 
-// 关闭对话框
+// 关闭弹窗
 const handleClose = () => {
   emit('update:visible', false)
-  // 重置表单和会员可提商品
+  // 重置表单
+  const emptyForm: PickupFormData = {
+    memberName: '',
+    memberPhone: '',
+    deliveryType: 'store',
+    pickupTime: '',
+    operator: '',
+    items: []
+  }
+  form.value = emptyForm
   if (formRef.value) {
     formRef.value.resetFields()
   }
@@ -564,29 +527,24 @@ const handleClose = () => {
 }
 
 // 修改商品数量时检查限制
-const handleQuantityChange = (item: any, value: number) => {
+const handleQuantityChange = (item: PickupOrderItem, value: number) => {
   const memberProduct = memberProducts.value.find(p => p.id === item.id)
   if (!memberProduct) return
 
-  // 检查新数量是否超过原始可提数量
-  if (value > item.originalQuantity) {
-    item.quantity = item.originalQuantity
-    memberProduct.availableQuantity = 0
-    ElMessage.warning(`该商品最多可提 ${item.originalQuantity} 件`)
+  // 检查新数量是否超过可提数量
+  if (value > memberProduct.availableQuantity) {
+    item.quantity = memberProduct.availableQuantity
+    ElMessage.warning(`该商品最多可提 ${memberProduct.availableQuantity} 件`)
     return
   }
 
   // 确保数量不小于1
   if (value < 1) {
     item.quantity = 1
-    memberProduct.availableQuantity = item.originalQuantity - 1
     return
   }
 
-  // 更新可提商品的可提数量
-  memberProduct.availableQuantity = item.originalQuantity - value
   item.quantity = value
-  calculateTotal()
 }
 </script>
 
