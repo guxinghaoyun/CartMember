@@ -3,15 +3,14 @@ export interface Member {
   id: number
   name: string
   phone: string
-  icCard: string
+  icNumber: string
   registerDate: string
-  status: '正常' | '停用'
-  cardImages?: {
-    front?: string
-    back?: string
-  }
-  notes?: string
+  icStatus: boolean
+  frontPicture?: string
+  backPicture?: string
+  note?: string
   remainingPoints: number
+  shopId?: number
   remainingProducts?: {
     id: number
     name: string
@@ -23,31 +22,29 @@ export interface Member {
 export interface CreateMemberRequest {
   name: string
   phone: string
-  icCard: string
-  status: '正常' | '停用'
-  cardImages?: {
-    front?: string
-    back?: string
-  }
-  notes?: string
+  icNumber: string
+  icStatus: boolean
+  shopId?: number
+  frontPicture?: string
+  backPicture?: string
+  note?: string
 }
 
 // 更新会员请求
 export interface UpdateMemberRequest {
   name?: string
   phone?: string
-  status?: '正常' | '停用'
-  cardImages?: {
-    front?: string
-    back?: string
-  }
-  notes?: string
+  icStatus?: boolean
+  frontPicture?: string
+  backPicture?: string
+  note?: string
+  shopId?: number
 }
 
 // 会员查询参数
 export interface MemberQueryParams {
   keyword?: string
-  status?: '正常' | '停用'
+  icStatus?: boolean
   startDate?: string
   endDate?: string
 }
@@ -59,7 +56,7 @@ export interface MemberCard {
   type: '会员卡' | '储值卡' | '礼品卡'
   balance: number
   points: number
-  status: '正常' | '已禁用' | '已过期'
+  icStatus: boolean
   activateDate: string
   expireDate: string
 }
@@ -109,4 +106,4 @@ export interface MemberRecordQueryParams {
   endDate?: string
   minAmount?: number
   maxAmount?: number
-} 
+}

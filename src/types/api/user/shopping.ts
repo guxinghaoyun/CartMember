@@ -31,36 +31,51 @@ export interface CartItem {
   invalidReason?: string
 }
 
+// 配送地址
+export interface DeliveryAddress {
+  name: string
+  phone: string
+  province: string
+  city: string
+  district: string
+  detail: string
+}
+
+// 订单商品
+export interface OrderProduct {
+  id: number
+  name: string
+  image: string
+  price: number
+  quantity: number
+  unit: string
+}
+
+// 支付方式类型
+export type PaymentMethodType = '微信支付' | '支付宝' | '余额支付'
+
+// 配送方式类型
+export type DeliveryMethodType = '快递配送' | '门店自提'
+
+// 订单状态类型
+export type OrderStatusType = '待支付' | '待发货' | '待收货' | '已完成' | '已取消' | '已退款'
+
 // 订单信息
 export interface Order {
   id: number
   orderNo: string
-  status: '待支付' | '待发货' | '待收货' | '已完成' | '已取消' | '已退款'
+  status: OrderStatusType
   totalAmount: number
   actualAmount: number
   discountAmount: number
-  paymentMethod?: '微信支付' | '支付宝' | '余额支付'
+  paymentMethod?: PaymentMethodType
   paymentTime?: string
-  deliveryMethod: '快递配送' | '门店自提'
+  deliveryMethod: DeliveryMethodType
   deliveryFee: number
-  address?: {
-    name: string
-    phone: string
-    province: string
-    city: string
-    district: string
-    detail: string
-  }
+  address?: DeliveryAddress
   storeId?: number
   storeName?: string
-  products: {
-    id: number
-    name: string
-    image: string
-    price: number
-    quantity: number
-    unit: string
-  }[]
+  products: OrderProduct[]
   couponId?: number
   couponAmount?: number
   notes?: string
@@ -68,38 +83,20 @@ export interface Order {
   updateTime: string
 }
 
+// 创建订单请求商品
+export interface CreateOrderProductRequest {
+  productId: number
+  quantity: number
+}
+
 // 创建订单请求
 export interface CreateOrderRequest {
-  products: {
-    productId: number
-    quantity: number
-  }[]
-  deliveryMethod: Order['deliveryMethod']
-  address?: {
-    name: string
-    phone: string
-    province: string
-    city: string
-    district: string
-    detail: string
-  }
+  products: CreateOrderProductRequest[]
+  deliveryMethod: DeliveryMethodType
+  address?: DeliveryAddress
   storeId?: number
   couponId?: number
   notes?: string
-}
-
-// 商品评价
-export interface ProductReview {
-  id: number
-  orderId: number
-  productId: number
-  productName: string
-  rating: number
-  content: string
-  images?: string[]
-  anonymous: boolean
-  reply?: string
-  createTime: string
 }
 
 // 商品查询参数

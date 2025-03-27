@@ -14,6 +14,8 @@ export interface StoreStaff {
   status?: StaffStatus
   entryTime?: string
   leaveTime?: string
+  phone?: string
+  createTime?: string
 }
 
 // 店铺基础信息
@@ -21,12 +23,12 @@ export interface Store {
   id: number
   name: string
   location: string
+  status: StoreStatus
+  username: string // 对应后端的loginId
+  password: string
   manager: string
   phone: string
   staffList: StoreStaff[]
-  username: string
-  password: string
-  status: StoreStatus
   createTime?: string
   updateTime?: string
 }
@@ -35,11 +37,12 @@ export interface Store {
 export interface StoreForm {
   name: string
   location: string
+  username: string // 对应后端的loginId
+  password: string
   manager: string
   phone: string
   staffList: StoreStaff[]
-  username: string
-  password: string
+  status: StoreStatus
 }
 
 // 创建店铺请求
@@ -104,4 +107,4 @@ export interface StoreInventoryQueryParams {
   productId?: number
   productName?: string
   belowWarning?: boolean
-} 
+}

@@ -4,7 +4,6 @@ import type {
   CartItem,
   Order,
   CreateOrderRequest,
-  ProductReview,
   ProductQueryParams,
   OrderQueryParams
 } from '@/types/api/user/shopping'
@@ -18,10 +17,6 @@ export const shoppingApi = {
 
   getProductDetail(id: number) {
     return request.get<ApiResponse<Product>>(`/user/shopping/products/${id}`)
-  },
-
-  getProductReviews(productId: number, params: PaginationParams) {
-    return request.get<ApiResponse<PaginationResponse<ProductReview>>>(`/user/shopping/products/${productId}/reviews`, { params })
   },
 
   // 购物车相关
@@ -86,16 +81,6 @@ export const shoppingApi = {
     images?: string[]
   }) {
     return request.post<ApiResponse<void>>(`/user/shopping/orders/${id}/refund`, data)
-  },
-
-  // 评价商品
-  reviewProduct(orderId: number, productId: number, data: {
-    rating: number
-    content: string
-    images?: string[]
-    anonymous: boolean
-  }) {
-    return request.post<ApiResponse<ProductReview>>(`/user/shopping/orders/${orderId}/products/${productId}/review`, data)
   },
 
   // 删除订单

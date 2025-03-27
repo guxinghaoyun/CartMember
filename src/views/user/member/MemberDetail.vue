@@ -5,7 +5,8 @@
     title="会员详情"
     width="580px"
     :close-on-click-modal="false"
-    @close="handleClose">
+    @close="handleClose"
+  >
     <div class="space-y-8">
       <!-- 基本信息 -->
       <div class="space-y-4">
@@ -41,7 +42,7 @@
           <div class="space-y-4">
             <div class="flex">
               <span class="text-gray-500 w-20 flex-shrink-0">IC卡号</span>
-              <span class="text-gray-900">{{ member?.icCard }}</span>
+              <span class="text-gray-900">{{ member?.icNumber }}</span>
             </div>
             <div class="flex">
               <span class="text-gray-500 w-20 flex-shrink-0">注册时间</span>
@@ -49,47 +50,52 @@
             </div>
             <div class="flex">
               <span class="text-gray-500 w-20 flex-shrink-0">卡片状态</span>
-              <span 
+              <span
                 class="inline-flex items-center px-3 py-1 rounded-lg text-sm"
-                :class="member?.status === '正常' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                :class="member?.icStatus ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
               >
-                <span 
+                <span
                   class="w-2 h-2 mr-2 rounded-full"
-                  :class="member?.status === '正常' ? 'bg-green-500' : 'bg-red-500'"
+                  :class="member?.icStatus ? 'bg-green-500' : 'bg-red-500'"
                 ></span>
-                {{ member?.status }}
+                {{ member?.icStatus ? '正常' : '停用' }}
               </span>
             </div>
             <div class="flex">
               <span class="text-gray-500 w-20 flex-shrink-0">剩余积分</span>
               <span class="text-gray-900">
-                <span class="text-orange-500 font-medium">{{ member?.remainingPoints || 0 }}</span> 分
+                <span class="text-orange-500 font-medium">{{ member?.remainingPoints || 0 }}</span>
+                分
               </span>
             </div>
-            <div v-if="member?.cardImages?.front || member?.cardImages?.back" class="space-y-4">
+            <div v-if="member?.frontPicture || member?.backPicture" class="space-y-4">
               <div class="flex">
                 <span class="text-gray-500 w-20 flex-shrink-0">IC卡图片</span>
               </div>
               <div class="grid grid-cols-2 gap-4">
                 <!-- 正面 -->
-                <div v-if="member?.cardImages?.front" class="space-y-2">
+                <div v-if="member?.frontPicture" class="space-y-2">
                   <div class="text-sm text-gray-500">正面</div>
-                  <div class="border border-gray-200 rounded-lg p-2 bg-white">
-                    <img 
-                      :src="member.cardImages.front" 
-                      class="w-full h-32 object-contain rounded"
-                      alt="IC卡正面" 
+                  <div
+                    class="border border-gray-200 rounded-lg p-2 bg-white h-[190px] flex items-center justify-center"
+                  >
+                    <member-card-image
+                      :member-id="member.id"
+                      :image-uuid="member.frontPicture"
+                      alt="IC卡正面"
                     />
                   </div>
                 </div>
                 <!-- 背面 -->
-                <div v-if="member?.cardImages?.back" class="space-y-2">
+                <div v-if="member?.backPicture" class="space-y-2">
                   <div class="text-sm text-gray-500">背面</div>
-                  <div class="border border-gray-200 rounded-lg p-2 bg-white">
-                    <img 
-                      :src="member.cardImages.back" 
-                      class="w-full h-32 object-contain rounded"
-                      alt="IC卡背面" 
+                  <div
+                    class="border border-gray-200 rounded-lg p-2 bg-white h-[190px] flex items-center justify-center"
+                  >
+                    <member-card-image
+                      :member-id="member.id"
+                      :image-uuid="member.backPicture"
+                      alt="IC卡背面"
                     />
                   </div>
                 </div>
@@ -114,15 +120,13 @@
                 <div class="flex items-center text-gray-900">
                   <font-awesome-icon icon="list" class="mr-2 text-gray-500" />
                   共 {{ member.remainingProducts.length }} 种商品
-                  <span class="ml-2 text-sm text-gray-500">
-                    (点击展开查看详情)
-                  </span>
+                  <span class="ml-2 text-sm text-gray-500">(点击展开查看详情)</span>
                 </div>
               </template>
               <div class="bg-white rounded-lg mt-2 divide-y divide-gray-100">
-                <div 
-                  v-for="product in member.remainingProducts" 
-                  :key="product.id" 
+                <div
+                  v-for="product in member.remainingProducts"
+                  :key="product.id"
                   class="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors"
                 >
                   <div class="flex items-center space-x-3">
@@ -133,7 +137,9 @@
                   </div>
                   <div class="flex items-center">
                     <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-600">
-                      剩余 <span class="font-medium">{{ product.quantity }}</span> 件
+                      剩余
+                      <span class="font-medium">{{ product.quantity }}</span>
+                      件
                     </span>
                   </div>
                 </div>
@@ -154,7 +160,7 @@
         <div class="bg-gray-50 rounded-lg p-5">
           <div class="flex">
             <span class="text-gray-500 w-20 flex-shrink-0">备注</span>
-            <span class="text-gray-900">{{ member?.notes || '-' }}</span>
+            <span class="text-gray-900">{{ member?.note || '-' }}</span>
           </div>
         </div>
       </div>
@@ -170,6 +176,7 @@
 
 <script lang="ts" setup>
 import type { Member } from '@/types/api/user/member'
+import MemberCardImage from '@/components/common/MemberCardImage.vue'
 
 interface Props {
   visible: boolean
@@ -193,7 +200,9 @@ const handleClose = () => {
 /* Dialog 样式 */
 :deep(.el-dialog) {
   border-radius: 12px !important;
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
 }
 
 :deep(.el-dialog__header) {
@@ -216,4 +225,4 @@ const handleClose = () => {
   padding: 12px 20px !important;
   border-top: 1px solid #e5e7eb !important;
 }
-</style> 
+</style>

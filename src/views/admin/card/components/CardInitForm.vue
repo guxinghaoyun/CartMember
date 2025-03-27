@@ -13,12 +13,14 @@
           <label class="block text-sm font-medium text-gray-700 mb-1">内部号码</label>
           <div class="flex gap-2">
             <input
+              ref="cardInputRef"
               v-model="form.internalNumber"
               type="text"
               class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="请读取IC卡"
-              readonly
-            >
+              :readonly="!isReadingCard"
+              @keydown="handleKeyDown"
+            />
             <button
               class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               @click="handleReadCard"
@@ -38,7 +40,7 @@
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="请输入卡面号码（NO.1）"
             :disabled="loading"
-          >
+          />
         </div>
       </div>
 
@@ -47,7 +49,9 @@
           class="!rounded-button px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           @click="handleClose"
           :disabled="loading"
-        >取消</button>
+        >
+          取消
+        </button>
         <button
           class="!rounded-button px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           :disabled="!form.internalNumber || !form.surfaceNumber || loading"
@@ -62,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { cardApi } from '@/api/admin/card'
 import type { CardForm } from '@/types/api/admin/card'
@@ -82,42 +86,46 @@ const form = ref<CardForm>({
   surfaceNumber: '',
   internalNumber: ''
 })
+const cardInputRef = ref<HTMLInputElement | null>(null)
+const isReadingCard = ref(false)
 
 const handleClose = () => {
   form.value = {
     surfaceNumber: '',
     internalNumber: ''
   }
+  isReadingCard.value = false
   emit('update:show', false)
 }
 
 const handleReadCard = async () => {
   if (loading.value) return
 
-  try {
-    loading.value = true
-    // 这里模拟读卡操作，实际项目中需要调用真实的读卡API
-    const mockInternalNumber = 'RF8A7B2C' + Math.random().toString(36).substr(2, 4).toUpperCase()
-    
-    // 检查内部号码是否已存在
-    const response = await cardApi.getList({
-      page: 1,
-      pageSize: 1,
-      keyword: mockInternalNumber
-    })
+  // 清空内部号码输入框
+  form.value.internalNumber = ''
 
-    if (response.data.data.total > 0) {
-      ElMessage.error('该卡片已被初始化')
-      return
+  // 设置读卡状态为true，允许读卡器输入
+  isReadingCard.value = true
+
+  // 聚焦输入框，等待读卡器模拟键盘输入
+  if (cardInputRef.value) {
+    cardInputRef.value.focus()
+  }
+
+  // 设置一个超时，如果一段时间内没有读卡，自动关闭读卡状态
+  setTimeout(() => {
+    if (!form.value.internalNumber) {
+      isReadingCard.value = false
     }
+  }, 10000) // 10秒超时
+}
 
-    form.value.internalNumber = mockInternalNumber
-    ElMessage.success('读卡成功')
-  } catch (error) {
-    console.error('读卡失败:', error)
-    ElMessage.error('读卡失败，请重试')
-  } finally {
-    loading.value = false
+// 处理键盘输入事件
+const handleKeyDown = (e: KeyboardEvent) => {
+  // 如果不是在读卡状态，阻止所有键盘输入
+  if (!isReadingCard.value) {
+    e.preventDefault()
+    return false
   }
 }
 
@@ -140,7 +148,7 @@ const validateForm = async (): Promise<string | null> => {
       keyword: form.value.surfaceNumber
     })
 
-    if (response.data.data.total > 0) {
+    if (response.data && response.data.totalRecords > 0) {
       return '卡面号码已存在'
     }
   } catch (error) {
@@ -153,7 +161,7 @@ const validateForm = async (): Promise<string | null> => {
 
 const handleSubmit = async () => {
   if (loading.value) return
-  
+
   try {
     loading.value = true
     const error = await validateForm()
@@ -174,4 +182,42 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
-</script> 
+
+// 监听内部号码的变化
+watch(
+  () => form.value.internalNumber,
+  async newValue => {
+    // 当内部号码有值且不是空白字符时进行验证
+    if (newValue && newValue.trim() && !loading.value) {
+      try {
+        loading.value = true
+        // 检查内部号码是否已存在
+        const response = await cardApi.getList({
+          page: 1,
+          pageSize: 1,
+          keyword: newValue
+        })
+
+        if (response.data && response.data.totalRecords > 0) {
+          ElMessage.error('该卡片已被初始化')
+          form.value.internalNumber = ''
+          // 重新聚焦输入框，方便继续读卡
+          if (cardInputRef.value) {
+            cardInputRef.value.focus()
+          }
+        } else {
+          ElMessage.success('读卡成功')
+          // 读卡成功后，关闭读卡状态
+          isReadingCard.value = false
+        }
+      } catch (error) {
+        console.error('验证卡号失败:', error)
+        ElMessage.error('验证卡号失败，请重试')
+      } finally {
+        loading.value = false
+      }
+    }
+  },
+  { immediate: false }
+)
+</script>

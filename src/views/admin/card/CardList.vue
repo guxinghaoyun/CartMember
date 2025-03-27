@@ -8,7 +8,9 @@
             <p class="text-blue-100 text-sm">总卡数</p>
             <p class="text-3xl font-semibold mt-2">{{ cards.length }}</p>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-blue-400 bg-opacity-30 flex items-center justify-center">
+          <div
+            class="w-10 h-10 rounded-lg bg-blue-400 bg-opacity-30 flex items-center justify-center"
+          >
             <font-awesome-icon icon="credit-card" class="text-2xl text-blue-200" />
           </div>
         </div>
@@ -20,7 +22,9 @@
             <p class="text-purple-100 text-sm">本月新增</p>
             <p class="text-3xl font-semibold mt-2">12</p>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-purple-400 bg-opacity-30 flex items-center justify-center">
+          <div
+            class="w-10 h-10 rounded-lg bg-purple-400 bg-opacity-30 flex items-center justify-center"
+          >
             <font-awesome-icon icon="chart-line" class="text-2xl text-purple-200" />
           </div>
         </div>
@@ -32,7 +36,9 @@
             <p class="text-orange-100 text-sm">活跃率</p>
             <p class="text-3xl font-semibold mt-2">86%</p>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-orange-400 bg-opacity-30 flex items-center justify-center">
+          <div
+            class="w-10 h-10 rounded-lg bg-orange-400 bg-opacity-30 flex items-center justify-center"
+          >
             <font-awesome-icon icon="signal" class="text-2xl text-orange-200" />
           </div>
         </div>
@@ -42,7 +48,9 @@
     <!-- IC卡列表 -->
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
       <!-- 顶部工具栏 -->
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center p-6 border-b border-gray-100 gap-4">
+      <div
+        class="flex flex-col sm:flex-row sm:justify-between sm:items-center p-6 border-b border-gray-100 gap-4"
+      >
         <div class="flex items-center gap-4">
           <h2 class="text-xl font-medium flex items-center gap-3">
             <font-awesome-icon icon="credit-card" class="text-blue-600" />
@@ -52,7 +60,11 @@
           <div class="flex items-center bg-gray-100 rounded-lg p-1">
             <button
               class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors"
-              :class="viewMode === 'card' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'"
+              :class="
+                viewMode === 'card'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              "
               @click="viewMode = 'card'"
             >
               <font-awesome-icon icon="table-cells" class="text-sm" />
@@ -60,7 +72,11 @@
             </button>
             <button
               class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors"
-              :class="viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'"
+              :class="
+                viewMode === 'list'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              "
               @click="viewMode = 'list'"
             >
               <font-awesome-icon icon="list" class="text-sm" />
@@ -75,8 +91,11 @@
               type="text"
               placeholder="搜索卡号/会员姓名/手机号"
               class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
-            >
-            <font-awesome-icon icon="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            />
+            <font-awesome-icon
+              icon="search"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
           </div>
           <button
             class="!rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white px-6 py-2 flex items-center gap-2 justify-center"
@@ -89,7 +108,10 @@
       </div>
 
       <!-- 卡片视图 -->
-      <div v-if="viewMode === 'card'" class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        v-if="viewMode === 'card'"
+        class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         <div
           v-for="card in paginatedCards"
           :key="card.id"
@@ -102,7 +124,7 @@
                   <font-awesome-icon icon="credit-card" class="text-blue-600 text-xl" />
                 </div>
                 <div>
-                  <h3 class="font-medium text-lg">{{ card.surfaceNumber }}</h3>
+                  <h3 class="font-medium text-lg">{{ card.cardNumber }}</h3>
                   <div class="flex flex-col gap-1">
                     <p class="text-gray-500 text-sm">内部号: {{ card.internalNumber }}</p>
                   </div>
@@ -114,7 +136,10 @@
                   @click="toggleCardStatus(card)"
                   v-if="card.store"
                 >
-                  <font-awesome-icon :icon="getStatusIcon(card.status)" :class="getStatusClass(card.status)" />
+                  <font-awesome-icon
+                    :icon="getStatusIcon(card.status)"
+                    :class="getStatusClass(card.status)"
+                  />
                 </button>
               </div>
             </div>
@@ -141,7 +166,7 @@
               ></span>
               <span class="text-gray-600 min-w-[48px]">{{ card.status }}</span>
             </div>
-            <span class="text-gray-500 text-sm">{{ card.initTime }}</span>
+            <span class="text-gray-500 text-sm">{{ formatDate(card.createTime) }}</span>
           </div>
         </div>
       </div>
@@ -159,14 +184,18 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            <tr v-for="card in paginatedCards" :key="card.id" class="hover:bg-gray-50 transition-colors">
+            <tr
+              v-for="card in paginatedCards"
+              :key="card.id"
+              class="hover:bg-gray-50 transition-colors"
+            >
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                     <font-awesome-icon icon="credit-card" class="text-blue-600" />
                   </div>
                   <div>
-                    <div class="font-medium">{{ card.surfaceNumber }}</div>
+                    <div class="font-medium">{{ card.cardNumber }}</div>
                     <div class="text-sm text-gray-500">内部号: {{ card.internalNumber }}</div>
                   </div>
                 </div>
@@ -184,7 +213,7 @@
                 </div>
               </td>
               <td class="px-6 py-4 text-sm text-gray-500">
-                {{ card.initTime }}
+                {{ formatDate(card.initTime) }}
               </td>
               <td class="px-6 py-4">
                 <button
@@ -213,14 +242,19 @@
       </div>
 
       <!-- 分页 -->
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center px-6 py-4 bg-gray-50 gap-4">
+      <div
+        class="flex flex-col sm:flex-row sm:justify-between sm:items-center px-6 py-4 bg-gray-50 gap-4"
+      >
         <div class="text-sm text-gray-600">
           共 {{ cards.length }} 条数据，每页显示 {{ pageSize }} 条
         </div>
         <div class="flex items-center gap-3">
           <button
             class="!rounded-lg px-4 py-2 border bg-white transition-colors"
-            :class="{ 'text-gray-400 cursor-not-allowed': currentPage === 1, 'hover:bg-gray-50': currentPage > 1 }"
+            :class="{
+              'text-gray-400 cursor-not-allowed': currentPage === 1,
+              'hover:bg-gray-50': currentPage > 1
+            }"
             :disabled="currentPage === 1"
             @click="currentPage--"
           >
@@ -234,12 +268,15 @@
               v-model="currentPage"
               class="w-12 text-center border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 px-1 py-0.5"
               @blur="validatePageNumber"
-            >
+            />
             <span>页 / 共 {{ totalPages }} 页</span>
           </div>
           <button
             class="!rounded-lg px-4 py-2 border bg-white transition-colors"
-            :class="{ 'text-gray-400 cursor-not-allowed': currentPage === totalPages, 'hover:bg-gray-50': currentPage < totalPages }"
+            :class="{
+              'text-gray-400 cursor-not-allowed': currentPage === totalPages,
+              'hover:bg-gray-50': currentPage < totalPages
+            }"
             :disabled="currentPage === totalPages"
             @click="currentPage++"
           >
@@ -251,11 +288,7 @@
     </div>
 
     <!-- 初始化IC卡弹窗 -->
-    <card-init-form
-      v-if="showInitCard"
-      v-model:show="showInitCard"
-      @submit="handleCardInit"
-    />
+    <card-init-form v-if="showInitCard" v-model:show="showInitCard" @button="handleCardInit" />
   </div>
 </template>
 
@@ -266,6 +299,8 @@ import CardInitForm from './components/CardInitForm.vue'
 import type { CardForm } from '@/types/api/admin/card'
 import { cardApi } from '@/api/admin/card'
 import type { Card, CardStatus } from '@/types/api/admin/card'
+import { cardStatusMap } from '@/types/api/admin/card'
+import type { CardResponse } from '@/types/api/admin/card'
 
 // 视图模式
 const viewMode = ref<'card' | 'list'>('card')
@@ -281,6 +316,22 @@ const total = ref(0)
 // 卡片数据
 const cards = ref<Card[]>([])
 
+// 将后端返回的数据转换为前端使用的格式
+const transformCardData = (card: Card): Card => {
+  const statusValue = cardStatusMap[card.status as keyof typeof cardStatusMap] || card.status
+
+  // 创建一个新对象，确保包含所有必要字段
+  return {
+    ...card,
+    surfaceNumber: card.cardNumber || 'N/A', // 将cardNumber映射为surfaceNumber
+    initTime: card.createTime || 'N/A', // 将createTime映射为initTime
+    status: statusValue, // 映射状态
+    store: card.store || '未分配', // 默认店铺为未分配
+    memberName: card.memberName || '未绑定', // 默认会员名为未绑定
+    memberPhone: card.memberPhone || '--' // 默认电话为空
+  }
+}
+
 // 获取卡片列表
 const fetchCards = async () => {
   try {
@@ -292,8 +343,14 @@ const fetchCards = async () => {
       status: undefined as CardStatus | undefined
     }
     const response = await cardApi.getList(params)
-    cards.value = response.data.data.items
-    total.value = response.data.data.total
+
+    // 直接使用后端返回的数据
+    console.log('API响应:', response)
+
+    cards.value = response.records
+    total.value = response.totalRecords
+
+    console.log('总记录数:', total.value)
   } catch (error) {
     console.error('Failed to fetch cards:', error)
     ElMessage.error('获取卡片列表失败')
@@ -316,7 +373,7 @@ const validatePageNumber = () => {
   fetchCards()
 }
 
-const getStatusIcon = (status: CardStatus) => {
+const getStatusIcon = (status: CardStatus | string) => {
   switch (status) {
     case '正常':
       return 'check'
@@ -329,7 +386,7 @@ const getStatusIcon = (status: CardStatus) => {
   }
 }
 
-const getStatusClass = (status: CardStatus) => {
+const getStatusClass = (status: CardStatus | string) => {
   switch (status) {
     case '正常':
       return 'text-green-600'
@@ -367,28 +424,7 @@ const toggleCardStatus = async (card: Card) => {
 }
 
 const handleCardInit = async (formData: CardForm) => {
-  try {
-    const response = await cardApi.getList({
-      page: 1,
-      pageSize: 1,
-      keyword: formData.surfaceNumber
-    })
-    
-    // 检查卡号是否已存在
-    if (response.data.data.total > 0) {
-      ElMessage.error('卡面号码已存在')
-      return
-    }
-
-    // 创建新卡片
-    await cardApi.createCard(formData)
-    ElMessage.success('IC卡初始化成功')
-    showInitCard.value = false
-    fetchCards()
-  } catch (error) {
-    console.error('Failed to init card:', error)
-    ElMessage.error('IC卡初始化失败')
-  }
+  showInitCard.value = false
 }
 
 // 监听分页和搜索变化
@@ -400,4 +436,10 @@ watch([currentPage, pageSize, searchQuery], () => {
 onMounted(() => {
   fetchCards()
 })
-</script> 
+
+// 格式化日期，只显示年月日
+const formatDate = (date: string | undefined): string => {
+  if (!date) return '' // 处理undefined情况
+  return date.split('T')[0] // 只返回日期部分
+}
+</script>

@@ -1,29 +1,28 @@
 import { defineStore } from 'pinia'
+import type { Product } from './shopping'
+import { memberApi } from '@/api/user/member'
+import { operatorApi } from '@/api/user/operator'
+import type { ApiResponse } from '@/types/api/common'
+import type { Member as MemberType } from '@/types/api/user/member'
+import type { Operator } from '@/types/api/user/operator'
 
-interface Product {
-  id: number
-  name: string
-  price: number
-  category: string
-  image: string
-}
-
-interface CartItem {
+export interface CartStoreItem {
   id: number
   quantity: number
   product: Product
 }
 
-interface Member {
+export interface Member {
   name: string
   points: number
 }
 
-interface CartState {
-  items: CartItem[]
+export interface CartState {
+  items: CartStoreItem[]
   member: Member | null
   totalAmount: number
   expectedPoints: number
+  operators: Operator[]
 }
 
 export const useCartStore = defineStore('cart', {
@@ -31,7 +30,8 @@ export const useCartStore = defineStore('cart', {
     items: [],
     member: null,
     totalAmount: 0,
-    expectedPoints: 0
+    expectedPoints: 0,
+    operators: []
   }),
 
   actions: {
@@ -42,7 +42,7 @@ export const useCartStore = defineStore('cart', {
       this.expectedPoints = cart.expectedPoints
     },
 
-    addItem(item: CartItem) {
+    addItem(item: CartStoreItem) {
       const existingItem = this.items.find(i => i.id === item.id)
       if (existingItem) {
         existingItem.quantity += item.quantity
@@ -77,6 +77,58 @@ export const useCartStore = defineStore('cart', {
       this.member = null
       this.totalAmount = 0
       this.expectedPoints = 0
+    },
+
+    // 新增的方法，用于获取会员信息
+    async fetchMemberById(id: number): Promise<MemberType | null> {
+      try {
+        const response = await memberApi.getMemberById(id)
+        const memberData = response.data.data
+        
+        // 更新购物车中的会员信息
+        this.member = {
+          name: memberData.name,
+          points: memberData.remainingPoints
+        }
+        
+        return memberData
+      } catch (error) {
+        console.error('Failed to fetch member:', error)
+        return null
+      }
+    },
+
+    // 新增的方法，用于获取操作员列表
+    async fetchOperators(): Promise<Operator[]> {
+      try {
+        const response = await operatorApi.getCurrentStoreOperators()
+        this.operators = response.data.data
+        return this.operators
+      } catch (error) {
+        console.error('Failed to fetch operators:', error)
+        return []
+      }
+    },
+
+    // 新增的方法，用于处理结账流程
+    async processCheckout(): Promise<boolean> {
+      // 这里可以调用支付API或执行其他结账逻辑
+      // 这只是一个示例实现
+      try {
+        // 模拟API调用
+        // const response = await paymentApi.processPayment({
+        //   memberId: this.member?.id,
+        //   amount: this.totalAmount,
+        //   items: this.items
+        // })
+        
+        // 清空购物车
+        this.clearCart()
+        return true
+      } catch (error) {
+        console.error('Checkout failed:', error)
+        return false
+      }
     }
   },
 

@@ -22,17 +22,20 @@
                 <font-awesome-icon icon="info-circle" class="text-blue-500" />
                 基本信息
               </h4>
-              
+
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">商品名称</label>
                 <div class="relative">
-                  <font-awesome-icon icon="tag" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <font-awesome-icon
+                    icon="tag"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
                   <input
                     v-model="form.name"
                     type="text"
                     class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="请输入商品名称"
-                  >
+                  />
                 </div>
               </div>
 
@@ -42,66 +45,43 @@
                   <div class="relative">
                     <button
                       type="button"
-                      class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-left flex items-center justify-between"
+                      class="w-full pl-4 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-left flex items-center justify-between"
                       @click.stop="showStoreDropdown = !showStoreDropdown"
                     >
-                      <div class="flex items-center gap-2">
-                        <font-awesome-icon icon="store" class="text-gray-400" />
-                        <span class="text-gray-700">{{ selectedStoresText }}</span>
+                      <div class="flex items-center gap-2 overflow-hidden">
+                        <font-awesome-icon icon="store" class="text-gray-400 flex-shrink-0" />
+                        <span class="text-gray-700 truncate">{{ selectedStoresText }}</span>
                       </div>
-                      <font-awesome-icon icon="chevron-down" class="text-gray-400" />
+                      <font-awesome-icon icon="chevron-down" class="text-gray-400 flex-shrink-0" />
                     </button>
 
                     <div
                       v-if="showStoreDropdown"
                       class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
                     >
-                      <div class="p-2 border-b border-gray-100">
-                        <label
-                          class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                          :class="{ 'bg-gray-50': isAllStoresSelected || isIndeterminate }"
-                        >
-                          <div
-                            class="w-4 h-4 border border-gray-300 rounded"
-                            :class="{
-                              'bg-blue-500 border-blue-500': isAllStoresSelected,
-                              'bg-blue-500 border-blue-500 opacity-50': isIndeterminate
-                            }"
-                          >
-                            <font-awesome-icon v-if="isAllStoresSelected" icon="check" class="text-xs text-white" />
-                            <div v-if="isIndeterminate" class="w-2 h-2 bg-white mx-auto mt-1"></div>
-                          </div>
-                          <span class="text-sm font-medium text-gray-700">全选</span>
-                          <input
-                            type="checkbox"
-                            class="hidden"
-                            :checked="isAllStoresSelected"
-                            :indeterminate="isIndeterminate"
-                            @change="handleSelectAllStores"
-                          >
-                        </label>
-                      </div>
-
                       <div class="max-h-[240px] overflow-y-auto p-2 space-y-1 store-dropdown">
                         <label
                           v-for="store in stores"
                           :key="store.id"
-                          class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                          :class="{ 'bg-gray-50': form.storeIds.includes(store.id) }"
+                          class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer w-full"
+                          :class="{ 'bg-gray-50': form.storeIds === store.id }"
                         >
                           <div
-                            class="w-4 h-4 border border-gray-300 rounded"
-                            :class="{ 'bg-blue-500 border-blue-500': form.storeIds.includes(store.id) }"
+                            class="w-4 h-4 border border-gray-300 rounded-md flex-shrink-0"
+                            :class="{ 'bg-blue-500 border-blue-500': form.storeIds === store.id }"
                           >
-                            <font-awesome-icon v-if="form.storeIds.includes(store.id)" icon="check" class="text-xs text-white" />
+                            <div
+                              v-if="form.storeIds === store.id"
+                              class="w-2 h-2 bg-white rounded-full mx-auto mt-1"
+                            ></div>
                           </div>
-                          <span class="text-sm text-gray-700">{{ store.name }}</span>
+                          <span class="text-sm text-gray-700 truncate">{{ store.name }}</span>
                           <input
-                            type="checkbox"
+                            type="radio"
                             class="hidden"
-                            :checked="form.storeIds.includes(store.id)"
+                            :checked="form.storeIds === store.id"
                             @change="handleStoreSelect(store.id)"
-                          >
+                          />
                         </label>
                       </div>
                     </div>
@@ -110,17 +90,51 @@
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1.5">商品分类</label>
-                  <div class="relative">
-                    <font-awesome-icon icon="tags" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <select
-                      v-model="form.category"
-                      class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  <div class="relative" ref="categoryDropdownRef">
+                    <button
+                      type="button"
+                      class="w-full pl-4 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-left flex items-center justify-between"
+                      @click.stop="showCategoryDropdown = !showCategoryDropdown"
                     >
-                      <option v-for="option in categoryOptions.slice(1)" :key="option.value" :value="option.value">
-                        {{ option.label }}
-                      </option>
-                    </select>
-                    <font-awesome-icon icon="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <div class="flex items-center gap-2 overflow-hidden">
+                        <font-awesome-icon icon="tags" class="text-gray-400 flex-shrink-0" />
+                        <span class="text-gray-700 truncate">{{ selectedCategoryText }}</span>
+                      </div>
+                      <font-awesome-icon icon="chevron-down" class="text-gray-400 flex-shrink-0" />
+                    </button>
+
+                    <div
+                      v-if="showCategoryDropdown"
+                      class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+                    >
+                      <div class="max-h-[240px] overflow-y-auto p-2 space-y-1 store-dropdown">
+                        <label
+                          v-for="option in categoryOptions.filter(o => o.value !== '')"
+                          :key="option.value"
+                          class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer w-full"
+                          :class="{ 'bg-gray-50': form.category === option.value }"
+                        >
+                          <div
+                            class="w-4 h-4 border border-gray-300 rounded-full flex-shrink-0"
+                            :class="{
+                              'bg-blue-500 border-blue-500': form.category === option.value
+                            }"
+                          >
+                            <div
+                              v-if="form.category === option.value"
+                              class="w-2 h-2 bg-white rounded-full mx-auto mt-1"
+                            ></div>
+                          </div>
+                          <span class="text-sm text-gray-700 truncate">{{ option.label }}</span>
+                          <input
+                            type="radio"
+                            class="hidden"
+                            :checked="form.category === option.value"
+                            @change="handleCategorySelect(option.value)"
+                          />
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -129,26 +143,38 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1.5">积分价格</label>
                   <div class="relative">
-                    <font-awesome-icon icon="coins" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <font-awesome-icon
+                      icon="coins"
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
                     <input
-                      v-model.number="form.price"
+                      :value="form.price === 0 ? '' : form.price"
                       type="number"
                       class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="请输入积分价格"
-                    >
+                      @focus="handlePriceFocus"
+                      @blur="handlePriceBlur"
+                      @input="e => handlePriceInput(e)"
+                    />
                   </div>
                 </div>
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1.5">库存数量</label>
                   <div class="relative">
-                    <font-awesome-icon icon="cubes" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <font-awesome-icon
+                      icon="cubes"
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
                     <input
-                      v-model.number="form.quantity"
+                      :value="form.quantity === 0 ? '' : form.quantity"
                       type="number"
                       class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="请输入库存数量"
-                    >
+                      @focus="handleQuantityFocus"
+                      @blur="handleQuantityBlur"
+                      @input="e => handleQuantityInput(e)"
+                    />
                   </div>
                 </div>
               </div>
@@ -171,7 +197,7 @@
                 <font-awesome-icon icon="image" class="text-blue-500" />
                 商品图片
               </h4>
-              
+
               <div
                 class="border-2 border-dashed border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer aspect-square flex flex-col items-center justify-center gap-4"
                 @click="triggerFileInput"
@@ -186,14 +212,44 @@
                     <p class="text-sm font-medium text-gray-900">点击或拖拽上传图片</p>
                     <p class="text-xs text-gray-500 mt-1">支持 JPG、PNG 格式，最大 5MB</p>
                   </div>
-                  <button class="!rounded-button px-6 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center gap-2">
+                  <button
+                    class="!rounded-button px-6 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center gap-2"
+                    @click.stop="triggerFileInput"
+                  >
                     <font-awesome-icon icon="folder-open" />
-                    <span>选择文件</span>
+                    <span>选择图片</span>
                   </button>
+                  <input
+                    type="file"
+                    ref="fileInput"
+                    accept="image/jpeg,image/png"
+                    class="hidden"
+                    @change="handleFileChange"
+                  />
+                </template>
+                <template v-else-if="isExistingImageUuid">
+                  <div class="relative w-full h-full p-2">
+                    <product-image
+                      :product-id="props.productData?.id || 0"
+                      :image-uuid="props.productData?.productImageUuid || ''"
+                      class="w-full h-full object-contain rounded-lg"
+                      alt="商品图片"
+                    />
+                    <button
+                      class="absolute top-2 right-2 w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-full flex items-center justify-center transition-colors"
+                      @click.stop="form.image = ''"
+                    >
+                      <font-awesome-icon icon="times" />
+                    </button>
+                  </div>
                 </template>
                 <template v-else>
                   <div class="relative w-full h-full p-2">
-                    <img :src="form.image" class="w-full h-full object-contain rounded-lg" alt="商品图片">
+                    <img
+                      :src="form.image"
+                      class="w-full h-full object-contain rounded-lg"
+                      alt="商品图片"
+                    />
                     <button
                       class="absolute top-2 right-2 w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-full flex items-center justify-center transition-colors"
                       @click.stop="form.image = ''"
@@ -203,7 +259,7 @@
                   </div>
                 </template>
               </div>
-              
+
               <p class="text-xs text-gray-500">
                 <font-awesome-icon icon="info-circle" class="mr-1" />
                 建议尺寸：800x800px，支持 JPG、PNG 格式
@@ -213,16 +269,18 @@
         </div>
       </div>
 
-      <div class="flex justify-end gap-4 px-8 py-5 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+      <div
+        class="flex justify-end gap-4 px-8 py-5 border-t border-gray-100 bg-gray-50 rounded-b-2xl"
+      >
         <button
-          class="!rounded-button px-6 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+          class="rounded-lg px-6 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
           @click="handleClose"
         >
           <font-awesome-icon icon="times" />
           <span>取消</span>
         </button>
         <button
-          class="!rounded-button px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+          class="rounded-lg px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
           @click="handleSubmit"
         >
           <font-awesome-icon icon="check" />
@@ -236,12 +294,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { productApi } from '@/api/admin/product'
-import type { CreateProductRequest, UpdateProductRequest, ProductCategoryType, Product } from '@/types/api/admin/product'
+import type { ProductCategoryType, Product } from '@/types/api/admin/product'
+import ProductImage from '@/components/common/ProductImage.vue'
 
 export interface ProductForm {
   name: string
-  storeIds: number[]
+  storeIds: number
   price: number
   image: string
   quantity: number
@@ -267,9 +325,10 @@ const emit = defineEmits<{
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const storeDropdownRef = ref<HTMLDivElement | null>(null)
+const categoryDropdownRef = ref<HTMLDivElement | null>(null)
 const form = ref<ProductForm>({
   name: '',
-  storeIds: [],
+  storeIds: 0,
   price: 0,
   image: '',
   quantity: 0,
@@ -278,36 +337,45 @@ const form = ref<ProductForm>({
 })
 
 const showStoreDropdown = ref(false)
+const showCategoryDropdown = ref(false)
 
 const isAllStoresSelected = computed(() => {
-  return props.stores.length > 0 && form.value.storeIds.length === props.stores.length
+  return props.stores.length > 0 && form.value.storeIds === props.stores[0].id
 })
 
 const isIndeterminate = computed(() => {
-  return form.value.storeIds.length > 0 && form.value.storeIds.length < props.stores.length
+  return false
 })
 
 const selectedStoresText = computed(() => {
-  if (form.value.storeIds.length === 0) return '请选择店铺'
-  if (form.value.storeIds.length === props.stores.length) return '全部店铺'
-  return `已选 ${form.value.storeIds.length} 个店铺`
+  if (form.value.storeIds === 0) return '请选择店铺'
+  return props.stores.find(store => store.id === form.value.storeIds)?.name || '请选择店铺'
+})
+
+const selectedCategoryText = computed(() => {
+  if (!form.value.category) return '请选择商品分类'
+  return (
+    props.categoryOptions.find(option => option.value === form.value.category)?.label ||
+    '请选择商品分类'
+  )
 })
 
 const handleSelectAllStores = () => {
   if (isAllStoresSelected.value) {
-    form.value.storeIds = []
+    form.value.storeIds = 0
   } else {
-    form.value.storeIds = props.stores.map(store => store.id)
+    form.value.storeIds = props.stores[0].id
   }
 }
 
 const handleStoreSelect = (storeId: number) => {
-  const index = form.value.storeIds.indexOf(storeId)
-  if (index === -1) {
-    form.value.storeIds.push(storeId)
-  } else {
-    form.value.storeIds.splice(index, 1)
-  }
+  form.value.storeIds = storeId
+  showStoreDropdown.value = false
+}
+
+const handleCategorySelect = (category: ProductCategoryType) => {
+  form.value.category = category
+  showCategoryDropdown.value = false
 }
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -315,13 +383,28 @@ const handleClickOutside = (event: MouseEvent) => {
   if (storeDropdownRef.value && !storeDropdownRef.value.contains(target)) {
     showStoreDropdown.value = false
   }
+  if (categoryDropdownRef.value && !categoryDropdownRef.value.contains(target)) {
+    showCategoryDropdown.value = false
+  }
 }
 
 onMounted(() => {
   if (props.editMode && props.productData) {
+    // 转换Product对象的storeIds数组为单个值
+    const storeId =
+      props.productData.storeIds && props.productData.storeIds.length > 0
+        ? props.productData.storeIds[0]
+        : 0
+
     form.value = {
       ...form.value,
-      ...props.productData
+      name: props.productData.name,
+      price: props.productData.price,
+      quantity: props.productData.quantity,
+      category: props.productData.category,
+      image: props.productData.image,
+      description: props.productData.description,
+      storeIds: storeId
     }
   }
   document.addEventListener('click', handleClickOutside)
@@ -338,12 +421,12 @@ const triggerFileInput = () => {
 // 表单验证规则
 const validateForm = (form: ProductForm): string | null => {
   if (!form.name.trim()) return '请输入商品名称'
-  if (form.storeIds.length === 0) return '请选择所属店铺'
+  if (form.storeIds === 0) return '请选择所属店铺'
   if (!form.category) return '请选择商品分类'
   if (form.price <= 0) return '请输入有效的积分价格'
   if (form.quantity < 0) return '请输入有效的库存数量'
   if (!form.description.trim()) return '请输入商品描述'
-  if (!form.image) return '请上传商品图片'
+  // 图片上传是可选的
   return null
 }
 
@@ -360,7 +443,7 @@ const handleImageUpload = async (file: File): Promise<string> => {
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = e => {
       if (e.target?.result) {
         resolve(e.target.result as string)
       } else {
@@ -405,27 +488,86 @@ const handleSubmit = async () => {
     return
   }
 
-  try {
-    const productData: CreateProductRequest = {
-      ...form.value,
-      status: '在售'
-    }
+  // 提交表单数据，让父组件处理API调用
+  emit('submit', form.value)
+  handleClose()
+}
 
-    if (props.editMode && props.productData?.id) {
-      await productApi.updateProduct(props.productData.id, productData as UpdateProductRequest)
-      ElMessage.success('商品更新成功')
-    } else {
-      await productApi.createProduct(productData)
-      ElMessage.success('商品添加成功')
+const handlePriceFocus = () => {
+  if (form.value.price === 0) {
+    const priceInput = document.querySelector(
+      'input[placeholder="请输入积分价格"]'
+    ) as HTMLInputElement
+    if (priceInput) {
+      priceInput.value = ''
     }
-
-    emit('submit', form.value)
-    handleClose()
-  } catch (error) {
-    console.error('Failed to save product:', error)
-    ElMessage.error(props.editMode ? '更新商品失败' : '添加商品失败')
   }
 }
+
+const handlePriceBlur = (event: FocusEvent) => {
+  const input = event.target as HTMLInputElement
+  const value = parseFloat(input.value)
+  if (isNaN(value) || value < 0) {
+    form.value.price = 0
+    input.value = '0'
+  } else {
+    form.value.price = value
+  }
+}
+
+const handleQuantityFocus = () => {
+  if (form.value.quantity === 0) {
+    const quantityInput = document.querySelector(
+      'input[placeholder="请输入库存数量"]'
+    ) as HTMLInputElement
+    if (quantityInput) {
+      quantityInput.value = ''
+    }
+  }
+}
+
+const handleQuantityBlur = (event: FocusEvent) => {
+  const input = event.target as HTMLInputElement
+  const value = parseInt(input.value)
+  if (isNaN(value) || value < 0) {
+    form.value.quantity = 0
+    input.value = '0'
+  } else {
+    form.value.quantity = value
+  }
+}
+
+const handlePriceInput = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const value = parseFloat(input.value)
+  if (isNaN(value) || value < 0) {
+    form.value.price = 0
+    input.value = '0'
+  } else {
+    form.value.price = value
+  }
+}
+
+const handleQuantityInput = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const value = parseInt(input.value)
+  if (isNaN(value) || value < 0) {
+    form.value.quantity = 0
+    input.value = '0'
+  } else {
+    form.value.quantity = value
+  }
+}
+
+// 判断是否是编辑模式下的已有图片UUID
+const isExistingImageUuid = computed(() => {
+  return (
+    props.editMode &&
+    props.productData &&
+    props.productData.productImageUuid &&
+    form.value.image === props.productData.image
+  )
+})
 </script>
 
 <style scoped>
@@ -464,4 +606,4 @@ const handleSubmit = async () => {
 .store-dropdown::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
-</style> 
+</style>

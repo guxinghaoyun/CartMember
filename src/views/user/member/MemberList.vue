@@ -11,15 +11,18 @@
       </div>
       <div class="flex items-center space-x-3">
         <div class="relative">
-          <input 
+          <input
             type="text"
             v-model="searchQuery"
             placeholder="搜索会员"
             class="w-64 h-9 pl-9 pr-4 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
-          <font-awesome-icon icon="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+          <font-awesome-icon
+            icon="search"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"
+          />
         </div>
-        <button 
+        <button
           @click="showAddDialog = true"
           class="h-9 px-4 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center"
         >
@@ -43,9 +46,11 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="member in paginatedMembers" 
-              :key="member.id"
-              class="hover:bg-gray-50 transition-colors">
+          <tr
+            v-for="member in paginatedMembers"
+            :key="member.id"
+            class="hover:bg-gray-50 transition-colors"
+          >
             <td class="px-4 py-4 text-base">
               <div class="flex items-center space-x-3">
                 <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -67,7 +72,7 @@
                 <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
                   <font-awesome-icon icon="credit-card" class="text-indigo-500" />
                 </div>
-                {{ member.icCard }}
+                {{ member.icNumber }}
               </div>
             </td>
             <td class="px-4 py-4 text-base text-gray-600">
@@ -82,30 +87,32 @@
               <div class="flex items-center">
                 <span
                   class="inline-flex items-center px-3 py-1 rounded-lg text-sm"
-                  :class="member.status === '正常' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                  :class="member.icStatus ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                 >
-                  <span class="w-2 h-2 mr-2 rounded-full"
-                        :class="member.status === '正常' ? 'bg-green-500' : 'bg-red-500'"></span>
-                  {{ member.status }}
+                  <span
+                    class="w-2 h-2 mr-2 rounded-full"
+                    :class="member.icStatus ? 'bg-green-500' : 'bg-red-500'"
+                  ></span>
+                  {{ member.icStatus ? '正常' : '停用' }}
                 </span>
               </div>
             </td>
             <td class="px-4 py-4 text-base text-right space-x-1">
-              <button 
+              <button
                 @click="handleDetails(member)"
                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                 title="查看详情"
               >
                 <font-awesome-icon icon="info-circle" class="text-gray-500" />
               </button>
-              <button 
+              <button
                 @click="handleEdit(member)"
                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
                 title="编辑"
               >
                 <font-awesome-icon icon="edit" class="text-blue-500" />
               </button>
-              <button 
+              <button
                 @click="handleDelete(member)"
                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 transition-colors"
                 title="删除"
@@ -116,15 +123,18 @@
           </tr>
         </tbody>
       </table>
-      
+
       <!-- 分页器 -->
-      <div class="px-4 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-base">
+      <div
+        class="px-4 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-base"
+      >
         <div class="text-gray-600">
           <font-awesome-icon icon="list-ul" class="mr-2" />
-          显示 {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, total) }} 条，共 {{ total }} 条
+          显示 {{ (currentPage - 1) * pageSize + 1 }} -
+          {{ Math.min(currentPage * pageSize, total) }} 条，共 {{ total }} 条
         </div>
         <div class="flex items-center space-x-1">
-          <button 
+          <button
             @click="handlePageChange(currentPage - 1)"
             :disabled="currentPage === 1"
             class="px-2 py-1 border border-gray-300 rounded text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -132,20 +142,20 @@
             <font-awesome-icon icon="chevron-left" class="mr-1" />
             上一页
           </button>
-          <button 
-            v-for="page in totalPages" 
+          <button
+            v-for="page in totalPages"
             :key="page"
             @click="handlePageChange(page)"
             :class="[
               'px-2 py-1 border rounded transition-colors',
-              currentPage === page 
-                ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600' 
+              currentPage === page
+                ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
                 : 'text-gray-600 border-gray-300 hover:bg-gray-100'
             ]"
           >
             {{ page }}
           </button>
-          <button 
+          <button
             @click="handlePageChange(currentPage + 1)"
             :disabled="currentPage === totalPages"
             class="px-2 py-1 border border-gray-300 rounded text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -158,20 +168,17 @@
     </div>
 
     <!-- 新增会员弹窗 -->
-    <MemberAdd
-      v-model:visible="showAddDialog"
-      @success="handleAddSuccess" />
+    <MemberAdd v-model:visible="showAddDialog" @success="handleAddSuccess" />
 
     <!-- 编辑会员弹窗 -->
     <MemberEdit
       v-model:visible="showEditDialog"
       :member="currentMember"
-      @success="handleEditSuccess" />
+      @success="handleEditSuccess"
+    />
 
     <!-- 会员详情弹窗 -->
-    <MemberDetail
-      v-model:visible="showDetailDialog"
-      :member="currentMember" />
+    <MemberDetail v-model:visible="showDetailDialog" :member="currentMember" />
   </div>
 </template>
 
@@ -210,9 +217,9 @@ const fetchMembers = async () => {
       pageSize: pageSize.value,
       keyword: searchQuery.value || undefined
     }
-    
+
     const response = await memberApi.getMembers(params)
-    const paginationData = (response.data as unknown) as PaginationResponse<Member>
+    const paginationData = response.data as unknown as PaginationResponse<Member>
     members.value = paginationData.items || []
     total.value = paginationData.total || 0
   } catch (error) {
@@ -246,7 +253,7 @@ const handlePageChange = (page: number) => {
 const handleDetails = async (member: Member) => {
   try {
     const response = await memberApi.getMemberById(member.id)
-    const memberData = (response.data as unknown) as Member
+    const memberData = response.data as unknown as Member
     currentMember.value = memberData
     showDetailDialog.value = true
   } catch (error) {
@@ -258,7 +265,7 @@ const handleDetails = async (member: Member) => {
 const handleEdit = async (member: Member) => {
   try {
     const response = await memberApi.getMemberById(member.id)
-    const memberData = (response.data as unknown) as Member
+    const memberData = response.data as unknown as Member
     currentMember.value = memberData
     showEditDialog.value = true
   } catch (error) {
@@ -269,16 +276,12 @@ const handleEdit = async (member: Member) => {
 
 const handleDelete = async (member: Member) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要删除会员 ${member.name} 吗？`,
-      '警告',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
+    await ElMessageBox.confirm(`确定要删除会员 ${member.name} 吗？`, '警告', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
     await memberApi.deleteMember(member.id)
     ElMessage.success('会员删除成功')
     fetchMembers() // 重新加载列表
@@ -317,17 +320,18 @@ const handleEditSuccess = (member: Member) => {
 
 :deep(th) {
   font-weight: 500;
-  background-color: #F9FAFB;
-  border-color: #E5E7EB;
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
 }
 
-:deep(td), :deep(th) {
+:deep(td),
+:deep(th) {
   white-space: nowrap;
   padding: 0.75rem 1.5rem;
 }
 
 :deep(tbody tr:hover) {
-  background-color: #F9FAFB;
+  background-color: #f9fafb;
 }
 
 /* 操作按钮样式 */
@@ -346,11 +350,11 @@ button:focus {
 
 /* 搜索框样式 */
 input::placeholder {
-  color: #9CA3AF;
+  color: #9ca3af;
 }
 
 input:focus {
   border-color: transparent;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
 }
-</style> 
+</style>

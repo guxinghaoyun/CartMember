@@ -103,7 +103,8 @@ import {
   faUserCheck,
   faUserGear,
   faUserClock,
-  faUserPen
+  faUserPen,
+  faNoteSticky
 } from '@fortawesome/free-solid-svg-icons'
 
 // 添加图标到库
@@ -210,7 +211,8 @@ library.add(
   faUserCheck,
   faUserGear,
   faUserClock,
-  faUserPen
+  faUserPen,
+  faNoteSticky
 )
 
-export default FontAwesomeIcon 
+export default FontAwesomeIcon

@@ -202,10 +202,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useCartStore } from '@/types/api/user/cart'
-import { memberApi } from '@/api/user/member'
-import { operatorApi } from '@/api/user/operator'
-import type { Member } from '@/types/api/user/member'
 import type { Operator } from '@/types/api/user/operator'
+import type { CartStoreItem } from '@/types/api/user/cart'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -233,8 +231,7 @@ const operators = ref<Operator[]>([])
 // 获取操作员列表
 const fetchOperators = async () => {
   try {
-    const response = await operatorApi.getCurrentStoreOperators()
-    operators.value = response.data.data
+    operators.value = await cartStore.fetchOperators()
   } catch (error) {
     console.error('Failed to fetch operators:', error)
     ElMessage.error('获取操作员列表失败')
@@ -277,17 +274,18 @@ const initCartAndMember = () => {
 // 在组件挂载时初始化
 onMounted(() => {
   initCartAndMember()
+  fetchOperators() // 初始化时获取操作员列表
 })
 
 // 方法
-const updateQuantity = (item: any, delta: number) => {
+const updateQuantity = (item: CartStoreItem, delta: number) => {
   const newQuantity = item.quantity + delta
   if (newQuantity > 0) {
     cartStore.updateItemQuantity(item.id, newQuantity)
   }
 }
 
-const removeItem = async (item: any) => {
+const removeItem = async (item: CartStoreItem) => {
   try {
     await ElMessageBox.confirm('确定要移除该商品吗？', '提示', {
       confirmButtonText: '确定',
@@ -301,7 +299,7 @@ const removeItem = async (item: any) => {
   }
 }
 
-const previewImage = (item: any) => {
+const previewImage = (item: CartStoreItem) => {
   // TODO: 实现图片预览功能
   console.log('Preview image:', item.product.image)
 }
@@ -313,31 +311,21 @@ const readMemberCard = async () => {
     const icCardNo = await simulateReadICCard()
     memberCardNo.value = icCardNo
 
-    // 并行请求会员信息和操作员列表
-    const [memberResponse, operatorResponse] = await Promise.all([
-      memberApi.getMemberById(parseInt(icCardNo)),
-      operatorApi.getCurrentStoreOperators()
-    ])
-
-    const memberData = memberResponse.data.data
-    operators.value = operatorResponse.data.data
-
-    // 更新会员信息显示
-    memberInfo.value = {
-      name: memberData.name,
-      points: memberData.remainingPoints.toString()
-    }
-
-    // 更新购物车store中的会员信息
-    cartStore.updateCart({
-      ...cartStore.$state,
-      member: {
+    // 通过store获取会员信息
+    const memberData = await cartStore.fetchMemberById(parseInt(icCardNo))
+    
+    if (memberData) {
+      // 更新会员信息显示
+      memberInfo.value = {
         name: memberData.name,
-        points: memberData.remainingPoints
+        points: memberData.remainingPoints.toString(),
+        id: memberData.id
       }
-    })
-
-    ElMessage.success('会员卡读取成功')
+      
+      ElMessage.success('会员卡读取成功')
+    } else {
+      ElMessage.error('未找到会员信息')
+    }
   } catch (error) {
     console.error('Failed to read member card:', error)
     ElMessage.error('会员卡读取失败，请重试')
@@ -367,10 +355,15 @@ const handleCheckout = async () => {
       type: 'info'
     })
     
-    // 支付成功后清空购物车
-    cartStore.clearCart()
-    ElMessage.success('支付成功')
-    router.push('/member') // 支付完成后跳转到会员页面
+    // 使用store处理结账流程
+    const success = await cartStore.processCheckout()
+    
+    if (success) {
+      ElMessage.success('支付成功')
+      router.push('/member') // 支付完成后跳转到会员页面
+    } else {
+      ElMessage.error('支付失败，请重试')
+    }
   } catch {
     // 用户取消支付
   }
@@ -405,6 +398,24 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background-color: #D1D5DB;
+}
+
+/* 设置选择框边框为透明或白色 */
+:deep(.el-select .el-input__wrapper) {
+  box-shadow: none !important;
+  border: 1px solid transparent !important;
+  background-color: #fff !important;
+}
+
+:deep(.el-select .el-input__wrapper.is-focus) {
+  box-shadow: none !important;
+  border: 1px solid transparent !important;
+  outline: none !important;
+}
+
+:deep(.el-select .el-input__wrapper:hover) {
+  box-shadow: none !important;
+  border: 1px solid transparent !important;
 }
 
 :deep(.operator-select-dropdown) {

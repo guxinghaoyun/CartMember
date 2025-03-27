@@ -16,8 +16,9 @@ export interface PaginationParams {
 
 // 分页响应数据
 export interface PaginationResponse<T> {
-  total: number
-  items: T[]
-  page: number
+  currentPage: number
   pageSize: number
-} 
+  totalRecords: number
+  totalPages: number
+  records: T[]
+}

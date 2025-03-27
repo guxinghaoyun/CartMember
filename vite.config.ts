@@ -13,15 +13,25 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     AutoImport({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [ElementPlusResolver()]
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
-    }),
+      resolvers: [ElementPlusResolver()]
+    })
   ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
-    },
+    }
   },
+  server: {
+    proxy: {
+      '/api': {
+        // target: 'http://162.14.67.119:8090',
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: path => path
+      }
+    }
+  }
 })

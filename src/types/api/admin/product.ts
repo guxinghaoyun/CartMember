@@ -9,6 +9,7 @@ export interface Product {
   quantity: number // 库存数量
   category: ProductCategoryType
   image: string
+  productImageUuid?: string // 产品图片UUID，用于获取图片
   description: string
   storeIds: number[] // 所属店铺ID数组
   status: '在售' | '下架' | '缺货'
@@ -36,4 +37,4 @@ export interface ProductQueryParams {
   status?: Product['status']
   priceRange?: [number, number]
   dateRange?: [string, string]
-} 
+}

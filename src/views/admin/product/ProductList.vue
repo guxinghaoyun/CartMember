@@ -2,49 +2,65 @@
   <div class="space-y-8 p-6 bg-gray-50 min-h-screen">
     <!-- 商品统计卡片 -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <div
+        class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+      >
         <div class="flex justify-between items-start">
           <div>
             <p class="text-blue-100 text-sm font-medium">商品总数</p>
             <p class="text-4xl font-bold mt-3">{{ allProducts.length }}</p>
           </div>
-          <div class="w-12 h-12 rounded-xl bg-blue-400 bg-opacity-30 flex items-center justify-center backdrop-blur-sm">
+          <div
+            class="w-12 h-12 rounded-xl bg-blue-400 bg-opacity-30 flex items-center justify-center backdrop-blur-sm"
+          >
             <font-awesome-icon icon="boxes" class="text-2xl" />
           </div>
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <div
+        class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+      >
         <div class="flex justify-between items-start">
           <div>
             <p class="text-green-100 text-sm font-medium">累计兑换</p>
             <p class="text-4xl font-bold mt-3">{{ totalExchanges.toLocaleString() }}</p>
           </div>
-          <div class="w-12 h-12 rounded-xl bg-green-400 bg-opacity-30 flex items-center justify-center backdrop-blur-sm">
+          <div
+            class="w-12 h-12 rounded-xl bg-green-400 bg-opacity-30 flex items-center justify-center backdrop-blur-sm"
+          >
             <font-awesome-icon icon="exchange-alt" class="text-2xl" />
           </div>
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <div
+        class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+      >
         <div class="flex justify-between items-start">
           <div>
             <p class="text-purple-100 text-sm font-medium">库存告警</p>
             <p class="text-4xl font-bold mt-3">{{ lowStockCount }}</p>
           </div>
-          <div class="w-12 h-12 rounded-xl bg-purple-400 bg-opacity-30 flex items-center justify-center backdrop-blur-sm">
+          <div
+            class="w-12 h-12 rounded-xl bg-purple-400 bg-opacity-30 flex items-center justify-center backdrop-blur-sm"
+          >
             <font-awesome-icon icon="exclamation-triangle" class="text-2xl" />
           </div>
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <div
+        class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+      >
         <div class="flex justify-between items-start">
           <div>
             <p class="text-orange-100 text-sm font-medium">本月新增</p>
             <p class="text-4xl font-bold mt-3">{{ newProductsThisMonth }}</p>
           </div>
-          <div class="w-12 h-12 rounded-xl bg-orange-400 bg-opacity-30 flex items-center justify-center backdrop-blur-sm">
+          <div
+            class="w-12 h-12 rounded-xl bg-orange-400 bg-opacity-30 flex items-center justify-center backdrop-blur-sm"
+          >
             <font-awesome-icon icon="chart-line" class="text-2xl" />
           </div>
         </div>
@@ -69,9 +85,12 @@
                 {{ store.name }}
               </option>
             </select>
-            <font-awesome-icon icon="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <font-awesome-icon
+              icon="chevron-down"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
-          
+
           <div class="relative">
             <select
               v-model="selectedCategory"
@@ -81,12 +100,15 @@
                 {{ option.label }}
               </option>
             </select>
-            <font-awesome-icon icon="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <font-awesome-icon
+              icon="chevron-down"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
-          
+
           <button
             class="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 flex items-center gap-2 transition-colors duration-200 shadow-sm hover:shadow-md"
-            @click="showAddProduct = true"
+            @click="handleAddProduct"
           >
             <font-awesome-icon icon="plus" />
             <span>添加商品</span>
@@ -96,19 +118,30 @@
     </div>
 
     <!-- 商品列表 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4"
+    >
       <div
         v-for="product in filteredProducts"
         :key="product.id"
         class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group"
       >
-        <div class="relative">
-          <img :src="product.image" class="w-full h-40 object-cover" alt="商品图片">
-          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
+        <div class="relative h-40">
+          <product-image
+            :product-id="product.id"
+            :image-uuid="product.productImageUuid"
+            class="w-full h-40"
+            alt="商品图片"
+          />
+          <div
+            class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"
+          ></div>
         </div>
         <div class="p-3 space-y-2">
           <div class="flex items-start justify-between gap-2">
-            <h3 class="font-bold text-gray-800 text-base line-clamp-1 flex-1">{{ product.name }}</h3>
+            <h3 class="font-bold text-gray-800 text-base line-clamp-1 flex-1">
+              {{ product.name }}
+            </h3>
             <div class="flex gap-1">
               <button
                 class="rounded-lg p-1 text-blue-600 hover:bg-blue-50 transition-colors"
@@ -128,7 +161,9 @@
           </div>
           <p class="text-gray-600 text-xs line-clamp-2">{{ product.description }}</p>
           <div class="flex items-center justify-between">
-            <p class="text-red-600 font-bold text-base">{{ product.price.toLocaleString() }} 积分</p>
+            <p class="text-red-600 font-bold text-base">
+              {{ product.price.toLocaleString() }} 积分
+            </p>
             <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
               库存: {{ product.quantity }}
             </span>
@@ -162,9 +197,12 @@
 import { ref, computed, onMounted, watch, defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import ProductForm, { type ProductForm as IProductForm } from './components/ProductForm.vue'
+import ProductImage from '@/components/common/ProductImage.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { productApi } from '@/api/admin/product'
+import { storeApi } from '@/api/admin/store'
 import type { Product, ProductCategoryType } from '@/types/api/admin/product'
+import type { Store } from '@/types/api/admin/store'
 
 // 商品分类选项
 const categoryOptions: Array<{
@@ -218,28 +256,62 @@ const showAddProduct = ref(false)
 const editingProduct = ref<Product | null>(null)
 const allProducts = ref<Product[]>([])
 const total = ref(0)
+const isSubmitting = ref(false) // 防止重复提交
 
 // 视图模式
 const viewMode = ref<'card' | 'list'>('card')
 
 // 店铺数据
-const stores = ref([
-  { id: 1, name: '北京朝阳店' },
-  { id: 2, name: '上海浦东店' },
-  { id: 3, name: '广州天河店' }
-])
+const stores = ref<{ id: number; name: string }[]>([])
+
+// 获取店铺列表
+const fetchStores = async () => {
+  try {
+    const response = await storeApi.getList({
+      page: 1,
+      pageSize: 100 // 尝试获取所有店铺
+    })
+
+    if (response.code === 200 && response.data) {
+      // 检查response.data的结构
+      const storeData = response.data as any
+      if (storeData.items && Array.isArray(storeData.items)) {
+        stores.value = storeData.items.map((store: Store) => ({
+          id: store.id,
+          name: store.name
+        }))
+      }
+    } else {
+      ElMessage.warning('获取店铺列表失败，使用默认数据')
+      stores.value = [
+        { id: 1, name: '北京朝阳店' },
+        { id: 2, name: '上海浦东店' },
+        { id: 3, name: '广州天河店' }
+      ]
+    }
+  } catch (error) {
+    console.error('Failed to fetch stores:', error)
+    ElMessage.warning('获取店铺列表失败，使用默认数据')
+    stores.value = [
+      { id: 1, name: '北京朝阳店' },
+      { id: 2, name: '上海浦东店' },
+      { id: 3, name: '广州天河店' }
+    ]
+  }
+}
 
 // 获取商品列表
 const fetchProducts = async () => {
   try {
     loading.value = true
     const params = {
-      category: selectedCategory.value || undefined,
-      storeId: selectedStore.value ? parseInt(selectedStore.value) : undefined,
+      category: selectedCategory.value,
+      storeId: selectedStore.value ? parseInt(selectedStore.value) : -1
     }
+    console.log('发送商品查询参数:', params)
     const response = await productApi.getProducts(params)
-    allProducts.value = response.data.data.items
-    total.value = response.data.data.total
+    allProducts.value = response.data.items
+    total.value = response.data.total
   } catch (error) {
     console.error('Failed to fetch products:', error)
     ElMessage.error('获取商品列表失败')
@@ -250,19 +322,7 @@ const fetchProducts = async () => {
 
 // 计算属性
 const filteredProducts = computed(() => {
-  let result = [...allProducts.value]
-  
-  // 按店铺筛选
-  if (selectedStore.value) {
-    result = result.filter(product => product.storeIds.includes(parseInt(selectedStore.value)))
-  }
-  
-  // 按分类筛选
-  if (selectedCategory.value) {
-    result = result.filter(product => product.category === selectedCategory.value)
-  }
-  
-  return result
+  return allProducts.value
 })
 
 // 统计数据
@@ -291,11 +351,18 @@ const newProductsThisMonth = computed(() => {
 })
 
 const getStoreName = (storeIds: number[]) => {
-  const store = stores.value.find(s => storeIds.includes(s.id))
+  if (!storeIds || storeIds.length === 0) return '未知店铺'
+  const storeId = storeIds[0] // 获取第一个店铺ID
+  const store = stores.value.find(s => s.id === storeId)
   return store?.name || '未知店铺'
 }
 
 // 方法
+const handleAddProduct = () => {
+  editingProduct.value = null
+  showAddProduct.value = true
+}
+
 const handleEdit = (product: Product) => {
   editingProduct.value = product
   showAddProduct.value = true
@@ -304,17 +371,13 @@ const handleEdit = (product: Product) => {
 // 删除商品
 const handleDelete = async (product: Product) => {
   try {
-    await ElMessageBox.confirm(
-      '确定要删除该商品吗？此操作不可恢复。',
-      '删除确认',
-      {
-        confirmButtonText: '确定删除',
-        cancelButtonText: '取消',
-        type: 'warning',
-        confirmButtonClass: 'el-button--danger',
-      }
-    )
-    
+    await ElMessageBox.confirm('确定要删除该商品吗？此操作不可恢复。', '删除确认', {
+      confirmButtonText: '确定删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+      confirmButtonClass: 'el-button--danger'
+    })
+
     await productApi.deleteProduct(product.id)
     ElMessage.success('商品已删除')
     fetchProducts() // 重新加载商品列表
@@ -328,10 +391,14 @@ const handleDelete = async (product: Product) => {
 
 // 提交商品表单
 const handleProductSubmit = async (formData: IProductForm) => {
+  // 防止重复提交
+  if (isSubmitting.value) return
+
   try {
+    isSubmitting.value = true
     const productData = {
       ...formData,
-      storeIds: Array.isArray(formData.storeIds) ? formData.storeIds : [formData.storeIds],
+      storeIds: [formData.storeIds], // 将单个storeId转换为数组
       status: '在售' as const, // 设置默认状态
       category: formData.category as ProductCategoryType
     }
@@ -351,17 +418,21 @@ const handleProductSubmit = async (formData: IProductForm) => {
   } catch (error) {
     console.error('Failed to save product:', error)
     ElMessage.error(editingProduct.value ? '更新商品失败' : '添加商品失败')
+  } finally {
+    isSubmitting.value = false
   }
 }
 
 // 监听筛选条件变化
 watch([selectedStore, selectedCategory], () => {
+  console.log('筛选条件变化:', { 店铺: selectedStore.value, 分类: selectedCategory.value })
   currentPage.value = 1
   fetchProducts()
 })
 
 // 在组件挂载时获取商品列表
 onMounted(() => {
+  fetchStores()
   fetchProducts()
 })
 </script>
@@ -380,4 +451,4 @@ onMounted(() => {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-</style> 
+</style>
