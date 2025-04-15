@@ -18,6 +18,8 @@ import {
   faArrowDown,
   faMinus,
   faCalendarAlt,
+  faCalendar,
+  faCalendarDays,
   faChevronDown,
   faReceipt,
   faUserPlus,
@@ -104,7 +106,10 @@ import {
   faUserGear,
   faUserClock,
   faUserPen,
-  faNoteSticky
+  faNoteSticky,
+  faCog,
+  faSpinner,
+  faRedo
 } from '@fortawesome/free-solid-svg-icons'
 
 // 添加图标到库
@@ -126,6 +131,8 @@ library.add(
   faArrowDown,
   faMinus,
   faCalendarAlt,
+  faCalendar,
+  faCalendarDays,
   faChevronDown,
   faReceipt,
   faUserPlus,
@@ -212,7 +219,10 @@ library.add(
   faUserGear,
   faUserClock,
   faUserPen,
-  faNoteSticky
+  faNoteSticky,
+  faCog,
+  faSpinner,
+  faRedo
 )
 
 export default FontAwesomeIcon

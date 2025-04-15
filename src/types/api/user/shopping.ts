@@ -86,7 +86,7 @@ export interface Order {
 // 创建订单请求商品
 export interface CreateOrderProductRequest {
   productId: number
-  quantity: number
+  stockQuantity: number
 }
 
 // 创建订单请求
@@ -117,4 +117,4 @@ export interface OrderQueryParams {
   dateRange?: [string, string]
   minAmount?: number
   maxAmount?: number
-} 
+}

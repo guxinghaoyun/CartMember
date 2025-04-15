@@ -1,6 +1,5 @@
 import type { Member } from './member'
 
-
 // 充值订单状态
 export type RechargeOrderStatus = 'pending' | 'success' | 'failed' | 'cancelled'
 
@@ -9,11 +8,30 @@ export interface RechargeProduct {
   id: number
   name: string
   price: number // 商品积分
-  quantity: number
+  stockQuantity: number
   category: string
   status: string
   stock: number
   image?: string
+  quantity?: number // 商品数量，用于订单中显示
+}
+
+// 后端API期望的充值请求格式
+export interface RechargeView {
+  // id?: number
+  membershipId: number
+  // membershipName: string
+  // membershipPhone: string
+  // icNumber?: string
+  // currentScore?: number
+  rechargeScore: number
+  rechargeProducts?: {
+    id: number
+    quantity: number
+  }[]
+  operationUser: string
+  note?: string
+  // rechargeTime?: string
 }
 
 // 充值订单
@@ -88,4 +106,26 @@ export interface RechargeStats {
   successRate: number
   periodStart: string
   periodEnd: string
+}
+
+// 充值历史记录（匹配后端返回结构）
+export interface RechargeHistory {
+  id: number
+  currentScore: number
+  icNumber: string
+  membershipId: number
+  membershipName: string
+  membershipPhone: string | null
+  note: string
+  operationUser: string
+  rechargeProducts: {
+    id: number
+    name: string
+    price: number
+    productTypeId: number
+    productImageUuid: string
+    stockQuantity: number
+  }[]
+  rechargeScore: number
+  rechargeTime: string
 }

@@ -49,7 +49,7 @@
                       @click.stop="showStoreDropdown = !showStoreDropdown"
                     >
                       <div class="flex items-center gap-2 overflow-hidden">
-                        <font-awesome-icon icon="store" class="text-gray-400 flex-shrink-0" />
+                        <font-awesome-icon icon="store" class="text-blue-500 flex-shrink-0" />
                         <span class="text-gray-700 truncate">{{ selectedStoresText }}</span>
                       </div>
                       <font-awesome-icon icon="chevron-down" class="text-gray-400 flex-shrink-0" />
@@ -59,30 +59,25 @@
                       v-if="showStoreDropdown"
                       class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
                     >
-                      <div class="max-h-[240px] overflow-y-auto p-2 space-y-1 store-dropdown">
-                        <label
+                      <div class="max-h-[240px] overflow-y-auto p-2 space-y-1">
+                        <div
                           v-for="store in stores"
                           :key="store.id"
                           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer w-full"
                           :class="{ 'bg-gray-50': form.storeIds === store.id }"
+                          @click="handleStoreSelect(store.id)"
                         >
-                          <div
-                            class="w-4 h-4 border border-gray-300 rounded-md flex-shrink-0"
-                            :class="{ 'bg-blue-500 border-blue-500': form.storeIds === store.id }"
-                          >
-                            <div
-                              v-if="form.storeIds === store.id"
-                              class="w-2 h-2 bg-white rounded-full mx-auto mt-1"
-                            ></div>
+                          <div class="flex items-center gap-2 flex-1">
+                            <font-awesome-icon
+                              icon="store"
+                              class="text-sm text-blue-500 flex-shrink-0"
+                            />
+                            <span class="text-sm text-gray-700 truncate">{{ store.name }}</span>
                           </div>
-                          <span class="text-sm text-gray-700 truncate">{{ store.name }}</span>
-                          <input
-                            type="radio"
-                            class="hidden"
-                            :checked="form.storeIds === store.id"
-                            @change="handleStoreSelect(store.id)"
-                          />
-                        </label>
+                          <div v-if="form.storeIds === store.id">
+                            <font-awesome-icon icon="check" class="text-blue-500 text-sm" />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -97,7 +92,11 @@
                       @click.stop="showCategoryDropdown = !showCategoryDropdown"
                     >
                       <div class="flex items-center gap-2 overflow-hidden">
-                        <font-awesome-icon icon="tags" class="text-gray-400 flex-shrink-0" />
+                        <font-awesome-icon
+                          :icon="getCategoryIcon(form.category)"
+                          :class="getCategoryIconClass(form.category)"
+                          class="flex-shrink-0"
+                        />
                         <span class="text-gray-700 truncate">{{ selectedCategoryText }}</span>
                       </div>
                       <font-awesome-icon icon="chevron-down" class="text-gray-400 flex-shrink-0" />
@@ -107,32 +106,26 @@
                       v-if="showCategoryDropdown"
                       class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
                     >
-                      <div class="max-h-[240px] overflow-y-auto p-2 space-y-1 store-dropdown">
-                        <label
+                      <div class="max-h-[240px] overflow-y-auto p-2 space-y-1">
+                        <div
                           v-for="option in categoryOptions.filter(o => o.value !== '')"
                           :key="option.value"
                           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer w-full"
                           :class="{ 'bg-gray-50': form.category === option.value }"
+                          @click="handleCategorySelect(option.value)"
                         >
-                          <div
-                            class="w-4 h-4 border border-gray-300 rounded-full flex-shrink-0"
-                            :class="{
-                              'bg-blue-500 border-blue-500': form.category === option.value
-                            }"
-                          >
-                            <div
-                              v-if="form.category === option.value"
-                              class="w-2 h-2 bg-white rounded-full mx-auto mt-1"
-                            ></div>
+                          <div class="flex items-center gap-2 flex-1">
+                            <font-awesome-icon
+                              :icon="getCategoryIcon(option.value)"
+                              :class="getCategoryIconClass(option.value)"
+                              class="text-sm flex-shrink-0"
+                            />
+                            <span class="text-sm text-gray-700 truncate">{{ option.label }}</span>
                           </div>
-                          <span class="text-sm text-gray-700 truncate">{{ option.label }}</span>
-                          <input
-                            type="radio"
-                            class="hidden"
-                            :checked="form.category === option.value"
-                            @change="handleCategorySelect(option.value)"
-                          />
-                        </label>
+                          <div v-if="form.category === option.value">
+                            <font-awesome-icon icon="check" class="text-blue-500 text-sm" />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -568,6 +561,38 @@ const isExistingImageUuid = computed(() => {
     form.value.image === props.productData.image
   )
 })
+
+// 根据分类获取对应的图标
+const getCategoryIcon = (category: ProductCategoryType) => {
+  switch (category) {
+    case 'digital':
+      return 'shopping-cart'
+    case 'office':
+      return 'pencil-alt'
+    case 'life':
+      return 'tags'
+    case 'gift':
+      return 'credit-card'
+    default:
+      return 'tag'
+  }
+}
+
+// 根据分类获取图标的颜色类
+const getCategoryIconClass = (category: ProductCategoryType) => {
+  switch (category) {
+    case 'digital':
+      return 'text-blue-500'
+    case 'office':
+      return 'text-green-500'
+    case 'life':
+      return 'text-orange-500'
+    case 'gift':
+      return 'text-purple-500'
+    default:
+      return 'text-gray-400'
+  }
+}
 </script>
 
 <style scoped>

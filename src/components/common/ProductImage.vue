@@ -61,11 +61,14 @@ watch(
   () => [props.productId, props.imageUuid],
   () => {
     loadImage()
-  }
+  },
+  { immediate: true }
 )
 
 onMounted(() => {
-  loadImage()
+  if (!imageUrl.value) {
+    loadImage()
+  }
 })
 </script>
 

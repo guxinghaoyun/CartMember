@@ -46,13 +46,13 @@
             </el-form-item>
             <el-form-item label="卡片状态" prop="icStatus" class="!mb-0">
               <el-radio-group v-model="form.icStatus" class="!w-full flex gap-4">
-                <el-radio :value="true" class="flex-1 !mr-0">
+                <el-radio :value="'正常'" class="flex-1 !mr-0">
                   <div class="flex items-center">
                     <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
                     正常
                   </div>
                 </el-radio>
-                <el-radio :value="false" class="flex-1 !mr-0">
+                <el-radio :value="'停用'" class="flex-1 !mr-0">
                   <div class="flex items-center">
                     <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
                     停用
@@ -247,7 +247,7 @@ interface FormData {
   phone: string
   icNumber: string
   registerDate: string
-  icStatus: boolean
+  icStatus: string
   frontPicture: string
   backPicture: string
   note: string
@@ -261,7 +261,7 @@ const form = ref<FormData>({
   phone: '',
   icNumber: '',
   registerDate: '',
-  icStatus: true,
+  icStatus: '正常',
   frontPicture: '',
   backPicture: '',
   note: '',
@@ -286,10 +286,7 @@ watch(
         phone: newMember.phone,
         icNumber: newMember.icNumber,
         registerDate: newMember.registerDate,
-        icStatus:
-          typeof newMember.icStatus === 'boolean'
-            ? newMember.icStatus
-            : newMember.icStatus === '正常',
+        icStatus: newMember.icStatus,
         frontPicture: newMember?.frontPicture || '',
         backPicture: newMember?.backPicture || '',
         note: newMember.note || '',
@@ -523,7 +520,7 @@ const handleClose = () => {
     phone: '',
     icNumber: '',
     registerDate: '',
-    icStatus: true,
+    icStatus: '正常',
     frontPicture: '',
     backPicture: '',
     note: '',

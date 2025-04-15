@@ -44,6 +44,32 @@ request.interceptors.response.use(
     return response.data
   },
   error => {
+    // 处理Token过期情况
+    if (error.response && error.response.status === 401) {
+      // 清除过期的认证信息
+      localStorage.removeItem('token')
+      localStorage.removeItem('userType')
+      localStorage.removeItem('lastActivityTime')
+
+      // 显示提示消息
+      const errorMessage = '登录已过期，请重新登录'
+      console.error(errorMessage)
+
+      // 如果有Element Plus的消息组件，可以显示提示
+      if (window.ElMessage) {
+        window.ElMessage.error(errorMessage)
+      } else {
+        // 使用原生alert作为备选
+        setTimeout(() => {
+          alert(errorMessage)
+        }, 0)
+      }
+
+      // 重定向到登录页面
+      window.location.href = '/?timeout=true'
+      return Promise.reject(new Error(errorMessage))
+    }
+
     if (!(error.config as RequestConfig)?.skipErrorHandler) {
       // 统一错误处理
       const errorResponse = error.response?.data as ApiErrorResponse

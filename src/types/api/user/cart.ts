@@ -1,10 +1,14 @@
 import { defineStore } from 'pinia'
 import type { Product } from './shopping'
 import { memberApi } from '@/api/user/member'
-import { operatorApi } from '@/api/user/operator'
+import { shoppingApi } from '@/api/user/shopping'
 import type { ApiResponse } from '@/types/api/common'
 import type { Member as MemberType } from '@/types/api/user/member'
 import type { Operator } from '@/types/api/user/operator'
+import { ElMessage } from 'element-plus'
+
+// 从shopping.ts导入结账接口类型
+import type { PurchaseProductsRequest, PurchaseProductItem } from '@/api/user/shopping'
 
 export interface CartStoreItem {
   id: number
@@ -15,6 +19,9 @@ export interface CartStoreItem {
 export interface Member {
   name: string
   points: number
+  id?: number
+  icNumber?: string
+  icStatus?: string
 }
 
 export interface CartState {
@@ -67,7 +74,7 @@ export const useCartStore = defineStore('cart', {
 
     recalculateAmounts() {
       this.totalAmount = this.items.reduce((sum, item) => {
-        return sum + (item.product.price * item.quantity)
+        return sum + item.product.price * item.quantity
       }, 0)
       this.expectedPoints = Math.floor(this.totalAmount * 0.1)
     },
@@ -79,62 +86,145 @@ export const useCartStore = defineStore('cart', {
       this.expectedPoints = 0
     },
 
-    // 新增的方法，用于获取会员信息
-    async fetchMemberById(id: number): Promise<MemberType | null> {
+    // 更新 fetchMemberByInterICNumber 方法
+    async fetchMemberByInterICNumber(interICNumber: string) {
+      console.log('fetchMemberByInterICNumber', interICNumber)
       try {
-        const response = await memberApi.getMemberById(id)
-        const memberData = response.data.data
-        
-        // 更新购物车中的会员信息
-        this.member = {
-          name: memberData.name,
-          points: memberData.remainingPoints
+        const result = await memberApi.getMemberByInterICNumber(interICNumber)
+        console.log('获取会员信息结果:', result)
+        if (result.code === 200 && result.data) {
+          // 将返回的数据转换为符合Member接口的数据
+          this.member = {
+            id: result.data.id,
+            name: result.data.name,
+            points: result.data.remainingPoints,
+            icNumber: result.data.icNumber,
+            icStatus: result.data.icStatus
+          }
+          this.calculateMemberDiscount()
+          return true
+        } else {
+          ElMessage.error(result.message || '未找到会员信息')
+          return false
         }
-        
-        return memberData
       } catch (error) {
-        console.error('Failed to fetch member:', error)
+        console.error('获取会员信息失败:', error)
+        ElMessage.error('获取会员信息失败')
+        return false
+      }
+    },
+
+    // 为了兼容旧代码，添加fetchMemberById方法
+    async fetchMemberById(cardNumber: string) {
+      try {
+        // 此方法与fetchMemberByInterICNumber相同，只是为了兼容旧代码
+        const result = await memberApi.getMemberByInterICNumber(cardNumber)
+        if (result.code === 200 && result.data) {
+          // 将返回的数据转换为符合Member接口的数据
+          this.member = {
+            id: result.data.id,
+            name: result.data.name,
+            points: result.data.remainingPoints,
+            icNumber: result.data.icNumber,
+            icStatus: result.data.icStatus
+          }
+          this.calculateMemberDiscount()
+
+          // 返回原始数据以兼容旧代码
+          const memberData = { ...result.data }
+          // 确保返回的对象与旧代码期望的格式相同
+          return memberData
+        } else {
+          ElMessage.error(result.message || '未找到会员信息')
+          return null
+        }
+      } catch (error) {
+        console.error('获取会员信息失败:', error)
+        ElMessage.error('获取会员信息失败')
         return null
       }
+    },
+
+    // 计算会员折扣
+    calculateMemberDiscount() {
+      // 此处可以根据会员信息计算折扣
+      // 暂无具体实现
     },
 
     // 新增的方法，用于获取操作员列表
     async fetchOperators(): Promise<Operator[]> {
       try {
-        const response = await operatorApi.getCurrentStoreOperators()
-        this.operators = response.data.data
+        // 从localStorage中获取店铺信息
+        const shopInfoStr = localStorage.getItem('shopInfo')
+        if (!shopInfoStr) {
+          console.error('No shop info found in localStorage')
+          return []
+        }
+
+        const shopInfo = JSON.parse(shopInfoStr)
+
+        // 将用户数据转换为操作员数据格式
+        this.operators = shopInfo.users.map((user: any) => ({
+          id: user.id?.toString() || '',
+          name: user.name || '',
+          role: user.position || (user.manager ? '店长' : '店员')
+        }))
+
         return this.operators
       } catch (error) {
-        console.error('Failed to fetch operators:', error)
+        console.error('Failed to fetch operators from localStorage:', error)
         return []
       }
     },
 
-    // 新增的方法，用于处理结账流程
-    async processCheckout(): Promise<boolean> {
-      // 这里可以调用支付API或执行其他结账逻辑
-      // 这只是一个示例实现
+    // 修改结账流程方法，对接API
+    async processCheckout(operatorId: string, discount: number, notes: string): Promise<boolean> {
+      if (!this.member || !this.member.id) {
+        console.error('Checkout failed: No member selected')
+        return false
+      }
+
       try {
-        // 模拟API调用
-        // const response = await paymentApi.processPayment({
-        //   memberId: this.member?.id,
-        //   amount: this.totalAmount,
-        //   items: this.items
-        // })
-        
-        // 清空购物车
-        this.clearCart()
-        return true
+        console.log('会员信息:', JSON.stringify(this.member, null, 2))
+        console.log('购物车商品:', this.items.length, '件')
+
+        // 构造请求参数，严格按照API文档要求的格式
+        const requestData = {
+          membershipId: this.member.id,
+          note: notes || '',
+          discount: discount || 0,
+          operationUser: operatorId,
+          products: this.items.map(item => ({
+            productId: item.product.id,
+            currentQuantity: item.quantity
+          }))
+        }
+
+        console.log('提交的结账数据:', JSON.stringify(requestData, null, 2))
+
+        try {
+          // 调用购买商品API
+          const response = await shoppingApi.purchaseProducts(requestData as any)
+          // 简化逻辑：只根据HTTP状态码判断成功
+          // HTTP状态码200表示请求成功，无论响应内容如何
+          this.clearCart()
+          return true
+        } catch (apiError) {
+          console.error('API调用异常:', apiError)
+          ElMessage.error(apiError instanceof Error ? apiError.message : '支付API调用失败')
+          return false
+        }
       } catch (error) {
         console.error('Checkout failed:', error)
+        ElMessage.error(error instanceof Error ? error.message : '支付失败，请重试')
         return false
       }
     }
   },
 
   getters: {
-    cartItemCount: (state) => {
+    cartItemCount: state => {
       return state.items.reduce((sum, item) => sum + item.quantity, 0)
     }
   }
-}) 
+})

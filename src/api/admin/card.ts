@@ -43,16 +43,70 @@ export const cardApi = {
 
   // 激活卡片
   activate(id: number, memberId: number) {
-    return request.put<void>(`/ic-cards/${id}`, {
-      status: 'NORMAL'
+    // 从列表中获取卡片
+    return this.getList({ page: 1, pageSize: 100 }).then(response => {
+      // 将整个response对象断言为包含records的类型
+      const responseData = response as unknown as {
+        records: Card[]
+        totalRecords: number
+        currentPage: number
+        pageSize: number
+        totalPages: number
+      }
+
+      const cards = responseData.records || []
+      const card = cards.find((c: Card) => c.id === id)
+
+      if (!card) {
+        throw new Error('卡片不存在')
+      }
+
+      // 使用URL参数传递，状态使用中文"正常"
+      return request.put<void>(`/ic-cards/${id}`, null, {
+        params: {
+          id: id,
+          internalNumber: card.internalNumber,
+          cardNumber: card.cardNumber,
+          status: '正常',
+          createTime: card.createTime,
+          updateTime: card.updateTime
+        }
+      })
     })
   },
 
   // 禁用卡片
   disable(id: number, reason: string) {
-    return request.put<void>(`/ic-cards/${id}`, {
-      status: 'DISABLED',
-      notes: reason
+    // 从列表中获取卡片
+    return this.getList({ page: 1, pageSize: 100 }).then(response => {
+      // 将整个response对象断言为包含records的类型
+      const responseData = response as unknown as {
+        records: Card[]
+        totalRecords: number
+        currentPage: number
+        pageSize: number
+        totalPages: number
+      }
+
+      const cards = responseData.records || []
+      const card = cards.find((c: Card) => c.id === id)
+
+      if (!card) {
+        throw new Error('卡片不存在')
+      }
+
+      // 使用URL参数传递，状态使用中文"停用"
+      return request.put<void>(`/ic-cards/${id}`, null, {
+        params: {
+          id: id,
+          internalNumber: card.internalNumber,
+          cardNumber: card.cardNumber,
+          status: '停用',
+          createTime: card.createTime,
+          updateTime: card.updateTime,
+          notes: reason // 添加停用原因
+        }
+      })
     })
   },
 

@@ -17,4 +17,4 @@ export const operatorApi = {
   getCurrentStoreOperators() {
     return request.get<ApiResponse<Operator[]>>('/user/operators/current-store')
   }
-} 
+}

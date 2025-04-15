@@ -75,35 +75,98 @@
           商品管理
         </h2>
         <div class="flex flex-wrap items-center gap-4">
-          <div class="relative">
-            <select
-              v-model="selectedStore"
-              class="appearance-none w-48 rounded-xl border-2 border-gray-200 px-4 py-2.5 pr-10 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+          <div class="relative" ref="storeDropdownRef">
+            <button
+              type="button"
+              class="w-48 rounded-xl border-2 border-gray-200 px-4 py-2.5 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 flex items-center justify-between"
+              @click.stop="toggleStoreDropdown"
             >
-              <option value="">全部店铺</option>
-              <option v-for="store in stores" :key="store.id" :value="store.id">
-                {{ store.name }}
-              </option>
-            </select>
-            <font-awesome-icon
-              icon="chevron-down"
-              class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
+              <div class="flex items-center gap-2 overflow-hidden">
+                <font-awesome-icon
+                  :icon="getStoreIcon(selectedStore)"
+                  class="text-blue-500 flex-shrink-0"
+                />
+                <span class="text-gray-700 truncate">
+                  {{
+                    selectedStore
+                      ? stores.find(s => s.id === parseInt(selectedStore))?.name
+                      : '全部店铺'
+                  }}
+                </span>
+              </div>
+              <font-awesome-icon icon="chevron-down" class="text-gray-400 flex-shrink-0" />
+            </button>
+
+            <div
+              v-if="showStoreDropdown"
+              class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+            >
+              <div class="max-h-[240px] overflow-y-auto p-2 space-y-1">
+                <div
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  :class="{ 'bg-gray-50': selectedStore === '' }"
+                  @click="handleStoreSelect('')"
+                >
+                  <font-awesome-icon icon="list" class="text-blue-500 flex-shrink-0" />
+                  <span class="text-sm text-gray-700">全部店铺</span>
+                </div>
+                <div
+                  v-for="store in stores"
+                  :key="store.id"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  :class="{ 'bg-gray-50': selectedStore === store.id.toString() }"
+                  @click="handleStoreSelect(store.id.toString())"
+                >
+                  <font-awesome-icon icon="store" class="text-sm text-blue-500 flex-shrink-0" />
+                  <span class="text-sm text-gray-700">{{ store.name }}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="relative">
-            <select
-              v-model="selectedCategory"
-              class="appearance-none w-48 rounded-xl border-2 border-gray-200 px-4 py-2.5 pr-10 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+          <div class="relative" ref="categoryDropdownRef">
+            <button
+              type="button"
+              class="w-48 rounded-xl border-2 border-gray-200 px-4 py-2.5 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 flex items-center justify-between"
+              @click.stop="toggleCategoryDropdown"
             >
-              <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <font-awesome-icon
-              icon="chevron-down"
-              class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
+              <div class="flex items-center gap-2 overflow-hidden">
+                <font-awesome-icon
+                  :icon="getCategoryIcon(selectedCategory)"
+                  :class="getCategoryIconClass(selectedCategory)"
+                  class="flex-shrink-0"
+                />
+                <span class="text-gray-700 truncate">
+                  {{
+                    categoryOptions.find(option => option.value === selectedCategory)?.label ||
+                    '全部分类'
+                  }}
+                </span>
+              </div>
+              <font-awesome-icon icon="chevron-down" class="text-gray-400 flex-shrink-0" />
+            </button>
+
+            <div
+              v-if="showCategoryDropdown"
+              class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+            >
+              <div class="max-h-[240px] overflow-y-auto p-2 space-y-1">
+                <div
+                  v-for="option in categoryOptions"
+                  :key="option.value"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  :class="{ 'bg-gray-50': selectedCategory === option.value }"
+                  @click="handleCategorySelect(option.value)"
+                >
+                  <font-awesome-icon
+                    :icon="getCategoryIcon(option.value)"
+                    :class="getCategoryIconClass(option.value)"
+                    class="text-sm flex-shrink-0"
+                  />
+                  <span class="text-sm text-gray-700">{{ option.label }}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <button
@@ -194,7 +257,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, defineComponent } from 'vue'
+import { ref, computed, onMounted, watch, defineComponent, onUnmounted } from 'vue'
 import type { PropType } from 'vue'
 import ProductForm, { type ProductForm as IProductForm } from './components/ProductForm.vue'
 import ProductImage from '@/components/common/ProductImage.vue'
@@ -435,6 +498,91 @@ onMounted(() => {
   fetchStores()
   fetchProducts()
 })
+
+// 在 script 标签内添加以下代码
+const showCategoryDropdown = ref(false)
+const categoryDropdownRef = ref<HTMLDivElement | null>(null)
+const showStoreDropdown = ref(false)
+const storeDropdownRef = ref<HTMLDivElement | null>(null)
+
+// 处理分类下拉框的点击事件
+const toggleCategoryDropdown = () => {
+  showCategoryDropdown.value = !showCategoryDropdown.value
+}
+
+// 处理分类选择
+const handleCategorySelect = (category: ProductCategoryType) => {
+  selectedCategory.value = category
+  showCategoryDropdown.value = false
+}
+
+// 根据分类获取对应的图标
+const getCategoryIcon = (category: ProductCategoryType) => {
+  switch (category) {
+    case 'digital':
+      return 'shopping-cart'
+    case 'office':
+      return 'pencil-alt'
+    case 'life':
+      return 'tags'
+    case 'gift':
+      return 'credit-card'
+    default:
+      return 'list'
+  }
+}
+
+// 根据分类获取图标的颜色类
+const getCategoryIconClass = (category: ProductCategoryType) => {
+  switch (category) {
+    case 'digital':
+      return 'text-blue-500'
+    case 'office':
+      return 'text-green-500'
+    case 'life':
+      return 'text-orange-500'
+    case 'gift':
+      return 'text-purple-500'
+    default:
+      return 'text-blue-500'
+  }
+}
+
+// 处理店铺下拉框的点击事件
+const toggleStoreDropdown = () => {
+  showStoreDropdown.value = !showStoreDropdown.value
+}
+
+// 处理店铺选择
+const handleStoreSelect = (storeId: string) => {
+  selectedStore.value = storeId
+  showStoreDropdown.value = false
+}
+
+// 修改点击外部关闭下拉框函数，增加对店铺下拉框的处理
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (categoryDropdownRef.value && !categoryDropdownRef.value.contains(target)) {
+    showCategoryDropdown.value = false
+  }
+  if (storeDropdownRef.value && !storeDropdownRef.value.contains(target)) {
+    showStoreDropdown.value = false
+  }
+}
+
+// 添加生命周期钩子，处理点击外部关闭下拉框
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+// 获取店铺图标
+const getStoreIcon = (storeId: string) => {
+  return storeId ? 'store' : 'list'
+}
 </script>
 
 <style scoped>

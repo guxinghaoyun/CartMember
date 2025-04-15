@@ -111,4 +111,12 @@ export interface PickupStatistics {
   todayCompleted: number
   todayDelivering: number
   todayTotal: number
-} 
+}
+
+// 订单摘要统计
+export interface OrdersSummary {
+  pickupOrders: number // 提货订单总数
+  completeOrders: number // 已完成订单数
+  deliveryOrders: number // 配送订单数
+  pickupInShopOrders: number // 店内提货订单数
+}

@@ -45,9 +45,9 @@ function transformMemberResponse(response: any): FrontendPaginationResponse<Memb
       id: item.id || 0,
       name: item.name || '',
       phone: item.phone || '',
-      icCard: item.icNumber || '',
+      icNumber: item.icNumber || '',
       registerDate: item.createTime ? new Date(item.createTime).toLocaleDateString() : '',
-      icStatus: item.icStatus === true || item.icStatus === '1' || item.icStatus === 1,
+      icStatus: item.icStatus || '',
       note: item.note || '',
       remainingPoints: 0, // 后端API中没有此字段，默认为0
       frontPicture: item.frontPicture || item.icFrontPictureUuid || '',
@@ -60,6 +60,59 @@ function transformMemberResponse(response: any): FrontendPaginationResponse<Memb
 
 // 会员管理相关接口
 export const memberApi = {
+  // 根据内部IC卡号查询会员
+  async getMemberByInterICNumber(innerNumber: string) {
+    try {
+      console.log(`通过内部IC卡号查询会员，卡号: ${innerNumber}`)
+
+      // 调用后端API
+      const response = await request.get(`/ic-cards/membership`, {
+        params: { innerNumber }
+      })
+      console.log('查询会员返回数据:', JSON.stringify(response, null, 2))
+
+      if (response) {
+        // 转换会员数据为前端格式
+        const memberData = response
+        console.log('转换后的会员数据:', JSON.stringify(memberData, null, 2))
+        // 返回处理后的数据
+        return {
+          code: 200,
+          message: '成功',
+          data: {
+            id: memberData.id || 0,
+            name: memberData.name || '',
+            phone: memberData.phone || '',
+            icNumber: memberData.icNumber || '',
+            internalNumber: memberData.innerIcNumber || '',
+            registerDate: memberData.createTime
+              ? new Date(memberData.createTime).toLocaleDateString()
+              : '',
+            icStatus: memberData.icStatus || '',
+            note: memberData.note || '',
+            products: memberData.products || [],
+            remainingPoints: memberData.currentScore || 0,
+            frontPicture: memberData.icFrontPictureUuid || '',
+            backPicture: memberData.icBackPictureUuid || ''
+          }
+        }
+      }
+
+      return {
+        code: 404,
+        message: '未找到会员',
+        data: null
+      }
+    } catch (error) {
+      console.error('通过IC卡号查询会员失败', error)
+      return {
+        code: 500,
+        message: error instanceof Error ? error.message : '查询会员失败',
+        data: null
+      }
+    }
+  },
+
   // 获取会员列表
   async getMembers(params: PaginationParams & MemberQueryParams) {
     try {
@@ -197,9 +250,7 @@ export const memberApi = {
         registerDate: memberData.createTime
           ? new Date(memberData.createTime).toLocaleDateString()
           : '',
-        icStatus:
-          memberData.icStatus === true || memberData.icStatus === '1' || memberData.icStatus === 1,
-        note: memberData.note || '',
+        icStatus: memberData.icStatus || '',
         remainingPoints: 0, // 后端API中没有此字段，默认为0
         frontPicture: memberData.icFrontPictureUuid || '',
         backPicture: memberData.icBackPictureUuid || ''
@@ -248,7 +299,7 @@ export const memberApi = {
       formData.append('icNumber', data.icNumber)
       formData.append('shopId', shopId.toString())
       formData.append('note', data.note || '')
-      formData.append('icStatus', '1')
+      formData.append('icStatus', data.icStatus.toString())
 
       // 处理图片 - 优先使用直接字段，如果没有则尝试从cardImages中获取
       const frontPicture = data.frontPicture || ''
@@ -293,7 +344,7 @@ export const memberApi = {
       // 添加会员基本信息
       if (data.name) formData.append('name', data.name)
       if (data.phone) formData.append('phone', data.phone)
-      if (data.icStatus !== undefined) formData.append('icStatus', data.icStatus.toString())
+      if (data.icStatus !== undefined) formData.append('icStatus', data.icStatus === '正常' ? 1 : 0)
       if (data.note !== undefined) formData.append('note', data.note)
       // 添加shopId，确保更新时包含店铺ID
       if (data.shopId) formData.append('shopId', data.shopId.toString())

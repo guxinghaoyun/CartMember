@@ -3,6 +3,43 @@ import AdminLayout from '@/components/layout/admin/AdminLayout.vue'
 import UserLayout from '@/components/layout/user/UserLayout.vue'
 import LoginView from '@/views/LoginView.vue'
 
+// 设置会话超时时间（毫秒）
+const SESSION_TIMEOUT = 30 * 60 * 1000 // 30分钟
+
+// 存储上次活动时间
+let lastActivityTime = Date.now()
+
+// 更新活动时间的函数
+const updateActivityTime = () => {
+  lastActivityTime = Date.now()
+  localStorage.setItem('lastActivityTime', lastActivityTime.toString())
+}
+
+// 检查会话是否超时
+const isSessionTimedOut = () => {
+  const storedTime = localStorage.getItem('lastActivityTime')
+  if (!storedTime) return false
+
+  const lastActivity = parseInt(storedTime)
+  return Date.now() - lastActivity > SESSION_TIMEOUT
+}
+
+// 监听用户活动
+if (typeof window !== 'undefined') {
+  // 页面加载时初始化lastActivityTime
+  const storedTime = localStorage.getItem('lastActivityTime')
+  if (storedTime) {
+    lastActivityTime = parseInt(storedTime)
+  } else {
+    updateActivityTime()
+  }
+
+  // 添加活动事件监听器
+  ;['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+    document.addEventListener(event, updateActivityTime, true)
+  })
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -112,6 +149,20 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('token')
   const userType = localStorage.getItem('userType')
+
+  // 检查会话是否超时（仅对已认证用户）
+  if (isAuthenticated && isSessionTimedOut() && to.meta.requiresAuth) {
+    // 清除认证信息
+    localStorage.removeItem('token')
+    localStorage.removeItem('userType')
+    localStorage.removeItem('lastActivityTime')
+
+    // 重定向到登录页，并带上超时提示参数
+    next({ path: '/', query: { timeout: 'true' } })
+    // 刷新页面
+    window.location.reload()
+    return
+  }
 
   // 如果访问登录页
   if (to.path === '/') {

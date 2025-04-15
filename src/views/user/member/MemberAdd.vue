@@ -39,7 +39,7 @@
         <div class="bg-gray-50 rounded-lg p-5">
           <div class="space-y-4">
             <!-- IC卡号 -->
-            <el-form-item label="IC卡号" prop="icCard" class="!mb-0">
+            <el-form-item label="IC卡号" prop="icNumber" class="!mb-0">
               <div class="flex space-x-2">
                 <el-input v-model="form.icNumber" placeholder="请输入IC卡号" class="!w-full" />
                 <el-button
@@ -56,13 +56,13 @@
             <!-- 卡片状态 -->
             <el-form-item label="卡片状态" prop="icStatus" class="!mb-0">
               <el-radio-group v-model="form.icStatus" class="!w-full flex gap-4">
-                <el-radio :value="'正常'" class="flex-1 !mr-0">
+                <el-radio :value="true" class="flex-1 !mr-0">
                   <div class="flex items-center">
                     <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
                     正常
                   </div>
                 </el-radio>
-                <el-radio :value="'停用'" class="flex-1 !mr-0">
+                <el-radio :value="false" class="flex-1 !mr-0">
                   <div class="flex items-center">
                     <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
                     停用
@@ -73,7 +73,10 @@
 
             <!-- 卡片图片 -->
             <div class="mt-4">
-              <div class="text-base text-gray-500 mb-2">卡片图片</div>
+              <div class="text-base text-gray-500 mb-2">
+                卡片图片
+                <span class="text-red-500">*</span>
+              </div>
               <div class="grid grid-cols-2 gap-4">
                 <!-- 正面图片 -->
                 <div class="space-y-2">
@@ -89,12 +92,19 @@
                     <template #trigger>
                       <div
                         class="border border-gray-200 rounded-lg p-2 bg-white h-[190px] flex items-center justify-center"
+                        :class="{
+                          'border-red-300 bg-red-50':
+                            !form?.frontPicture &&
+                            formRef?.fields?.find(field => field.prop === 'frontPicture')
+                              ?.validateState === 'error'
+                        }"
                       >
                         <div v-if="!form?.frontPicture" class="space-y-2 p-2 text-center">
                           <font-awesome-icon icon="image" class="text-3xl text-gray-400" />
                           <div class="text-sm text-gray-500">
                             点击或拖拽上传正面图片
                             <div class="text-xs">支持 jpg、png 格式，大小不超过 2MB</div>
+                            <div class="text-xs text-red-500 font-medium mt-1">（必填项）</div>
                           </div>
                         </div>
                         <div v-else class="relative group w-full h-full">
@@ -136,12 +146,19 @@
                     <template #trigger>
                       <div
                         class="border border-gray-200 rounded-lg p-2 bg-white h-[190px] flex items-center justify-center"
+                        :class="{
+                          'border-red-300 bg-red-50':
+                            !form?.backPicture &&
+                            formRef?.fields?.find(field => field.prop === 'backPicture')
+                              ?.validateState === 'error'
+                        }"
                       >
                         <div v-if="!form.backPicture" class="space-y-2 p-2 text-center">
                           <font-awesome-icon icon="image" class="text-3xl text-gray-400" />
                           <div class="text-sm text-gray-500">
                             点击或拖拽上传背面图片
                             <div class="text-xs">支持 jpg、png 格式，大小不超过 2MB</div>
+                            <div class="text-xs text-red-500 font-medium mt-1">（必填项）</div>
                           </div>
                         </div>
                         <div v-else class="relative group w-full h-full">
@@ -171,6 +188,21 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- 其他信息 -->
+      <div class="space-y-4">
+        <h3 class="text-base font-medium text-gray-900 flex items-center">
+          <div class="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center mr-2">
+            <font-awesome-icon icon="note-sticky" class="text-green-500" />
+          </div>
+          其他信息
+        </h3>
+        <div class="bg-gray-50 rounded-lg p-5">
+          <el-form-item label="备注" prop="note" class="!mb-0">
+            <el-input v-model="form.note" type="textarea" :rows="3" placeholder="请输入备注信息" />
+          </el-form-item>
         </div>
       </div>
     </el-form>
@@ -223,7 +255,7 @@ const form = ref<CreateMemberRequest>({
   name: '',
   phone: '',
   icNumber: '',
-  icStatus: '正常',
+  icStatus: '',
   frontPicture: '',
   backPicture: '',
   note: ''
@@ -240,7 +272,9 @@ const rules: FormRules = {
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
   ],
   icNumber: [{ required: true, message: '请输入IC卡号', trigger: 'blur' }],
-  icStatus: [{ required: true, message: '请选择卡片状态', trigger: 'change' }]
+  icStatus: [{ required: true, message: '请选择卡片状态', trigger: 'change' }],
+  frontPicture: [{ required: true, message: '请上传IC卡正面图片', trigger: 'change' }],
+  backPicture: [{ required: true, message: '请上传IC卡背面图片', trigger: 'change' }]
 }
 
 // 读取IC卡
@@ -343,7 +377,7 @@ const handleSubmit = async () => {
       name: form.value.name,
       phone: form.value.phone,
       icNumber: form.value.icNumber,
-      icStatus: form.value.icStatus === '正常' ? true : false, // 转换为布尔值
+      icStatus: form.value.icStatus, // 转换为布尔值
       note: form.value.note || '',
       // 图片数据
       frontPicture: form.value?.frontPicture || '',
@@ -356,7 +390,8 @@ const handleSubmit = async () => {
     const response = await memberApi.createMember(submitData)
 
     if (response.code === 200) {
-      emit('success', response.data as unknown as Member)
+      const newMember = response as unknown as Member
+      emit('success', newMember)
       handleClose()
       ElMessage.success('会员添加成功')
     } else {
@@ -380,7 +415,7 @@ const handleClose = () => {
     name: '',
     phone: '',
     icNumber: '',
-    icStatus: '正常',
+    icStatus: '',
     frontPicture: '',
     backPicture: '',
     note: ''

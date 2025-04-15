@@ -326,9 +326,9 @@ const transformCardData = (card: Card): Card => {
     surfaceNumber: card.cardNumber || 'N/A', // 将cardNumber映射为surfaceNumber
     initTime: card.createTime || 'N/A', // 将createTime映射为initTime
     status: statusValue, // 映射状态
-    store: card.store || '未分配', // 默认店铺为未分配
-    memberName: card.memberName || '未绑定', // 默认会员名为未绑定
-    memberPhone: card.memberPhone || '--' // 默认电话为空
+    store: card.shopName || '未分配', // 默认店铺为未分配
+    memberName: card.membershipName || '未绑定', // 默认会员名为未绑定
+    memberPhone: card.membershipPhone || '--' // 默认电话为空
   }
 }
 
@@ -347,8 +347,11 @@ const fetchCards = async () => {
     // 直接使用后端返回的数据
     console.log('API响应:', response)
 
-    cards.value = response.records
-    total.value = response.totalRecords
+    // 转换后端返回的数据，确保字段名与前端组件期望的一致
+    // 使用类型断言解决TypeScript类型问题
+    const apiResponse = response as unknown as { records: Card[]; totalRecords: number }
+    cards.value = apiResponse.records.map(card => transformCardData(card))
+    total.value = apiResponse.totalRecords
 
     console.log('总记录数:', total.value)
   } catch (error) {

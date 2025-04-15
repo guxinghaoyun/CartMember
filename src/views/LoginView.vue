@@ -32,6 +32,17 @@
 
       <!-- 卡片内容 -->
       <div class="relative p-12">
+        <!-- 会话超时提示 -->
+        <div
+          v-if="sessionTimedOut"
+          class="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700"
+        >
+          <div class="flex items-center">
+            <font-awesome-icon icon="exclamation-triangle" class="mr-2 text-amber-500" />
+            <span>您的会话已过期，请重新登录</span>
+          </div>
+        </div>
+
         <!-- Logo和标题区域 -->
         <div class="text-center mb-10">
           <div
@@ -82,42 +93,32 @@
           <el-button type="primary" class="login-button" :loading="loading" @click="handleSubmit">
             登录
           </el-button>
-
-          <!-- 测试账号提示 -->
-          <div class="text-center text-sm text-gray-600 mt-4">
-            <div class="bg-gray-50/50 rounded-lg px-4 py-3 backdrop-blur-sm">
-              <div class="font-medium text-gray-700 mb-1">测试账号</div>
-              <div class="space-y-1">
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-700">管理员账号：</span>
-                  <code class="bg-white/80 px-2 py-0.5 rounded text-gray-800 font-medium">
-                    admin / admin
-                  </code>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-700">用户账号：</span>
-                  <code class="bg-white/80 px-2 py-0.5 rounded text-gray-800 font-medium">
-                    user / user
-                  </code>
-                </div>
-              </div>
-            </div>
-          </div>
         </el-form>
       </div>
     </div>
+
+    <!-- 版权信息 -->
+    <footer
+      class="bg-white py-2 text-center text-xs text-gray-500 border-t border-gray-200 w-full fixed bottom-0 left-0 right-0 z-40"
+    >
+      © 2024 智慧零售管理系统 版权所有
+    </footer>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { login } from '@/api/login'
 import type { LoginParams } from '@/types/api/login'
 
 const router = useRouter()
+const route = useRoute()
+
+// 会话超时状态
+const sessionTimedOut = ref(false)
 
 // 表单引用
 const loginFormRef = ref<FormInstance>()
@@ -130,6 +131,11 @@ const loginForm = reactive<LoginParams>({
   username: '',
   password: '',
   remember: false
+})
+
+// 检查是否是因为会话超时被重定向到登录页
+onMounted(() => {
+  sessionTimedOut.value = route.query.timeout === 'true'
 })
 
 // 表单验证规则

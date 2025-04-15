@@ -7,11 +7,11 @@ services:
       platforms:
         - linux/amd64
         - linux/arm64
-    image: hy1358783794/retail-management:latest
+    image: hy1358783794/retail-management:liangsen
     container_name: retail-management
     restart: always
     ports:
-      - "80:80"
+      - '97664:80'
     environment:
       - NODE_ENV=production
     networks:
@@ -19,4 +19,4 @@ services:
 
 networks:
   retail-network:
-    driver: bridge
+    driver: my_bridge_network

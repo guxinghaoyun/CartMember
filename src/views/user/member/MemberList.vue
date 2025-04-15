@@ -78,7 +78,7 @@
             <td class="px-4 py-4 text-base text-gray-600">
               <div class="flex items-center space-x-3">
                 <div class="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center">
-                  <font-awesome-icon icon="calendar-days" class="text-green-500 text-lg" />
+                  <font-awesome-icon icon="calendar-alt" class="text-green-500 text-lg" />
                 </div>
                 {{ member.registerDate }}
               </div>
@@ -87,13 +87,17 @@
               <div class="flex items-center">
                 <span
                   class="inline-flex items-center px-3 py-1 rounded-lg text-sm"
-                  :class="member.icStatus ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                  :class="
+                    member.icStatus === '正常'
+                      ? 'bg-green-50 text-green-700'
+                      : 'bg-red-50 text-red-700'
+                  "
                 >
                   <span
                     class="w-2 h-2 mr-2 rounded-full"
-                    :class="member.icStatus ? 'bg-green-500' : 'bg-red-500'"
+                    :class="member.icStatus === '正常' ? 'bg-green-500' : 'bg-red-500'"
                   ></span>
-                  {{ member.icStatus ? '正常' : '停用' }}
+                  {{ member.icStatus === '正常' ? '正常' : '停用' }}
                 </span>
               </div>
             </td>
@@ -219,7 +223,7 @@ const fetchMembers = async () => {
     }
 
     const response = await memberApi.getMembers(params)
-    const paginationData = response.data as unknown as PaginationResponse<Member>
+    const paginationData = response.data as unknown as any
     members.value = paginationData.items || []
     total.value = paginationData.total || 0
   } catch (error) {

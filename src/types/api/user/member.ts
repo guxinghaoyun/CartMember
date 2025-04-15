@@ -5,7 +5,7 @@ export interface Member {
   phone: string
   icNumber: string
   registerDate: string
-  icStatus: boolean
+  icStatus: string
   frontPicture?: string
   backPicture?: string
   note?: string
@@ -23,7 +23,7 @@ export interface CreateMemberRequest {
   name: string
   phone: string
   icNumber: string
-  icStatus: boolean
+  icStatus: string
   shopId?: number
   frontPicture?: string
   backPicture?: string
@@ -34,7 +34,7 @@ export interface CreateMemberRequest {
 export interface UpdateMemberRequest {
   name?: string
   phone?: string
-  icStatus?: boolean
+  icStatus?: string
   frontPicture?: string
   backPicture?: string
   note?: string
@@ -44,7 +44,7 @@ export interface UpdateMemberRequest {
 // 会员查询参数
 export interface MemberQueryParams {
   keyword?: string
-  icStatus?: boolean
+  icStatus?: string
   startDate?: string
   endDate?: string
 }
@@ -56,7 +56,7 @@ export interface MemberCard {
   type: '会员卡' | '储值卡' | '礼品卡'
   balance: number
   points: number
-  icStatus: boolean
+  icStatus: string
   activateDate: string
   expireDate: string
 }
