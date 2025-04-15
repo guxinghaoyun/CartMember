@@ -1,7 +1,7 @@
 <template>
-  <div class="h-[calc(100vh-64px)] bg-gray-50 p-2 space-y-2 flex flex-col overflow-hidden">
-    <!-- 状态统计卡片 -->
-    <div class="grid grid-cols-4 gap-3">
+  <!-- 状态统计卡片 -->
+  <div class="overflow-x-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 min-w-[800px]">
       <!-- 待提货订单 -->
       <div
         class="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group relative overflow-hidden"
@@ -120,477 +120,430 @@
         <div class="h-1 w-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"></div>
       </div>
     </div>
+  </div>
 
-    <!-- 订单列表 -->
-    <div class="bg-white rounded-xl shadow-sm">
-      <!-- 列表头部 -->
-      <div class="p-4 border-b">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-6">
-            <h2 class="text-lg font-medium flex items-center text-gray-800">
-              <div
-                class="w-10 h-10 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center mr-3 shadow-sm"
-              >
-                <font-awesome-icon icon="file-invoice" class="text-gray-500" />
-              </div>
-              提货订单管理
-            </h2>
-            <div class="flex bg-gray-50/80 p-1.5 rounded-xl shadow-sm">
-              <button
-                v-for="tab in tabs"
-                :key="tab.value"
-                class="px-4 py-2 rounded-lg text-sm transition-all duration-300 relative group min-w-[100px]"
-                :class="[
-                  currentTab === tab.value
-                    ? 'bg-white text-blue-600 shadow-sm font-medium'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                ]"
-                @click="currentTab = tab.value"
-              >
-                <div class="flex items-center justify-center space-x-2">
-                  <font-awesome-icon
-                    :icon="getTabIcon(tab.value)"
-                    :class="[
-                      currentTab === tab.value
-                        ? 'text-blue-500'
-                        : 'text-gray-400 group-hover:text-gray-600'
-                    ]"
-                  />
-                  <span>{{ tab.label }}</span>
-                  <span
-                    v-if="getTabCount(tab.value)"
-                    :class="[
-                      currentTab === tab.value
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-gray-200 text-gray-600 group-hover:bg-gray-300'
-                    ]"
-                    class="px-2 py-0.5 text-xs rounded-full transition-colors duration-300"
-                  >
-                    {{ getTabCount(tab.value) }}
-                  </span>
-                </div>
-                <div
-                  v-if="currentTab === tab.value"
-                  class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full -mb-1"
-                ></div>
-              </button>
-            </div>
+  <!-- 订单列表 -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <!-- 列表头部 -->
+    <div class="p-4 border-b overflow-x-auto">
+      <div class="flex items-center justify-between min-w-[800px]">
+        <div class="flex items-center space-x-2 sm:space-x-4">
+          <div class="flex items-center gap-2 mr-2">
+            <font-awesome-icon icon="file-invoice" class="text-gray-500" />
+            <h2 class="text-base sm:text-lg font-medium text-gray-800">提货订单管理</h2>
           </div>
-          <div class="flex items-center space-x-4">
-            <!-- 高级筛选 -->
-            <div class="relative" ref="filterRef">
-              <button
-                class="px-4 py-2.5 border rounded-xl text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900 transition-all duration-300 flex items-center space-x-2 min-w-[100px] justify-center shadow-sm"
-                :class="{ 'border-blue-500 !bg-blue-50 !text-blue-600': showFilter }"
-                @click="showFilter = !showFilter"
-              >
-                <font-awesome-icon icon="filter" />
-                <span>筛选</span>
-                <span
-                  v-if="activeFilters > 0"
-                  class="px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded-full"
-                >
-                  {{ activeFilters }}
-                </span>
-              </button>
-              <!-- 筛选面板 -->
-              <div
-                v-if="showFilter"
-                class="absolute right-0 top-14 w-96 bg-white rounded-2xl shadow-xl p-6 z-50 border animate-fade-in"
-                style="max-height: 80vh; overflow-y: auto"
-                @click.stop
-              >
-                <div class="space-y-4">
-                  <!-- 提货方式筛选 -->
-                  <div>
-                    <div class="text-sm font-medium mb-2 flex items-center">
-                      <font-awesome-icon icon="cube" class="text-gray-400 mr-2" />
-                      提货方式
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                      <button
-                        v-for="type in deliveryTypes"
-                        :key="type.value"
-                        class="px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 flex items-center"
-                        :class="
-                          filters.deliveryType === type.value
-                            ? 'bg-blue-50 text-blue-500 border border-blue-200'
-                            : 'text-gray-500 hover:bg-gray-50 border border-gray-200'
-                        "
-                        @click="filters.deliveryType = type.value"
-                      >
-                        <font-awesome-icon :icon="type.icon" class="mr-2" />
-                        {{ type.label }}
-                      </button>
-                    </div>
-                  </div>
-                  <!-- 时间范围筛选 -->
-                  <div>
-                    <div class="text-sm font-medium mb-2 flex items-center">
-                      <font-awesome-icon icon="calendar-alt" class="text-gray-400 mr-2" />
-                      时间范围
-                    </div>
-                    <el-date-picker
-                      v-model="filters.dateRange"
-                      type="daterange"
-                      range-separator="至"
-                      start-placeholder="开始日期"
-                      end-placeholder="结束日期"
-                      :shortcuts="dateShortcuts"
-                      class="!w-full"
-                      :popper-options="{ strategy: 'fixed' }"
-                    />
-                  </div>
-                  <!-- 操作员筛选 -->
-                  <div>
-                    <div class="text-sm font-medium mb-2 flex items-center">
-                      <font-awesome-icon icon="user-cog" class="text-gray-400 mr-2" />
-                      操作员
-                    </div>
-                    <el-select
-                      v-model="filters.operator"
-                      placeholder="选择操作员"
-                      class="!w-full"
-                      popper-class="operator-select-dropdown"
-                      :popper-options="{ strategy: 'fixed' }"
-                      size="large"
-                    >
-                      <el-option value="" label="全部操作员">
-                        <div class="flex items-center space-x-2">
-                          <div
-                            class="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center"
-                          >
-                            <font-awesome-icon icon="users" class="text-gray-400" />
-                          </div>
-                          <span>全部操作员</span>
-                        </div>
-                      </el-option>
-                      <el-option v-for="op in operators" :key="op" :value="op" :label="op">
-                        <div class="flex items-center space-x-2">
-                          <div
-                            class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center"
-                          >
-                            <font-awesome-icon icon="user" class="text-blue-400" />
-                          </div>
-                          <span>{{ op }}</span>
-                        </div>
-                      </el-option>
-                    </el-select>
-                  </div>
-                  <!-- 筛选按钮 -->
-                  <div class="flex justify-end space-x-2 pt-4 border-t">
-                    <button
-                      class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 flex items-center"
-                      @click="resetFilters"
-                    >
-                      <font-awesome-icon icon="rotate" class="mr-2" />
-                      重置
-                    </button>
-                    <button
-                      class="px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 flex items-center"
-                      @click="applyFilters"
-                    >
-                      <font-awesome-icon icon="check" class="mr-2" />
-                      应用筛选
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- 搜索框 -->
-            <div class="relative flex items-center">
-              <input
-                type="text"
-                v-model="searchQuery"
-                placeholder="搜索订单号/会员"
-                @keyup.enter="handleSearch"
-                class="pl-12 pr-28 py-2.5 border rounded-xl w-80 focus:ring-2 focus:ring-blue-500 outline-none transition-all duration-300 hover:border-gray-400 shadow-sm"
-                :class="{ '!border-blue-500 !pr-36': isSearchMode }"
-              />
-              <font-awesome-icon
-                icon="magnifying-glass"
-                class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
-              />
-              <div class="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-1">
-                <button
-                  v-if="isSearchMode"
-                  class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1.5 rounded-lg transition-colors duration-200 text-xs flex items-center"
-                  @click="clearSearch"
-                  title="清除搜索"
-                >
-                  <font-awesome-icon icon="times" class="mr-1" />
-                  <span>清除</span>
-                </button>
-                <button
-                  class="bg-blue-50 hover:bg-blue-100 text-blue-500 p-1.5 rounded-lg transition-colors duration-200"
-                  @click="handleSearch"
-                  title="搜索"
-                >
-                  <font-awesome-icon icon="search" />
-                </button>
-              </div>
-              <div
-                v-if="isSearchMode"
-                class="absolute -bottom-6 left-0 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg"
-              >
-                <font-awesome-icon icon="info-circle" class="mr-1" />
-                在全部数据中找到 {{ searchResultsTotal }} 条记录
-              </div>
-            </div>
-            <!-- 刷新按钮 -->
+          <div class="flex bg-gray-50/80 p-1 rounded-xl shadow-sm">
             <button
-              class="p-2.5 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-all duration-300 w-11 h-11 flex items-center justify-center"
-              @click="refreshList"
+              v-for="tab in tabs"
+              :key="tab.value"
+              class="px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm transition-all duration-300 relative group"
+              :class="[
+                currentTab === tab.value
+                  ? 'bg-white text-blue-600 shadow-sm font-medium'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+              ]"
+              @click="currentTab = tab.value"
             >
-              <font-awesome-icon icon="rotate" class="text-lg" />
-            </button>
-            <!-- 新增按钮 -->
-            <button
-              class="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2.5 flex items-center space-x-2 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-sm hover:shadow group min-w-[120px] justify-center"
-              @click="handleNewPickup"
-            >
-              <div class="relative">
+              <div class="flex items-center justify-center space-x-1">
                 <font-awesome-icon
-                  icon="plus"
-                  class="transform group-hover:scale-110 transition-transform duration-300"
+                  :icon="getTabIcon(tab.value)"
+                  :class="[
+                    currentTab === tab.value
+                      ? 'text-blue-500'
+                      : 'text-gray-400 group-hover:text-gray-600'
+                  ]"
                 />
+                <span>{{ tab.label }}</span>
+                <span
+                  v-if="getTabCount(tab.value)"
+                  :class="[
+                    currentTab === tab.value
+                      ? 'bg-blue-100 text-blue-600'
+                      : 'bg-gray-200 text-gray-600 group-hover:bg-gray-300'
+                  ]"
+                  class="px-1.5 py-0.5 text-xs rounded-full transition-colors duration-300"
+                >
+                  {{ getTabCount(tab.value) }}
+                </span>
               </div>
-              <span>新增提货单</span>
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- 订单表格 -->
-      <div class="overflow-y-auto overflow-x-hidden flex-1 max-h-[calc(92vh-300px)]">
-        <table class="w-full">
-          <thead class="sticky top-0 bg-gray-50 z-10">
-            <tr class="bg-gradient-to-r from-gray-50 to-white border-b">
-              <th
-                v-for="col in columns"
-                :key="col.key"
-                class="px-6 py-4 text-left text-xs font-medium text-gray-600 first:pl-8 last:pr-8"
-                :class="[
-                  { 'cursor-pointer hover:text-gray-900': col.sortable },
-                  col.key === 'actions' ? 'text-right' : ''
-                ]"
-                @click="col.sortable && handleSort(col.key)"
+        <div class="flex items-center space-x-2">
+          <button
+            class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-all duration-300"
+            @click="refreshList"
+          >
+            <font-awesome-icon icon="rotate" />
+          </button>
+
+          <div class="relative hidden sm:block w-64 lg:w-80" ref="filterRef">
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="搜索订单号/会员"
+              @keyup.enter="handleSearch"
+              class="pl-10 pr-4 py-2 border rounded-full w-full focus:ring-2 focus:ring-blue-500 outline-none transition-all duration-300"
+            />
+            <font-awesome-icon
+              icon="magnifying-glass"
+              class="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+          </div>
+
+          <div class="relative" ref="filterRef">
+            <button
+              class="h-10 px-3 py-2 border rounded-xl text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center space-x-1"
+              :class="{ 'border-blue-500 !bg-blue-50 !text-blue-600': showFilter }"
+              @click="showFilter = !showFilter"
+            >
+              <font-awesome-icon icon="filter" />
+              <span class="hidden sm:inline">筛选</span>
+              <span
+                v-if="activeFilters > 0"
+                class="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-600 rounded-full"
               >
-                <div
-                  class="flex items-center space-x-2"
-                  :class="{ 'justify-end': col.key === 'actions' }"
-                >
-                  <div class="w-8 h-8 rounded-lg bg-gray-50/80 flex items-center justify-center">
-                    <font-awesome-icon v-if="col.icon" :icon="col.icon" class="text-gray-400" />
+                {{ activeFilters }}
+              </span>
+            </button>
+            <!-- 筛选面板 -->
+            <div
+              v-if="showFilter"
+              class="absolute right-0 top-14 w-64 sm:w-96 bg-white rounded-2xl shadow-xl p-6 z-50 border animate-fade-in"
+              style="max-height: 80vh; overflow-y: auto"
+              @click.stop
+            >
+              <div class="space-y-4">
+                <!-- 提货方式筛选 -->
+                <div>
+                  <div class="text-sm font-medium mb-2 flex items-center">
+                    <font-awesome-icon icon="cube" class="text-gray-400 mr-2" />
+                    提货方式
                   </div>
-                  <span>{{ col.label }}</span>
-                  <font-awesome-icon
-                    v-if="col.sortable"
-                    icon="sort"
-                    :class="{
-                      'text-blue-500': sortConfig.key === col.key,
-                      'rotate-180': sortConfig.key === col.key && sortConfig.order === 'desc'
-                    }"
-                    class="transition-transform duration-200"
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="type in deliveryTypes"
+                      :key="type.value"
+                      class="px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 flex items-center"
+                      :class="
+                        filters.deliveryType === type.value
+                          ? 'bg-blue-50 text-blue-500 border border-blue-200'
+                          : 'text-gray-500 hover:bg-gray-50 border border-gray-200'
+                      "
+                      @click="filters.deliveryType = type.value"
+                    >
+                      <font-awesome-icon :icon="type.icon" class="mr-2" />
+                      {{ type.label }}
+                    </button>
+                  </div>
+                </div>
+                <!-- 时间范围筛选 -->
+                <div>
+                  <div class="text-sm font-medium mb-2 flex items-center">
+                    <font-awesome-icon icon="calendar-alt" class="text-gray-400 mr-2" />
+                    时间范围
+                  </div>
+                  <el-date-picker
+                    v-model="filters.dateRange"
+                    type="daterange"
+                    range-separator="至"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期"
+                    :shortcuts="dateShortcuts"
+                    class="!w-full"
+                    :popper-options="{ strategy: 'fixed' }"
                   />
                 </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y">
-            <tr
-              v-for="order in filteredOrders"
-              :key="order.id"
-              class="hover:bg-blue-50/5 transition-all duration-200 group"
-            >
-              <!-- 订单信息 -->
-              <td class="px-6 py-4 first:pl-8">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <div
-                      class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center shadow-sm group-hover:shadow group-hover:scale-105 transition-all duration-200"
-                    >
-                      <font-awesome-icon icon="file-invoice" class="text-blue-500" />
-                    </div>
+                <!-- 操作员筛选 -->
+                <div>
+                  <div class="text-sm font-medium mb-2 flex items-center">
+                    <font-awesome-icon icon="user-cog" class="text-gray-400 mr-2" />
+                    操作员
                   </div>
-                  <div>
-                    <div
-                      class="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200"
-                    >
-                      {{ order.orderNo }}
-                    </div>
-                    <div class="text-xs text-gray-500 flex items-center mt-1.5">
-                      <div
-                        class="flex items-center px-2 py-1 rounded-full bg-blue-50 text-blue-600"
-                      >
-                        <font-awesome-icon icon="box" class="text-blue-400 mr-1.5 text-xs" />
-                        <span>{{ getItemCount(order) }} 件商品</span>
+                  <el-select
+                    v-model="filters.operator"
+                    placeholder="选择操作员"
+                    class="!w-full"
+                    popper-class="operator-select-dropdown"
+                    :popper-options="{ strategy: 'fixed' }"
+                    size="large"
+                  >
+                    <el-option value="" label="全部操作员">
+                      <div class="flex items-center space-x-2">
+                        <div class="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center">
+                          <font-awesome-icon icon="users" class="text-gray-400" />
+                        </div>
+                        <span>全部操作员</span>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <!-- 会员信息 -->
-              <td class="px-6 py-4">
-                <div class="flex items-center space-x-3">
-                  <div
-                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center shadow-sm group-hover:shadow group-hover:scale-105 transition-all duration-200"
-                  >
-                    <font-awesome-icon icon="user" class="text-purple-500 text-lg" />
-                  </div>
-                  <div>
-                    <div
-                      class="text-xs font-medium text-gray-900 group-hover:text-purple-600 transition-colors duration-200"
-                    >
-                      {{ order.memberName }}
-                    </div>
-                    <div class="text-xs text-gray-500 flex items-center mt-1">
-                      <div
-                        class="flex items-center px-2 py-0.5 rounded-full bg-purple-50 text-purple-600"
-                      >
-                        <font-awesome-icon icon="phone" class="text-purple-400 mr-1 text-xs" />
-                        <span class="text-xs">{{ order.memberPhone }}</span>
+                    </el-option>
+                    <el-option v-for="op in operators" :key="op" :value="op" :label="op">
+                      <div class="flex items-center space-x-2">
+                        <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
+                          <font-awesome-icon icon="user" class="text-blue-400" />
+                        </div>
+                        <span>{{ op }}</span>
                       </div>
-                    </div>
-                  </div>
+                    </el-option>
+                  </el-select>
                 </div>
-              </td>
-              <!-- 提货方式 -->
-              <td class="px-6 py-4">
-                <div
-                  class="flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200"
-                  :class="{
-                    'bg-gradient-to-r from-green-50 to-green-100 text-green-600':
-                      order.deliveryType === 'store',
-                    'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600':
-                      order.deliveryType === 'delivery'
-                  }"
-                >
-                  <div class="w-8 h-8 rounded-lg bg-white/50 flex items-center justify-center">
-                    <font-awesome-icon :icon="getDeliveryIcon(order.deliveryType)" />
-                  </div>
-                  <span class="text-xs font-medium">{{ getDeliveryText(order.deliveryType) }}</span>
-                </div>
-              </td>
-              <!-- 提货时间 -->
-              <td class="px-6 py-4">
-                <div class="flex flex-col">
-                  <div
-                    class="text-xs text-gray-900 flex items-center bg-gray-50 px-3 py-1.5 rounded-lg group-hover:bg-gray-100 transition-all duration-200"
-                  >
-                    <font-awesome-icon icon="calendar-alt" class="text-gray-400 mr-2" />
-                    {{ formatDate(order.pickupTime) }}
-                  </div>
-                  <div class="text-xs text-gray-500 mt-1.5 ml-1">
-                    {{ getTimeAgo(order.pickupTime) }}
-                  </div>
-                </div>
-              </td>
-              <!-- 状态 -->
-              <td class="px-6 py-4">
-                <div
-                  :class="[
-                    getStatusClass(order.status),
-                    'inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition-all duration-200'
-                  ]"
-                >
-                  <div class="w-8 h-8 rounded-lg bg-white/50 flex items-center justify-center mr-2">
-                    <font-awesome-icon :icon="getStatusIcon(order.status)" />
-                  </div>
-                  {{ getStatusText(order.status) }}
-                </div>
-              </td>
-              <!-- 操作员 -->
-              <td class="px-6 py-4">
-                <div class="flex items-center space-x-3">
-                  <div
-                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center shadow-sm group-hover:shadow group-hover:scale-105 transition-all duration-200"
-                  >
-                    <font-awesome-icon icon="user-cog" class="text-gray-500" />
-                  </div>
-                  <span class="text-xs text-gray-700 font-medium">{{ order.operator }}</span>
-                </div>
-              </td>
-              <!-- 操作 -->
-              <td class="px-6 py-4 text-right">
-                <div class="flex justify-end space-x-2 transition-all duration-200">
+                <!-- 筛选按钮 -->
+                <div class="flex justify-end space-x-2 pt-4 border-t">
                   <button
-                    class="action-button text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:scale-105"
-                    @click="handleEdit(order)"
-                    title="编辑"
+                    class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 flex items-center"
+                    @click="resetFilters"
                   >
-                    <font-awesome-icon icon="edit" />
+                    <font-awesome-icon icon="rotate" class="mr-2" />
+                    重置
                   </button>
                   <button
-                    v-if="order.status !== 'completed'"
-                    class="action-button text-gray-400 hover:text-green-600 hover:bg-green-50 hover:scale-105"
-                    @click="handleComplete(order)"
-                    title="完成"
+                    class="px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 flex items-center"
+                    @click="applyFilters"
                   >
-                    <font-awesome-icon icon="check" />
-                  </button>
-                  <button
-                    class="action-button text-gray-400 hover:text-red-600 hover:bg-red-50 hover:scale-105"
-                    @click="handleDelete(order)"
-                    title="删除"
-                  >
-                    <font-awesome-icon icon="trash" />
+                    <font-awesome-icon icon="check" class="mr-2" />
+                    应用筛选
                   </button>
                 </div>
-              </td>
-            </tr>
-            <!-- 空状态 -->
-            <tr v-if="filteredOrders.length === 0">
-              <td colspan="7" class="px-6 py-16">
-                <div class="text-center">
-                  <div
-                    class="w-24 h-24 mx-auto bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mb-4 shadow-sm"
-                  >
-                    <font-awesome-icon icon="inbox" class="text-4xl text-gray-300" />
-                  </div>
-                  <div class="text-gray-500 font-medium">暂无相关订单</div>
-                  <div class="text-gray-400 text-sm mt-1">
-                    可以点击右上角的"新增提货单"按钮创建新订单
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </div>
+          </div>
 
-      <!-- 分页 -->
-      <div class="flex items-center justify-between px-6 py-4 border-t">
-        <div class="text-sm text-gray-500 flex-shrink-0">
-          共
-          <span class="font-medium text-gray-900">{{ totalOrders }}</span>
-          条
-          <span class="hidden sm:inline">记录，每页 {{ pageSize }} 条</span>
+          <button
+            class="h-10 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 sm:px-4 py-2 flex items-center space-x-1 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-sm"
+            @click="handleNewPickup"
+          >
+            <font-awesome-icon icon="plus" class="text-xs" />
+            <span class="hidden sm:inline">新增提货单</span>
+          </button>
         </div>
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="totalOrders"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="sizes, prev, pager, next"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
-          class="!text-sm"
-          :pager-count="5"
-          background
-        />
       </div>
     </div>
 
-    <!-- 添加提货单表单 -->
-    <AddPickupForm v-model:visible="addVisible" @submit="handleAddSubmit" />
+    <!-- 订单表格 -->
+    <div class="overflow-x-auto overflow-y-auto flex-1 max-h-[calc(92vh-300px)]">
+      <table class="w-full min-w-[1000px]">
+        <thead class="sticky top-0 bg-gray-50 z-10">
+          <tr class="bg-gradient-to-r from-gray-50 to-white border-b">
+            <th
+              v-for="col in columns"
+              :key="col.key"
+              class="px-6 py-4 text-left text-xs font-medium text-gray-600 first:pl-8 last:pr-8 whitespace-nowrap"
+              :class="[
+                { 'cursor-pointer hover:text-gray-900': col.sortable },
+                col.key === 'actions' ? 'text-right' : ''
+              ]"
+              @click="col.sortable && handleSort(col.key)"
+            >
+              <div
+                class="flex items-center space-x-2"
+                :class="{ 'justify-end': col.key === 'actions' }"
+              >
+                <div class="w-8 h-8 rounded-lg bg-gray-50/80 flex items-center justify-center">
+                  <font-awesome-icon v-if="col.icon" :icon="col.icon" class="text-gray-400" />
+                </div>
+                <span>{{ col.label }}</span>
+                <font-awesome-icon
+                  v-if="col.sortable"
+                  icon="sort"
+                  :class="{
+                    'text-blue-500': sortConfig.key === col.key,
+                    'rotate-180': sortConfig.key === col.key && sortConfig.order === 'desc'
+                  }"
+                  class="transition-transform duration-200"
+                />
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y">
+          <tr
+            v-for="order in filteredOrders"
+            :key="order.id"
+            class="hover:bg-blue-50/5 transition-all duration-200 group"
+          >
+            <!-- 订单信息 -->
+            <td class="px-6 py-4 first:pl-8">
+              <div class="flex items-center space-x-4">
+                <div class="flex-shrink-0">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center shadow-sm group-hover:shadow group-hover:scale-105 transition-all duration-200"
+                  >
+                    <font-awesome-icon icon="file-invoice" class="text-blue-500" />
+                  </div>
+                </div>
+                <div>
+                  <div
+                    class="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200"
+                  >
+                    {{ order.orderNo }}
+                  </div>
+                  <div class="text-xs text-gray-500 flex items-center mt-1.5">
+                    <div class="flex items-center px-2 py-1 rounded-full bg-blue-50 text-blue-600">
+                      <font-awesome-icon icon="box" class="text-blue-400 mr-1.5 text-xs" />
+                      <span>{{ getItemCount(order) }} 件商品</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <!-- 会员信息 -->
+            <td class="px-6 py-4">
+              <div class="flex items-center space-x-3">
+                <div
+                  class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center shadow-sm group-hover:shadow group-hover:scale-105 transition-all duration-200"
+                >
+                  <font-awesome-icon icon="user" class="text-purple-500 text-lg" />
+                </div>
+                <div>
+                  <div
+                    class="text-xs font-medium text-gray-900 group-hover:text-purple-600 transition-colors duration-200"
+                  >
+                    {{ order.memberName }}
+                  </div>
+                  <div class="text-xs text-gray-500 flex items-center mt-1">
+                    <div
+                      class="flex items-center px-2 py-0.5 rounded-full bg-purple-50 text-purple-600"
+                    >
+                      <font-awesome-icon icon="phone" class="text-purple-400 mr-1 text-xs" />
+                      <span class="text-xs">{{ order.memberPhone }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <!-- 提货方式 -->
+            <td class="px-6 py-4">
+              <div
+                class="flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200"
+                :class="{
+                  'bg-gradient-to-r from-green-50 to-green-100 text-green-600':
+                    order.deliveryType === 'store',
+                  'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600':
+                    order.deliveryType === 'delivery'
+                }"
+              >
+                <div class="w-8 h-8 rounded-lg bg-white/50 flex items-center justify-center">
+                  <font-awesome-icon :icon="getDeliveryIcon(order.deliveryType)" />
+                </div>
+                <span class="text-xs font-medium">{{ getDeliveryText(order.deliveryType) }}</span>
+              </div>
+            </td>
+            <!-- 提货时间 -->
+            <td class="px-6 py-4">
+              <div class="flex flex-col">
+                <div
+                  class="text-xs text-gray-900 flex items-center bg-gray-50 px-3 py-1.5 rounded-lg group-hover:bg-gray-100 transition-all duration-200"
+                >
+                  <font-awesome-icon icon="calendar-alt" class="text-gray-400 mr-2" />
+                  {{ formatDate(order.pickupTime) }}
+                </div>
+                <div class="text-xs text-gray-500 mt-1.5 ml-1">
+                  {{ getTimeAgo(order.pickupTime) }}
+                </div>
+              </div>
+            </td>
+            <!-- 状态 -->
+            <td class="px-6 py-4">
+              <div
+                :class="[
+                  getStatusClass(order.status),
+                  'inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition-all duration-200'
+                ]"
+              >
+                <div class="w-8 h-8 rounded-lg bg-white/50 flex items-center justify-center mr-2">
+                  <font-awesome-icon :icon="getStatusIcon(order.status)" />
+                </div>
+                {{ getStatusText(order.status) }}
+              </div>
+            </td>
+            <!-- 操作员 -->
+            <td class="px-6 py-4">
+              <div class="flex items-center space-x-3">
+                <div
+                  class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center shadow-sm group-hover:shadow group-hover:scale-105 transition-all duration-200"
+                >
+                  <font-awesome-icon icon="user-cog" class="text-gray-500" />
+                </div>
+                <span class="text-xs text-gray-700 font-medium">{{ order.operator }}</span>
+              </div>
+            </td>
+            <!-- 操作 -->
+            <td class="px-6 py-4 text-right">
+              <div class="flex justify-end space-x-2 transition-all duration-200">
+                <button
+                  class="action-button text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:scale-105"
+                  @click="handleEdit(order)"
+                  title="编辑"
+                >
+                  <font-awesome-icon icon="edit" />
+                </button>
+                <button
+                  v-if="order.status !== 'completed'"
+                  class="action-button text-gray-400 hover:text-green-600 hover:bg-green-50 hover:scale-105"
+                  @click="handleComplete(order)"
+                  title="完成"
+                >
+                  <font-awesome-icon icon="check" />
+                </button>
+                <button
+                  class="action-button text-gray-400 hover:text-red-600 hover:bg-red-50 hover:scale-105"
+                  @click="handleDelete(order)"
+                  title="删除"
+                >
+                  <font-awesome-icon icon="trash" />
+                </button>
+              </div>
+            </td>
+          </tr>
+          <!-- 空状态 -->
+          <tr v-if="filteredOrders.length === 0">
+            <td colspan="7" class="px-6 py-16">
+              <div class="text-center">
+                <div
+                  class="w-24 h-24 mx-auto bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mb-4 shadow-sm"
+                >
+                  <font-awesome-icon icon="inbox" class="text-4xl text-gray-300" />
+                </div>
+                <div class="text-gray-500 font-medium">暂无相关订单</div>
+                <div class="text-gray-400 text-sm mt-1">
+                  可以点击右上角的"新增提货单"按钮创建新订单
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <EditPickupForm
-      v-model:visible="editVisible"
-      :edit-data="editData"
-      @submit="handleEditSubmit"
-    />
+    <!-- 分页 -->
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4 border-t gap-3 overflow-x-auto"
+    >
+      <div class="text-sm text-gray-500 flex-shrink-0">
+        共
+        <span class="font-medium text-gray-900">{{ totalOrders }}</span>
+        条
+        <span class="hidden sm:inline">记录，每页 {{ pageSize }} 条</span>
+      </div>
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="totalOrders"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="sizes, prev, pager, next"
+        @size-change="handleSizeChange"
+        @current-change="handlePageChange"
+        class="!text-sm !flex !justify-center sm:!justify-end"
+        :pager-count="pagerCount"
+        background
+      />
+    </div>
   </div>
+
+  <!-- 添加提货单表单 -->
+  <AddPickupForm v-model:visible="addVisible" @submit="handleAddSubmit" />
+
+  <EditPickupForm v-model:visible="editVisible" :edit-data="editData" @submit="handleEditSubmit" />
 </template>
 
 <script lang="ts" setup>
@@ -618,6 +571,24 @@ import type { PaginationParams } from '@/types/api/common'
 dayjs.extend(relativeTime)
 dayjs.extend(isBetween)
 dayjs.locale('zh-cn')
+
+// 屏幕宽度判断
+const screenWidth = ref(window.innerWidth)
+const isSmallScreen = computed(() => screenWidth.value < 640)
+const pagerCount = computed(() => (isSmallScreen.value ? 3 : 5))
+
+// 监听窗口大小变化
+const handleResize = () => {
+  screenWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 // 表格列配置
 const columns = [
@@ -1533,20 +1504,22 @@ const refreshList = () => {
 }
 
 .overflow-x-auto::-webkit-scrollbar {
-  height: 6px;
+  height: 8px;
+  width: 8px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f9f9f9;
+  border-radius: 4px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb {
-  background-color: #e5e7eb;
-  border-radius: 3px;
+  background-color: #d1d5db;
+  border-radius: 4px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
-  background-color: #d1d5db;
+  background-color: #9ca3af;
 }
 
 /* 表格样式优化 */
