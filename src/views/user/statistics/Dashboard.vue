@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-64px)] overflow-y-auto">
+  <div class="h-[calc(100vh-64px-32px)] overflow-y-auto">
     <div class="space-y-6 p-4 md:p-5 lg:p-6 bg-gradient-to-br from-gray-50 to-gray-100">
       <!-- 顶部统计卡片 -->
       <div class="grid grid-cols-4 gap-4">
@@ -10,8 +10,9 @@
           color="blue"
           sub-value="较昨日 +15.8%"
           trend="up"
-          class="transform hover:scale-102 hover:shadow-lg transition-all duration-300"/>
-        
+          class="transform hover:scale-102 hover:shadow-lg transition-all duration-300"
+        />
+
         <StatCard
           icon="users"
           title="活跃会员"
@@ -19,8 +20,9 @@
           color="green"
           sub-value="较昨日 +12"
           trend="up"
-          class="transform hover:scale-102 hover:shadow-lg transition-all duration-300"/>
-        
+          class="transform hover:scale-102 hover:shadow-lg transition-all duration-300"
+        />
+
         <StatCard
           icon="box"
           title="商品销量"
@@ -28,8 +30,9 @@
           color="yellow"
           sub-value="较昨日 +45"
           trend="up"
-          class="transform hover:scale-102 hover:shadow-lg transition-all duration-300"/>
-        
+          class="transform hover:scale-102 hover:shadow-lg transition-all duration-300"
+        />
+
         <StatCard
           icon="yen-sign"
           title="会员充值"
@@ -37,24 +40,37 @@
           color="purple"
           sub-value="较昨日 -5.2%"
           trend="down"
-          class="transform hover:scale-102 hover:shadow-lg transition-all duration-300"/>
+          class="transform hover:scale-102 hover:shadow-lg transition-all duration-300"
+        />
       </div>
 
       <!-- 图表区域 -->
       <div class="grid grid-cols-2 gap-4">
         <!-- 销售趋势 -->
-        <div class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+        <div
+          class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100"
+        >
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center space-x-3">
-              <h2 class="text-lg font-medium bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">销售趋势</h2>
-              <div class="px-2.5 py-1 bg-blue-50 text-blue-500 text-xs rounded-full font-medium">实时</div>
+              <h2
+                class="text-lg font-medium bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent"
+              >
+                销售趋势
+              </h2>
+              <div class="px-2.5 py-1 bg-blue-50 text-blue-500 text-xs rounded-full font-medium">
+                实时
+              </div>
             </div>
             <div class="flex items-center space-x-2 bg-gray-50 p-1 rounded-lg">
-              <button v-for="period in ['week', 'month', 'year']"
-                      :key="period"
-                      :class="{'bg-white text-blue-500 shadow-sm font-medium': salesTrendPeriod === period}"
-                      class="px-4 py-2 rounded-lg text-sm hover:bg-white transition-all duration-200"
-                      @click="salesTrendPeriod = period">
+              <button
+                v-for="period in ['week', 'month', 'year']"
+                :key="period"
+                :class="{
+                  'bg-white text-blue-500 shadow-sm font-medium': salesTrendPeriod === period
+                }"
+                class="px-4 py-2 rounded-lg text-sm hover:bg-white transition-all duration-200"
+                @click="salesTrendPeriod = period"
+              >
                 {{ getPeriodText(period) }}
               </button>
             </div>
@@ -63,13 +79,23 @@
         </div>
 
         <!-- 商品分类占比 -->
-        <div class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+        <div
+          class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100"
+        >
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center space-x-3">
-              <h2 class="text-lg font-medium bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">商品分类占比</h2>
-              <div class="px-2.5 py-1 bg-green-50 text-green-500 text-xs rounded-full font-medium">近30天</div>
+              <h2
+                class="text-lg font-medium bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent"
+              >
+                商品分类占比
+              </h2>
+              <div class="px-2.5 py-1 bg-green-50 text-green-500 text-xs rounded-full font-medium">
+                近30天
+              </div>
             </div>
-            <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 hover:bg-gray-50 rounded-lg">
+            <button
+              class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 hover:bg-gray-50 rounded-lg"
+            >
               <font-awesome-icon icon="ellipsis-h" />
             </button>
           </div>
@@ -77,31 +103,56 @@
         </div>
 
         <!-- 热销商品排行 -->
-        <div class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+        <div
+          class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100"
+        >
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center space-x-3">
-              <h2 class="text-lg font-medium bg-gradient-to-r from-yellow-600 to-yellow-400 bg-clip-text text-transparent">热销商品排行</h2>
-              <div class="px-2.5 py-1 bg-yellow-50 text-yellow-500 text-xs rounded-full font-medium">TOP 5</div>
+              <h2
+                class="text-lg font-medium bg-gradient-to-r from-yellow-600 to-yellow-400 bg-clip-text text-transparent"
+              >
+                热销商品排行
+              </h2>
+              <div
+                class="px-2.5 py-1 bg-yellow-50 text-yellow-500 text-xs rounded-full font-medium"
+              >
+                TOP 5
+              </div>
             </div>
-            <button class="text-blue-500 text-sm hover:text-blue-600 flex items-center space-x-2 group px-3 py-1.5 rounded-lg hover:bg-blue-50">
+            <button
+              class="text-blue-500 text-sm hover:text-blue-600 flex items-center space-x-2 group px-3 py-1.5 rounded-lg hover:bg-blue-50"
+            >
               <span>查看更多</span>
-              <font-awesome-icon icon="chevron-right" class="transform group-hover:translate-x-1 transition-transform duration-300" />
+              <font-awesome-icon
+                icon="chevron-right"
+                class="transform group-hover:translate-x-1 transition-transform duration-300"
+              />
             </button>
           </div>
           <div class="space-y-3">
-            <div v-for="(product, index) in topProducts" :key="product.id"
-                 class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group border border-transparent hover:border-gray-100">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3"
-                   :class="[
-                     index === 0 ? 'bg-yellow-50 text-yellow-500' : 
-                     index === 1 ? 'bg-gray-100 text-gray-500' :
-                     index === 2 ? 'bg-orange-50 text-orange-500' :
-                     'bg-gray-50 text-gray-400'
-                   ]">
+            <div
+              v-for="(product, index) in topProducts"
+              :key="product.id"
+              class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group border border-transparent hover:border-gray-100"
+            >
+              <div
+                class="w-8 h-8 rounded-lg flex items-center justify-center mr-3"
+                :class="[
+                  index === 0
+                    ? 'bg-yellow-50 text-yellow-500'
+                    : index === 1
+                      ? 'bg-gray-100 text-gray-500'
+                      : index === 2
+                        ? 'bg-orange-50 text-orange-500'
+                        : 'bg-gray-50 text-gray-400'
+                ]"
+              >
                 <span class="text-base font-medium">{{ index + 1 }}</span>
               </div>
               <div class="flex-1">
-                <div class="font-medium group-hover:text-blue-500 transition-colors duration-200">{{ product.name }}</div>
+                <div class="font-medium group-hover:text-blue-500 transition-colors duration-200">
+                  {{ product.name }}
+                </div>
                 <div class="text-sm text-gray-500 mt-1">销量 {{ product.count }}</div>
               </div>
               <div class="text-right">
@@ -115,26 +166,45 @@
         </div>
 
         <!-- 实时动态 -->
-        <div class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+        <div
+          class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100"
+        >
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center space-x-3">
-              <h2 class="text-lg font-medium bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">实时动态</h2>
-              <div class="px-2.5 py-1 bg-purple-50 text-purple-500 text-xs rounded-full font-medium animate-pulse">实时</div>
+              <h2
+                class="text-lg font-medium bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent"
+              >
+                实时动态
+              </h2>
+              <div
+                class="px-2.5 py-1 bg-purple-50 text-purple-500 text-xs rounded-full font-medium animate-pulse"
+              >
+                实时
+              </div>
             </div>
-            <button @click="refreshActivities" 
-                    class="p-2 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-blue-50 transition-all duration-200">
+            <button
+              @click="refreshActivities"
+              class="p-2 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-blue-50 transition-all duration-200"
+            >
               <font-awesome-icon icon="sync-alt" />
             </button>
           </div>
           <div class="space-y-4">
-            <div v-for="activity in activities" :key="activity.id"
-                 class="flex items-start group p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-100">
-              <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                   :class="getActivityIconClass(activity.type)">
+            <div
+              v-for="activity in activities"
+              :key="activity.id"
+              class="flex items-start group p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-100"
+            >
+              <div
+                class="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                :class="getActivityIconClass(activity.type)"
+              >
                 <font-awesome-icon :icon="getActivityIcon(activity.type)" />
               </div>
               <div class="flex-1">
-                <div class="font-medium group-hover:text-blue-500 transition-colors duration-200">{{ activity.title }}</div>
+                <div class="font-medium group-hover:text-blue-500 transition-colors duration-200">
+                  {{ activity.title }}
+                </div>
                 <div class="text-sm text-gray-500 mt-2">{{ activity.description }}</div>
               </div>
               <div class="text-sm text-gray-400 whitespace-nowrap">{{ activity.time }}</div>
@@ -173,27 +243,27 @@ const salesTrendPeriod = ref('week')
 
 // 商品分类数据
 const categoryData: ConsumptionStatistics['categories'] = [
-  { 
+  {
     category: '食品饮料',
     amount: 2580,
     percentage: 32
   },
-  { 
+  {
     category: '生鲜水果',
     amount: 1850,
     percentage: 23
   },
-  { 
+  {
     category: '休闲零食',
     amount: 1420,
     percentage: 18
   },
-  { 
+  {
     category: '日用百货',
     amount: 1260,
     percentage: 16
   },
-  { 
+  {
     category: '酒水饮料',
     amount: 890,
     percentage: 11
@@ -308,7 +378,7 @@ const generateSalesData = (period: string): ConsumptionStatistics['trend'] => {
   let dates: string[] = []
   let amounts: number[] = []
   let orders: number[] = []
-  
+
   switch (period) {
     case 'week':
       // 生成最近7天的数据
@@ -341,7 +411,7 @@ const generateSalesData = (period: string): ConsumptionStatistics['trend'] => {
         const date = now.subtract(i, 'month')
         dates.push(date.format('YYYY-MM'))
         const base = 150000
-        const seasonal = Math.sin(i * Math.PI / 6) * 50000 // 季节性波动
+        const seasonal = Math.sin((i * Math.PI) / 6) * 50000 // 季节性波动
         const random = Math.random() * 30000
         const trend = (12 - i) * 5000 // 整体上升趋势
         amounts.push(Math.floor(base + seasonal + random + trend))
@@ -349,21 +419,21 @@ const generateSalesData = (period: string): ConsumptionStatistics['trend'] => {
       }
       break
   }
-  
+
   return { dates, amounts, orders }
 }
 
 // 监听销售趋势周期变化
-watch(salesTrendPeriod, (newPeriod) => {
+watch(salesTrendPeriod, newPeriod => {
   updateSalesTrendChart(newPeriod)
 })
 
 // 更新销售趋势图表
 const updateSalesTrendChart = (period: string) => {
   if (!salesTrendChart) return
-  
+
   const { dates, amounts, orders } = generateSalesData(period)
-  
+
   const option = {
     tooltip: {
       trigger: 'axis',
@@ -440,7 +510,7 @@ const updateSalesTrendChart = (period: string) => {
       }
     ]
   }
-  
+
   salesTrendChart.setOption(option)
 }
 
@@ -565,10 +635,15 @@ onUnmounted(() => {
 
 /* 自定义动画 */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-</style> 
+</style>

@@ -54,4 +54,23 @@ export interface LogQueryParams {
   type?: SystemLog['type']
   dateRange?: [string, string]
   keyword?: string
-} 
+}
+
+// 新的操作日志记录
+export interface NewOperationLogRecord {
+  id: number
+  operationType: string // 操作类型，例如"充值"
+  operationUser: string // 操作用户，例如"购买充值: 梁森充值"
+  operationContent: string // 操作内容
+  status: string // 状态，例如"成功"
+  createTime: string // 创建时间
+  updateTime: string // 更新时间
+}
+
+// 新的操作日志响应类型
+export interface OperationLogResponse {
+  currentPage: number
+  totalRecords: number
+  totalPages: number
+  records: NewOperationLogRecord[]
+}

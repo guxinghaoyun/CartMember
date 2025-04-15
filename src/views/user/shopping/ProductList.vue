@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-64px)] pr-4 overflow-y-auto space-y-6">
+  <div class="h-[calc(100vh-64px-32px)] pr-4 overflow-y-auto space-y-6">
     <!-- 顶部信息栏 -->
     <div class="bg-white rounded-2xl p-3 shadow-sm">
       <!-- 顶部统计卡片 -->

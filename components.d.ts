@@ -8,7 +8,10 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AdminLayout: typeof import('./src/components/layout/admin/AdminLayout.vue')['default']
+    AdvancedDynamicLayout: typeof import('./src/components/AdvancedDynamicLayout.vue')['default']
     DataTable: typeof import('./src/components/common/DataTable.vue')['default']
+    DynamicLayout: typeof import('./src/components/DynamicLayout.vue')['default']
+    DynamicLayoutDemo: typeof import('./src/components/DynamicLayoutDemo.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
@@ -35,6 +38,8 @@ declare module 'vue' {
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     ElTag: typeof import('element-plus/es')['ElTag']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    EnhancedAdminLayout: typeof import('./src/components/layout/enhanced/EnhancedAdminLayout.vue')['default']
+    EnhancedUserLayout: typeof import('./src/components/layout/enhanced/EnhancedUserLayout.vue')['default']
     IconCommunity: typeof import('./src/components/icons/IconCommunity.vue')['default']
     IconDocumentation: typeof import('./src/components/icons/IconDocumentation.vue')['default']
     IconEcosystem: typeof import('./src/components/icons/IconEcosystem.vue')['default']
@@ -42,6 +47,7 @@ declare module 'vue' {
     IconTooling: typeof import('./src/components/icons/IconTooling.vue')['default']
     MemberCardImage: typeof import('./src/components/common/MemberCardImage.vue')['default']
     ProductImage: typeof import('./src/components/common/ProductImage.vue')['default']
+    ResponsiveDemo: typeof import('./src/components/demo/ResponsiveDemo.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StatCard: typeof import('./src/components/common/StatCard.vue')['default']

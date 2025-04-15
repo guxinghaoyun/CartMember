@@ -1,88 +1,83 @@
 <template>
-  <div class="h-[calc(100vh-64px)] bg-gray-50 p-6">
-    <div class="space-y-4">
-      <!-- 顶部卡片区域 -->
-      <div class="grid grid-cols-1 gap-4">
-        <!-- 会员信息卡片 -->
-        <div
-          class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300"
-        >
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center space-x-4">
-              <div
-                class="w-14 h-14 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner"
-              >
-                <font-awesome-icon
-                  :icon="currentMember ? 'user' : 'credit-card'"
-                  class="text-2xl"
-                />
-              </div>
-              <div>
-                <div class="text-sm opacity-80">会员姓名</div>
-                <div class="text-xl font-medium">
-                  {{ currentMember ? currentMember.name : '未读卡' }}
-                </div>
-              </div>
+  <div class="space-y-4">
+    <!-- 顶部卡片区域 -->
+    <div class="grid grid-cols-1 gap-4">
+      <!-- 会员信息卡片 -->
+      <div
+        class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+      >
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center space-x-4">
+            <div
+              class="w-14 h-14 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner"
+            >
+              <font-awesome-icon :icon="currentMember ? 'user' : 'credit-card'" class="text-2xl" />
             </div>
-            <div class="flex items-center space-x-2">
-              <button
-                v-if="currentMember"
-                @click="resetCard"
-                class="px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg backdrop-blur-sm transition-colors duration-300"
-              >
-                <font-awesome-icon icon="redo" class="mr-1" />
-                重置
-              </button>
-              <button
-                @click="handleReadCard"
-                :disabled="isReading"
-                class="bg-gradient-to-r text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center space-x-3 border-2 border-white/30"
-                :class="[
-                  isReading
-                    ? 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
-                    : 'from-blue-400 to-blue-500 hover:from-blue-300 hover:to-blue-400'
-                ]"
-              >
-                <font-awesome-icon
-                  :icon="isReading ? 'spinner' : 'id-card'"
-                  class="text-white text-lg"
-                  :class="{ 'fa-pulse': isReading }"
-                />
-                <span class="text-base font-medium whitespace-nowrap">
-                  {{ isReading ? '读取中...' : '读取会员卡' }}
-                </span>
-              </button>
+            <div>
+              <div class="text-sm opacity-80">会员姓名</div>
+              <div class="text-xl font-medium">
+                {{ currentMember ? currentMember.name : '未读卡' }}
+              </div>
             </div>
           </div>
-          <div class="flex items-center space-x-4">
-            <div class="flex-[2]">
-              <div class="text-base opacity-80 font-medium">可用积分</div>
-              <div class="text-3xl font-medium mt-1">
-                {{ currentMember ? currentMember.remainingPoints.toLocaleString() : '0' }}
-              </div>
+          <div class="flex items-center space-x-2">
+            <button
+              v-if="currentMember"
+              @click="resetCard"
+              class="px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg backdrop-blur-sm transition-colors duration-300"
+            >
+              <font-awesome-icon icon="redo" class="mr-1" />
+              重置
+            </button>
+            <button
+              @click="handleReadCard"
+              :disabled="isReading"
+              class="bg-gradient-to-r text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center space-x-3 border-2 border-white/30"
+              :class="[
+                isReading
+                  ? 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
+                  : 'from-blue-400 to-blue-500 hover:from-blue-300 hover:to-blue-400'
+              ]"
+            >
+              <font-awesome-icon
+                :icon="isReading ? 'spinner' : 'id-card'"
+                class="text-white text-lg"
+                :class="{ 'fa-pulse': isReading }"
+              />
+              <span class="text-base font-medium whitespace-nowrap">
+                {{ isReading ? '读取中...' : '读取会员卡' }}
+              </span>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="flex-[2]">
+            <div class="text-base opacity-80 font-medium">可用积分</div>
+            <div class="text-3xl font-medium mt-1">
+              {{ currentMember ? currentMember.remainingPoints.toLocaleString() : '0' }}
             </div>
-            <div class="w-px h-12 bg-white bg-opacity-20"></div>
-            <div class="flex-[8]">
-              <div class="text-base opacity-80 font-medium">可提商品</div>
-              <div class="w-full h-12 relative mt-2">
-                <div class="absolute inset-0 overflow-hidden">
-                  <div class="absolute inset-0 overflow-x-auto">
-                    <div class="flex items-center space-x-3 h-full min-w-full">
-                      <template v-if="currentMember">
-                        <div
-                          v-for="product in availableProducts"
-                          :key="product.id"
-                          class="inline-flex items-center space-x-2 bg-white bg-opacity-20 px-4 h-9 rounded-lg shrink-0"
-                        >
-                          <span class="text-white text-base">{{ product.name }}</span>
-                          <span class="text-white font-medium text-base">
-                            ×{{ product.stockQuantity }}
-                          </span>
-                        </div>
-                      </template>
-                      <div v-else class="flex items-center text-white opacity-80 text-base">
-                        暂无商品
+          </div>
+          <div class="w-px h-12 bg-white bg-opacity-20"></div>
+          <div class="flex-[8]">
+            <div class="text-base opacity-80 font-medium">可提商品</div>
+            <div class="w-full h-12 relative mt-2">
+              <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute inset-0 overflow-x-auto">
+                  <div class="flex items-center space-x-3 h-full min-w-full">
+                    <template v-if="currentMember">
+                      <div
+                        v-for="product in availableProducts"
+                        :key="product.id"
+                        class="inline-flex items-center space-x-2 bg-white bg-opacity-20 px-4 h-9 rounded-lg shrink-0"
+                      >
+                        <span class="text-white text-base">{{ product.name }}</span>
+                        <span class="text-white font-medium text-base">
+                          ×{{ product.stockQuantity }}
+                        </span>
                       </div>
+                    </template>
+                    <div v-else class="flex items-center text-white opacity-80 text-base">
+                      暂无商品
                     </div>
                   </div>
                 </div>
@@ -91,307 +86,305 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- 充值金额选项 -->
-      <div class="bg-white rounded-xl p-6 shadow-sm">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-              <font-awesome-icon icon="credit-card" class="text-blue-500 text-lg" />
-            </div>
-            <h3 class="text-lg font-medium">充值金额</h3>
+    <!-- 充值金额选项 -->
+    <div class="bg-white rounded-xl p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+            <font-awesome-icon icon="credit-card" class="text-blue-500 text-lg" />
           </div>
-          <div class="flex items-center space-x-4">
-            <!-- 查看历史记录按钮 -->
-            <!-- <button
+          <h3 class="text-lg font-medium">充值金额</h3>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- 查看历史记录按钮 -->
+          <!-- <button
               @click="$router.push('/user/history')"
               class="flex items-center px-4 py-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-300"
             >
               <font-awesome-icon icon="history" class="mr-2" />
               充值记录
             </button> -->
-            <div class="relative">
-              <el-select
-                v-model="selectedOperator"
-                filterable
-                placeholder="选择操作员"
-                class="!w-[160px] border-2 border-blue-100 rounded-lg"
-                popper-class="operator-select-dropdown"
-              >
-                <template #prefix>
-                  <div class="flex items-center text-blue-500 ml-1">
-                    <font-awesome-icon icon="user-cog" class="mr-1" />
+          <div class="relative">
+            <el-select
+              v-model="selectedOperator"
+              filterable
+              placeholder="选择操作员"
+              class="!w-[160px] border-2 border-blue-100 rounded-lg"
+              popper-class="operator-select-dropdown"
+            >
+              <template #prefix>
+                <div class="flex items-center text-blue-500 ml-1">
+                  <font-awesome-icon icon="user-cog" class="mr-1" />
+                </div>
+              </template>
+              <el-option v-for="op in operators" :key="op.id" :value="op.id" :label="op.name">
+                <div class="flex items-center justify-start w-full space-x-2 px-2">
+                  <div class="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center">
+                    <font-awesome-icon icon="user" class="text-blue-500" />
                   </div>
-                </template>
-                <el-option v-for="op in operators" :key="op.id" :value="op.id" :label="op.name">
-                  <div class="flex items-center justify-start w-full space-x-2 px-2">
-                    <div class="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center">
-                      <font-awesome-icon icon="user" class="text-blue-500" />
-                    </div>
-                    <span class="text-sm font-medium">{{ op.name }}</span>
-                  </div>
-                </el-option>
-              </el-select>
-            </div>
+                  <span class="text-sm font-medium">{{ op.name }}</span>
+                </div>
+              </el-option>
+            </el-select>
           </div>
         </div>
+      </div>
 
-        <!-- 充值选项网格 -->
-        <div class="space-y-6">
-          <!-- 将原来的垂直布局改为水平布局 -->
-          <div class="flex gap-6">
-            <!-- 积分充值部分 (左侧 50%) -->
-            <div class="w-1/2">
-              <div class="flex items-center justify-between mb-4">
-                <h4 class="text-lg font-medium text-gray-700">积分充值</h4>
-              </div>
-              <div class="grid grid-cols-2 gap-4 mb-8">
-                <button
-                  v-for="amount in rechargeAmounts"
-                  :key="amount"
-                  class="p-4 border rounded-xl hover:border-blue-500 hover:shadow-sm transition-all duration-300 group bg-white"
-                  :class="{ 'border-blue-500 shadow-md bg-blue-50': selectedAmount === amount }"
-                  @click="
-                    () => {
-                      selectedAmount = amount
-                      customAmount = ''
-                    }
-                  "
+      <!-- 充值选项网格 -->
+      <div class="space-y-6">
+        <!-- 将原来的垂直布局改为水平布局 -->
+        <div class="flex gap-6">
+          <!-- 积分充值部分 (左侧 50%) -->
+          <div class="w-1/2">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="text-lg font-medium text-gray-700">积分充值</h4>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+              <button
+                v-for="amount in rechargeAmounts"
+                :key="amount"
+                class="p-4 border rounded-xl hover:border-blue-500 hover:shadow-sm transition-all duration-300 group bg-white"
+                :class="{ 'border-blue-500 shadow-md bg-blue-50': selectedAmount === amount }"
+                @click="
+                  () => {
+                    selectedAmount = amount
+                    customAmount = ''
+                  }
+                "
+              >
+                <div
+                  class="text-base text-gray-400 mb-1 group-hover:text-blue-500"
+                  :class="{ 'text-blue-500': selectedAmount === amount }"
                 >
+                  充值
+                </div>
+                <div
+                  class="text-xl font-medium group-hover:text-blue-600"
+                  :class="{ 'text-blue-600': selectedAmount === amount }"
+                >
+                  {{ amount }} 积分
+                </div>
+              </button>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="flex-1">
+                <div class="text-base text-gray-700 font-medium mb-2">其他积分</div>
+                <div
+                  class="relative bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  <input
+                    type="number"
+                    v-model="customAmount"
+                    @input="handleCustomAmountInput"
+                    class="w-full pl-4 pr-20 py-4 border-0 focus:ring-0 outline-none text-xl font-medium text-gray-800"
+                    placeholder="请输入充值积分"
+                  />
                   <div
-                    class="text-base text-gray-400 mb-1 group-hover:text-blue-500"
-                    :class="{ 'text-blue-500': selectedAmount === amount }"
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium"
                   >
-                    充值
-                  </div>
-                  <div
-                    class="text-xl font-medium group-hover:text-blue-600"
-                    :class="{ 'text-blue-600': selectedAmount === amount }"
-                  >
-                    {{ amount }} 积分
-                  </div>
-                </button>
-              </div>
-              <div class="flex items-center space-x-4">
-                <div class="flex-1">
-                  <div class="text-base text-gray-700 font-medium mb-2">其他积分</div>
-                  <div
-                    class="relative bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300"
-                  >
-                    <input
-                      type="number"
-                      v-model="customAmount"
-                      @input="handleCustomAmountInput"
-                      class="w-full pl-4 pr-20 py-4 border-0 focus:ring-0 outline-none text-xl font-medium text-gray-800"
-                      placeholder="请输入充值积分"
-                    />
-                    <div
-                      class="absolute right-4 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium"
-                    >
-                      积分
-                    </div>
+                    积分
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- 商品充值部分 (右侧 50%) -->
-            <div class="w-1/2">
-              <div class="flex items-center justify-between mb-4">
-                <h4 class="text-base font-medium text-gray-700">商品充值</h4>
-                <button
-                  @click="showProductSelector = true"
-                  class="flex items-center px-4 py-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-300"
-                >
-                  <font-awesome-icon icon="plus" class="mr-2" />
-                  添加商品
-                </button>
-              </div>
-
-              <!-- 已选商品列表 -->
-              <div
-                v-if="selectedProducts.length > 0"
-                class="h-[600px] overflow-y-auto space-y-4 pr-2"
+          <!-- 商品充值部分 (右侧 50%) -->
+          <div class="w-1/2">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="text-base font-medium text-gray-700">商品充值</h4>
+              <button
+                @click="showProductSelector = true"
+                class="flex items-center px-4 py-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-300"
               >
-                <div
-                  v-for="product in selectedProducts"
-                  :key="product.id"
-                  class="flex items-center justify-between p-4 border rounded-xl hover:shadow-sm transition-shadow duration-300 bg-white"
-                >
-                  <div class="flex items-center space-x-4">
-                    <div
-                      class="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center p-2"
-                    >
-                      <ProductImage
-                        :productId="product.id"
-                        :imageUuid="product.image"
-                        :alt="product.name"
-                        imageClass="w-full h-full object-cover rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <div class="font-medium truncate">{{ product.name }}</div>
-                      <div class="flex justify-between items-center text-sm text-gray-500 mt-1">
-                        <div>{{ product.price }} 积分</div>
-                        <div>库存 {{ product.stock }}</div>
-                      </div>
+                <font-awesome-icon icon="plus" class="mr-2" />
+                添加商品
+              </button>
+            </div>
+
+            <!-- 已选商品列表 -->
+            <div
+              v-if="selectedProducts.length > 0"
+              class="h-[600px] overflow-y-auto space-y-4 pr-2"
+            >
+              <div
+                v-for="product in selectedProducts"
+                :key="product.id"
+                class="flex items-center justify-between p-4 border rounded-xl hover:shadow-sm transition-shadow duration-300 bg-white"
+              >
+                <div class="flex items-center space-x-4">
+                  <div class="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center p-2">
+                    <ProductImage
+                      :productId="product.id"
+                      :imageUuid="product.image"
+                      :alt="product.name"
+                      imageClass="w-full h-full object-cover rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <div class="font-medium truncate">{{ product.name }}</div>
+                    <div class="flex justify-between items-center text-sm text-gray-500 mt-1">
+                      <div>{{ product.price }} 积分</div>
+                      <div>库存 {{ product.stock }}</div>
                     </div>
                   </div>
-                  <div class="flex items-center space-x-6">
-                    <div class="flex items-center space-x-3">
-                      <button
-                        class="w-8 h-8 rounded-full border flex items-center justify-center hover:border-blue-500 hover:text-blue-500 transition-colors duration-300"
-                        @click="updateProductQuantity(product, -1)"
-                      >
-                        <font-awesome-icon icon="minus" class="text-xs" />
-                      </button>
-                      <span class="w-8 text-center text-lg">{{ product.quantity }}</span>
-                      <button
-                        class="w-8 h-8 rounded-full border flex items-center justify-center hover:border-blue-500 hover:text-blue-500 transition-colors duration-300"
-                        @click="updateProductQuantity(product, 1)"
-                      >
-                        <font-awesome-icon icon="plus" class="text-xs" />
-                      </button>
-                    </div>
+                </div>
+                <div class="flex items-center space-x-6">
+                  <div class="flex items-center space-x-3">
                     <button
-                      class="text-red-500 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors duration-300"
-                      @click="removeProduct(product)"
+                      class="w-8 h-8 rounded-full border flex items-center justify-center hover:border-blue-500 hover:text-blue-500 transition-colors duration-300"
+                      @click="updateProductQuantity(product, -1)"
                     >
-                      <font-awesome-icon icon="trash" />
+                      <font-awesome-icon icon="minus" class="text-xs" />
+                    </button>
+                    <span class="w-8 text-center text-lg">{{ product.quantity }}</span>
+                    <button
+                      class="w-8 h-8 rounded-full border flex items-center justify-center hover:border-blue-500 hover:text-blue-500 transition-colors duration-300"
+                      @click="updateProductQuantity(product, 1)"
+                    >
+                      <font-awesome-icon icon="plus" class="text-xs" />
                     </button>
                   </div>
-                </div>
-              </div>
-
-              <!-- 空状态 -->
-              <div
-                v-else
-                class="h-[600px] flex flex-col items-center justify-center text-gray-400 border rounded-xl bg-gray-50"
-              >
-                <font-awesome-icon icon="shopping-cart" class="text-3xl mb-3" />
-                <div class="text-sm">暂未选择商品</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 合计与确认 -->
-        <div class="flex items-stretch pt-6 mt-8 border-t">
-          <!-- 积分充值部分 -->
-          <div class="flex-[1.5] px-6 border-r">
-            <div class="text-lg text-gray-500 mb-2">积分充值</div>
-            <div v-if="selectedAmount || customAmount" class="text-xl font-medium text-blue-600">
-              {{ selectedAmount || Number(customAmount) || 0 }} 积分
-            </div>
-            <div v-else class="text-gray-400 text-sm">暂无积分充值</div>
-          </div>
-
-          <!-- 商品充值部分 -->
-          <div class="flex-[7] px-6 border-r">
-            <div class="text-lg text-gray-500 mb-2">商品充值</div>
-            <div class="w-full h-8 relative">
-              <div class="absolute inset-0 overflow-hidden">
-                <div class="absolute inset-0 overflow-x-auto">
-                  <div class="flex items-center space-x-2 h-full min-w-full">
-                    <template v-if="selectedProducts.length > 0">
-                      <div
-                        v-for="product in selectedProducts"
-                        :key="product.id"
-                        class="inline-flex items-center space-x-1 bg-gray-50 px-3 h-7 rounded-lg shrink-0"
-                      >
-                        <span class="text-gray-600">{{ product.name }}</span>
-                        <span class="text-blue-600 font-medium">×{{ product.quantity }}</span>
-                      </div>
-                    </template>
-                    <div v-else class="flex items-center text-gray-400">暂无商品</div>
-                  </div>
+                  <button
+                    class="text-red-500 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors duration-300"
+                    @click="removeProduct(product)"
+                  >
+                    <font-awesome-icon icon="trash" />
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- 确认充值按钮 -->
-          <div class="flex-[2] px-6 flex items-center justify-end">
-            <button
-              class="w-full h-16 flex items-center justify-center gap-3 text-white text-xl font-medium rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 disabled:cursor-not-allowed"
-              :class="[
-                currentMember
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:from-blue-700 active:to-blue-800 active:shadow-inner'
-                  : 'bg-gradient-to-r from-gray-400 to-gray-500'
-              ]"
-              @click="handleRecharge"
-              :disabled="isLoading"
+            <!-- 空状态 -->
+            <div
+              v-else
+              class="h-[600px] flex flex-col items-center justify-center text-gray-400 border rounded-xl bg-gray-50"
             >
-              <font-awesome-icon v-if="isLoading" icon="spinner" class="animate-spin text-2xl" />
-              <font-awesome-icon v-else icon="credit-card" class="text-2xl" />
-              <span>确认充值</span>
-            </button>
+              <font-awesome-icon icon="shopping-cart" class="text-3xl mb-3" />
+              <div class="text-sm">暂未选择商品</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 合计与确认 -->
+      <div class="flex items-stretch pt-6 mt-8 border-t">
+        <!-- 积分充值部分 -->
+        <div class="flex-[1.5] px-6 border-r">
+          <div class="text-lg text-gray-500 mb-2">积分充值</div>
+          <div v-if="selectedAmount || customAmount" class="text-xl font-medium text-blue-600">
+            {{ selectedAmount || Number(customAmount) || 0 }} 积分
+          </div>
+          <div v-else class="text-gray-400 text-sm">暂无积分充值</div>
+        </div>
+
+        <!-- 商品充值部分 -->
+        <div class="flex-[7] px-6 border-r">
+          <div class="text-lg text-gray-500 mb-2">商品充值</div>
+          <div class="w-full h-8 relative">
+            <div class="absolute inset-0 overflow-hidden">
+              <div class="absolute inset-0 overflow-x-auto">
+                <div class="flex items-center space-x-2 h-full min-w-full">
+                  <template v-if="selectedProducts.length > 0">
+                    <div
+                      v-for="product in selectedProducts"
+                      :key="product.id"
+                      class="inline-flex items-center space-x-1 bg-gray-50 px-3 h-7 rounded-lg shrink-0"
+                    >
+                      <span class="text-gray-600">{{ product.name }}</span>
+                      <span class="text-blue-600 font-medium">×{{ product.quantity }}</span>
+                    </div>
+                  </template>
+                  <div v-else class="flex items-center text-gray-400">暂无商品</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- 商品选择弹窗 -->
-        <el-dialog v-model="showProductSelector" title="选择商品" width="800px">
-          <div class="space-y-4">
-            <!-- 搜索栏 -->
-            <div class="flex items-center space-x-4">
-              <div class="flex-1 relative">
-                <input
-                  type="text"
-                  v-model="productSearch"
-                  class="w-full pl-10 pr-4 py-2 border rounded-lg"
-                  placeholder="搜索商品名称"
-                />
-                <font-awesome-icon
-                  icon="search"
-                  class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                />
-              </div>
-              <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded-lg">
-                <button
-                  v-for="cat in categories"
-                  :key="cat.id"
-                  :class="{
-                    'bg-blue-500 text-white': productCategory === cat.id,
-                    'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-500':
-                      productCategory !== cat.id
-                  }"
-                  class="px-3 py-1.5 rounded-lg transition-all duration-300 text-sm flex items-center space-x-1"
-                  @click="productCategory = cat.id"
-                >
-                  <font-awesome-icon :icon="getCategoryIcon(cat.id)" class="text-xs" />
-                  <span>{{ cat.name }}</span>
-                </button>
-              </div>
-            </div>
+        <!-- 确认充值按钮 -->
+        <div class="flex-[2] px-6 flex items-center justify-end">
+          <button
+            class="w-full h-16 flex items-center justify-center gap-3 text-white text-xl font-medium rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 disabled:cursor-not-allowed"
+            :class="[
+              currentMember
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:from-blue-700 active:to-blue-800 active:shadow-inner'
+                : 'bg-gradient-to-r from-gray-400 to-gray-500'
+            ]"
+            @click="handleRecharge"
+            :disabled="isLoading"
+          >
+            <font-awesome-icon v-if="isLoading" icon="spinner" class="animate-spin text-2xl" />
+            <font-awesome-icon v-else icon="credit-card" class="text-2xl" />
+            <span>确认充值</span>
+          </button>
+        </div>
+      </div>
 
-            <!-- 商品列表 -->
-            <div class="grid grid-cols-4 gap-4">
-              <div
-                v-for="product in filteredProducts"
-                :key="product.id"
-                class="border rounded-lg p-3 cursor-pointer hover:border-blue-500 hover:shadow-sm"
-                @click="addProduct(product)"
+      <!-- 商品选择弹窗 -->
+      <el-dialog v-model="showProductSelector" title="选择商品" width="800px">
+        <div class="space-y-4">
+          <!-- 搜索栏 -->
+          <div class="flex items-center space-x-4">
+            <div class="flex-1 relative">
+              <input
+                type="text"
+                v-model="productSearch"
+                class="w-full pl-10 pr-4 py-2 border rounded-lg"
+                placeholder="搜索商品名称"
+              />
+              <font-awesome-icon
+                icon="search"
+                class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              />
+            </div>
+            <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded-lg">
+              <button
+                v-for="cat in categories"
+                :key="cat.id"
+                :class="{
+                  'bg-blue-500 text-white': productCategory === cat.id,
+                  'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-500':
+                    productCategory !== cat.id
+                }"
+                class="px-3 py-1.5 rounded-lg transition-all duration-300 text-sm flex items-center space-x-1"
+                @click="productCategory = cat.id"
               >
-                <div
-                  class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden"
-                >
-                  <ProductImage
-                    :productId="product.id"
-                    :imageUuid="product.image"
-                    :alt="product.name"
-                    imageClass="w-full h-full object-contain"
-                  />
-                </div>
-                <div class="font-medium truncate">{{ product.name }}</div>
-                <div class="flex justify-between items-center text-sm text-gray-500 mt-1">
-                  <div>{{ product.price }} 积分</div>
-                  <div>库存 {{ product.stock }}</div>
-                </div>
+                <font-awesome-icon :icon="getCategoryIcon(cat.id)" class="text-xs" />
+                <span>{{ cat.name }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 商品列表 -->
+          <div class="grid grid-cols-4 gap-4">
+            <div
+              v-for="product in filteredProducts"
+              :key="product.id"
+              class="border rounded-lg p-3 cursor-pointer hover:border-blue-500 hover:shadow-sm"
+              @click="addProduct(product)"
+            >
+              <div
+                class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden"
+              >
+                <ProductImage
+                  :productId="product.id"
+                  :imageUuid="product.image"
+                  :alt="product.name"
+                  imageClass="w-full h-full object-contain"
+                />
+              </div>
+              <div class="font-medium truncate">{{ product.name }}</div>
+              <div class="flex justify-between items-center text-sm text-gray-500 mt-1">
+                <div>{{ product.price }} 积分</div>
+                <div>库存 {{ product.stock }}</div>
               </div>
             </div>
           </div>
-        </el-dialog>
-      </div>
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>

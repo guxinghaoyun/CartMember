@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col bg-gray-50">
     <!-- 顶部导航 -->
-    <header class="bg-white shadow-sm h-16 fixed w-full z-50">
+    <header class="bg-white shadow-sm h-16 fixed w-full left-0 right-0 z-50">
       <div class="h-full w-full flex items-center justify-between">
         <div class="flex items-center pl-[30px]">
           <div class="flex items-center gap-3">
@@ -48,7 +48,7 @@
     <div class="flex flex-1 pt-16">
       <!-- 左侧导航 -->
       <nav
-        class="w-20 sm:w-64 bg-white shadow-sm fixed h-[calc(100vh-4rem)] overflow-y-auto transition-all duration-300"
+        class="w-20 sm:w-64 bg-white shadow-sm fixed h-[calc(100vh-4rem-2rem)] overflow-y-auto transition-all duration-300"
       >
         <div class="py-4">
           <!-- 会员管理 -->
@@ -112,7 +112,7 @@
 
       <!-- 主内容区域 -->
       <main
-        class="flex-1 ml-20 sm:ml-64 min-h-[calc(100vh-4rem)] w-[calc(100vw-5rem)] sm:w-[calc(100vw-16rem)] overflow-x-hidden"
+        class="flex-1 ml-20 sm:ml-64 h-[calc(100vh-4rem-2rem)] w-[calc(100vw-5rem-1rem)] sm:w-[calc(100vw-16rem-1.5rem)] overflow-x-hidden"
       >
         <div class="w-full h-full p-6 sm:p-6 lg:p-8">
           <!-- <div class="h-full w-full p-4 overflow-auto"> -->

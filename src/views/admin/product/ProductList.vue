@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-8 p-6 bg-gray-50 min-h-screen">
+  <div class="space-y-6">
     <!-- 商品统计卡片 -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <div

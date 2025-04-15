@@ -306,7 +306,7 @@
             :disabled="currentPage === 1"
             @click="currentPage--"
           >
-            <i class="fas fa-chevron-left mr-1"></i>
+            <font-awesome-icon icon="chevron-left" class="mr-1" />
             上一页
           </button>
           <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border">
@@ -329,7 +329,7 @@
             @click="currentPage++"
           >
             下一页
-            <i class="fas fa-chevron-right ml-1"></i>
+            <font-awesome-icon icon="chevron-right" class="ml-1" />
           </button>
         </div>
       </div>

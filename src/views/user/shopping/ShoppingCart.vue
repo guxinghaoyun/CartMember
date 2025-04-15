@@ -1,247 +1,245 @@
 <template>
-  <div class="h-[calc(100vh-64px)] space-y-6 p-6 bg-gray-50">
-    <div class="flex gap-6 h-[calc(100%-20px)]">
-      <!-- 购物车区域 (70%) -->
-      <div class="flex-[7] bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
-        <div class="p-6 border-b">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xl font-medium">购物车</h2>
-            <div class="text-sm text-gray-500">共 {{ cartItems.length }} 件商品</div>
-          </div>
+  <div class="flex gap-6 h-[calc(100%-20px)]">
+    <!-- 购物车区域 (70%) -->
+    <div class="flex-[7] bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
+      <div class="p-6 border-b">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-medium">购物车</h2>
+          <div class="text-sm text-gray-500">共 {{ cartItems.length }} 件商品</div>
         </div>
+      </div>
 
-        <!-- 购物车商品列表（可滚动区域） -->
-        <div class="h-[calc(100vh-64px-48px-20px-48px)] p-6 overflow-y-auto">
-          <div class="space-y-4">
-            <div
-              v-for="item in cartItems"
-              :key="item.id"
-              class="group flex items-center justify-between p-4 border rounded-lg hover:border-blue-200 hover:shadow-sm transition-all duration-300"
-            >
-              <div class="flex items-center space-x-6">
-                <div class="relative w-20 h-20">
-                  <ProductImage
-                    :productId="item.product.id"
-                    :imageUuid="item.product.image"
-                    imageClass="w-full h-full object-cover rounded-lg shadow-sm"
-                  />
-                  <div
-                    class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center"
+      <!-- 购物车商品列表（可滚动区域） -->
+      <div class="h-[calc(100vh-64px-48px-20px-48px)] p-6 overflow-y-auto">
+        <div class="space-y-4">
+          <div
+            v-for="item in cartItems"
+            :key="item.id"
+            class="group flex items-center justify-between p-4 border rounded-lg hover:border-blue-200 hover:shadow-sm transition-all duration-300"
+          >
+            <div class="flex items-center space-x-6">
+              <div class="relative w-20 h-20">
+                <ProductImage
+                  :productId="item.product.id"
+                  :imageUuid="item.product.image"
+                  imageClass="w-full h-full object-cover rounded-lg shadow-sm"
+                />
+                <div
+                  class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center"
+                >
+                  <button
+                    class="!rounded-button text-white hover:text-red-200 p-2"
+                    @click="previewImage(item)"
                   >
-                    <button
-                      class="!rounded-button text-white hover:text-red-200 p-2"
-                      @click="previewImage(item)"
-                    >
-                      <font-awesome-icon icon="expand" />
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <h3 class="font-medium text-gray-800 mb-1">{{ item.product.name }}</h3>
-                  <div class="flex items-center space-x-2">
-                    <font-awesome-icon icon="tag" class="text-blue-500" />
-                    <div class="text-blue-600 font-medium">{{ item.product.price }} 积分</div>
-                  </div>
+                    <font-awesome-icon icon="expand" />
+                  </button>
                 </div>
               </div>
-              <div class="flex items-center space-x-6">
-                <div class="flex items-center border rounded-lg bg-gray-50 px-2">
-                  <button
-                    class="!rounded-button w-8 h-8 hover:bg-white hover:shadow-sm transition-all duration-200 text-gray-600"
-                    @click="updateQuantity(item, -1)"
-                  >
-                    <font-awesome-icon icon="minus" class="text-xs" />
-                  </button>
-                  <span class="px-4 font-medium text-gray-700">{{ item.quantity }}</span>
-                  <button
-                    class="!rounded-button w-8 h-8 hover:bg-white hover:shadow-sm transition-all duration-200 text-gray-600"
-                    @click="updateQuantity(item, 1)"
-                  >
-                    <font-awesome-icon icon="plus" class="text-xs" />
-                  </button>
+              <div>
+                <h3 class="font-medium text-gray-800 mb-1">{{ item.product.name }}</h3>
+                <div class="flex items-center space-x-2">
+                  <font-awesome-icon icon="tag" class="text-blue-500" />
+                  <div class="text-blue-600 font-medium">{{ item.product.price }} 积分</div>
                 </div>
-                <div class="text-gray-400 mx-2">|</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-6">
+              <div class="flex items-center border rounded-lg bg-gray-50 px-2">
                 <button
-                  class="!rounded-button text-gray-400 hover:text-red-500 hover:bg-red-50 w-8 h-8 flex items-center justify-center transition-colors duration-200"
-                  @click="removeItem(item)"
+                  class="!rounded-button w-8 h-8 hover:bg-white hover:shadow-sm transition-all duration-200 text-gray-600"
+                  @click="updateQuantity(item, -1)"
                 >
-                  <font-awesome-icon icon="trash-alt" />
+                  <font-awesome-icon icon="minus" class="text-xs" />
                 </button>
+                <span class="px-4 font-medium text-gray-700">{{ item.quantity }}</span>
+                <button
+                  class="!rounded-button w-8 h-8 hover:bg-white hover:shadow-sm transition-all duration-200 text-gray-600"
+                  @click="updateQuantity(item, 1)"
+                >
+                  <font-awesome-icon icon="plus" class="text-xs" />
+                </button>
+              </div>
+              <div class="text-gray-400 mx-2">|</div>
+              <button
+                class="!rounded-button text-gray-400 hover:text-red-500 hover:bg-red-50 w-8 h-8 flex items-center justify-center transition-colors duration-200"
+                @click="removeItem(item)"
+              >
+                <font-awesome-icon icon="trash-alt" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 结算信息区域 (30%) -->
+    <div class="flex-[3] bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
+      <div class="p-6 border-b">
+        <h2 class="text-xl font-medium">结算信息</h2>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-6">
+        <div class="space-y-6">
+          <!-- 会员信息 -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">会员卡号</label>
+              <div class="flex space-x-3">
+                <div class="flex-1 relative">
+                  <font-awesome-icon
+                    icon="id-card"
+                    class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    v-model="memberCardNo"
+                    type="text"
+                    class="w-full pl-12 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50"
+                    placeholder="请输入会员卡号"
+                    ref="cardInputRef"
+                    :readonly="!isReadingCard"
+                    @keydown="handleKeyDown"
+                  />
+                </div>
+                <button
+                  @click="readMemberCard"
+                  class="!rounded-button px-6 py-3 text-white flex items-center space-x-2 transition-all duration-300"
+                  :class="[
+                    isReadingCard
+                      ? 'bg-yellow-500 hover:bg-yellow-600'
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  ]"
+                  :disabled="isReadingCard"
+                >
+                  <font-awesome-icon
+                    :icon="isReadingCard ? 'spinner' : 'credit-card'"
+                    :class="{ 'fa-spin': isReadingCard }"
+                  />
+                  <span>{{ isReadingCard ? '读取中...' : '读取卡号' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 会员信息卡片 -->
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg text-white">
+              <div class="flex items-center space-x-3 mb-4">
+                <font-awesome-icon icon="user-circle" class="text-2xl" />
+                <div>
+                  <div class="text-sm opacity-80">会员信息</div>
+                  <div class="font-medium text-lg">{{ memberInfo.name || '未读取' }}</div>
+                </div>
+              </div>
+              <div
+                class="flex items-center justify-between py-3 border-t border-white border-opacity-20"
+              >
+                <div class="opacity-80">可用积分</div>
+                <div class="text-xl font-medium">{{ memberInfo.points || '0' }} 积分</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 金额信息 -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+              <div class="flex items-center space-x-2">
+                <font-awesome-icon icon="calculator" class="text-blue-500" />
+                <span class="text-gray-600">商品总额</span>
+              </div>
+              <div class="text-lg font-medium">{{ totalAmount }} 积分</div>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-green-50 rounded-xl">
+              <div class="flex items-center space-x-2">
+                <font-awesome-icon icon="tags" class="text-green-500" />
+                <span class="text-gray-600">会员折扣</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-green-500">-</span>
+                <input
+                  type="number"
+                  v-model.number="discountAmount"
+                  class="w-24 px-3 py-2 border border-green-200 rounded-lg text-right text-green-500 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white"
+                  @focus="handleDiscountFocus"
+                  @input="handleDiscountInput"
+                  @blur="handleDiscountBlur"
+                />
+                <span class="text-green-500">积分</span>
+              </div>
+            </div>
+
+            <div
+              class="flex justify-between items-center p-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl text-white"
+            >
+              <div class="flex items-center space-x-2">
+                <font-awesome-icon icon="money-bill-wave" />
+                <span>应付积分</span>
+              </div>
+              <div class="text-2xl font-medium">{{ finalAmount }} 积分</div>
+            </div>
+
+            <!-- 操作员选择 -->
+            <div class="flex items-center justify-between p-4 bg-purple-50 rounded-xl">
+              <div class="flex items-center space-x-2">
+                <font-awesome-icon icon="user-tie" class="text-purple-500" />
+                <span class="text-gray-600">操作员</span>
+              </div>
+              <div class="w-48">
+                <el-select
+                  v-model="selectedOperator"
+                  filterable
+                  placeholder="选择操作员"
+                  class="!w-full"
+                  popper-class="operator-select-dropdown"
+                >
+                  <el-option v-for="op in operators" :key="op.id" :value="op.id" :label="op.name">
+                    <div class="flex items-center space-x-2">
+                      <div
+                        class="w-5 h-5 bg-purple-50 rounded-full flex items-center justify-center"
+                      >
+                        <font-awesome-icon icon="user" class="text-purple-500 text-xs" />
+                      </div>
+                      <span class="text-sm">{{ op.name }}</span>
+                      <span class="text-xs text-gray-400">({{ op.role }})</span>
+                    </div>
+                  </el-option>
+                </el-select>
+              </div>
+            </div>
+
+            <!-- 备注信息移到这里 -->
+            <div class="p-4 bg-yellow-50 rounded-xl">
+              <div class="flex items-center space-x-2 mb-3">
+                <font-awesome-icon icon="pencil-alt" class="text-yellow-500" />
+                <span class="text-gray-600">备注信息</span>
+              </div>
+              <div class="relative">
+                <textarea
+                  v-model="notes"
+                  class="w-full px-4 py-3 border border-yellow-200 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none bg-white"
+                  rows="3"
+                  placeholder="请输入备注信息"
+                ></textarea>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 结算信息区域 (30%) -->
-      <div class="flex-[3] bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
-        <div class="p-6 border-b">
-          <h2 class="text-xl font-medium">结算信息</h2>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-6">
-          <div class="space-y-6">
-            <!-- 会员信息 -->
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">会员卡号</label>
-                <div class="flex space-x-3">
-                  <div class="flex-1 relative">
-                    <font-awesome-icon
-                      icon="id-card"
-                      class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    />
-                    <input
-                      v-model="memberCardNo"
-                      type="text"
-                      class="w-full pl-12 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50"
-                      placeholder="请输入会员卡号"
-                      ref="cardInputRef"
-                      :readonly="!isReadingCard"
-                      @keydown="handleKeyDown"
-                    />
-                  </div>
-                  <button
-                    @click="readMemberCard"
-                    class="!rounded-button px-6 py-3 text-white flex items-center space-x-2 transition-all duration-300"
-                    :class="[
-                      isReadingCard
-                        ? 'bg-yellow-500 hover:bg-yellow-600'
-                        : 'bg-blue-500 hover:bg-blue-600'
-                    ]"
-                    :disabled="isReadingCard"
-                  >
-                    <font-awesome-icon
-                      :icon="isReadingCard ? 'spinner' : 'credit-card'"
-                      :class="{ 'fa-spin': isReadingCard }"
-                    />
-                    <span>{{ isReadingCard ? '读取中...' : '读取卡号' }}</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- 会员信息卡片 -->
-              <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg text-white">
-                <div class="flex items-center space-x-3 mb-4">
-                  <font-awesome-icon icon="user-circle" class="text-2xl" />
-                  <div>
-                    <div class="text-sm opacity-80">会员信息</div>
-                    <div class="font-medium text-lg">{{ memberInfo.name || '未读取' }}</div>
-                  </div>
-                </div>
-                <div
-                  class="flex items-center justify-between py-3 border-t border-white border-opacity-20"
-                >
-                  <div class="opacity-80">可用积分</div>
-                  <div class="text-xl font-medium">{{ memberInfo.points || '0' }} 积分</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 金额信息 -->
-            <div class="space-y-4">
-              <div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
-                <div class="flex items-center space-x-2">
-                  <font-awesome-icon icon="calculator" class="text-blue-500" />
-                  <span class="text-gray-600">商品总额</span>
-                </div>
-                <div class="text-lg font-medium">{{ totalAmount }} 积分</div>
-              </div>
-
-              <div class="flex items-center justify-between p-4 bg-green-50 rounded-xl">
-                <div class="flex items-center space-x-2">
-                  <font-awesome-icon icon="tags" class="text-green-500" />
-                  <span class="text-gray-600">会员折扣</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <span class="text-green-500">-</span>
-                  <input
-                    type="number"
-                    v-model.number="discountAmount"
-                    class="w-24 px-3 py-2 border border-green-200 rounded-lg text-right text-green-500 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white"
-                    @focus="handleDiscountFocus"
-                    @input="handleDiscountInput"
-                    @blur="handleDiscountBlur"
-                  />
-                  <span class="text-green-500">积分</span>
-                </div>
-              </div>
-
-              <div
-                class="flex justify-between items-center p-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl text-white"
-              >
-                <div class="flex items-center space-x-2">
-                  <font-awesome-icon icon="money-bill-wave" />
-                  <span>应付积分</span>
-                </div>
-                <div class="text-2xl font-medium">{{ finalAmount }} 积分</div>
-              </div>
-
-              <!-- 操作员选择 -->
-              <div class="flex items-center justify-between p-4 bg-purple-50 rounded-xl">
-                <div class="flex items-center space-x-2">
-                  <font-awesome-icon icon="user-tie" class="text-purple-500" />
-                  <span class="text-gray-600">操作员</span>
-                </div>
-                <div class="w-48">
-                  <el-select
-                    v-model="selectedOperator"
-                    filterable
-                    placeholder="选择操作员"
-                    class="!w-full"
-                    popper-class="operator-select-dropdown"
-                  >
-                    <el-option v-for="op in operators" :key="op.id" :value="op.id" :label="op.name">
-                      <div class="flex items-center space-x-2">
-                        <div
-                          class="w-5 h-5 bg-purple-50 rounded-full flex items-center justify-center"
-                        >
-                          <font-awesome-icon icon="user" class="text-purple-500 text-xs" />
-                        </div>
-                        <span class="text-sm">{{ op.name }}</span>
-                        <span class="text-xs text-gray-400">({{ op.role }})</span>
-                      </div>
-                    </el-option>
-                  </el-select>
-                </div>
-              </div>
-
-              <!-- 备注信息移到这里 -->
-              <div class="p-4 bg-yellow-50 rounded-xl">
-                <div class="flex items-center space-x-2 mb-3">
-                  <font-awesome-icon icon="pencil-alt" class="text-yellow-500" />
-                  <span class="text-gray-600">备注信息</span>
-                </div>
-                <div class="relative">
-                  <textarea
-                    v-model="notes"
-                    class="w-full px-4 py-3 border border-yellow-200 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none bg-white"
-                    rows="3"
-                    placeholder="请输入备注信息"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
+      <!-- 固定在底部的结算按钮 -->
+      <div class="p-6 border-t bg-white">
+        <button
+          class="!rounded-button w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-medium text-lg shadow-lg relative overflow-hidden group"
+          :disabled="!canCheckout"
+          :class="{ 'opacity-50 cursor-not-allowed from-gray-400 to-gray-500': !canCheckout }"
+          @click="handleCheckout"
+        >
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300"
+          ></div>
+          <div class="relative flex items-center justify-center space-x-2">
+            <font-awesome-icon icon="check-circle" />
+            <span>{{ checkoutButtonText }}</span>
           </div>
-        </div>
-
-        <!-- 固定在底部的结算按钮 -->
-        <div class="p-6 border-t bg-white">
-          <button
-            class="!rounded-button w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-medium text-lg shadow-lg relative overflow-hidden group"
-            :disabled="!canCheckout"
-            :class="{ 'opacity-50 cursor-not-allowed from-gray-400 to-gray-500': !canCheckout }"
-            @click="handleCheckout"
-          >
-            <div
-              class="absolute inset-0 bg-gradient-to-r from-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-            ></div>
-            <div class="relative flex items-center justify-center space-x-2">
-              <font-awesome-icon icon="check-circle" />
-              <span>{{ checkoutButtonText }}</span>
-            </div>
-          </button>
-        </div>
+        </button>
       </div>
     </div>
   </div>

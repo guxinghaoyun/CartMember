@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar">
+  <div class="h-[calc(100vh-64px-32px)] overflow-y-auto custom-scrollbar">
     <div class="space-y-6 p-6 bg-gray-50">
       <!-- 快速查询 -->
       <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
@@ -12,9 +12,15 @@
                   v-for="period in periods"
                   :key="period.value"
                   class="!rounded-xl px-4 py-2 transition-all duration-200"
-                  :class="selectedPeriod === period.value ? 'bg-blue-50 text-blue-600 ring-2 ring-blue-100' : 'hover:bg-gray-100 text-gray-600'"
+                  :class="
+                    selectedPeriod === period.value
+                      ? 'bg-blue-50 text-blue-600 ring-2 ring-blue-100'
+                      : 'hover:bg-gray-100 text-gray-600'
+                  "
                   @click="selectedPeriod = period.value"
-                >{{ period.label }}</button>
+                >
+                  {{ period.label }}
+                </button>
               </div>
             </div>
             <div class="hidden sm:block h-8 w-px bg-gray-200"></div>
@@ -24,8 +30,11 @@
                   v-model="dateRange.start"
                   type="date"
                   class="!rounded-xl pl-10 pr-4 py-2 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-                >
-                <font-awesome-icon icon="calendar-alt" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                />
+                <font-awesome-icon
+                  icon="calendar-alt"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors"
+                />
               </div>
               <span class="text-gray-400">至</span>
               <div class="relative group">
@@ -33,11 +42,17 @@
                   v-model="dateRange.end"
                   type="date"
                   class="!rounded-xl pl-10 pr-4 py-2 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-                >
-                <font-awesome-icon icon="calendar-alt" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                />
+                <font-awesome-icon
+                  icon="calendar-alt"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors"
+                />
               </div>
-              <button class="!rounded-xl px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200">
-                <font-awesome-icon icon="search" class="mr-2" />查询
+              <button
+                class="!rounded-xl px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                <font-awesome-icon icon="search" class="mr-2" />
+                查询
               </button>
             </div>
           </div>
@@ -46,13 +61,19 @@
 
       <!-- 顶部数据卡片 -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group">
+        <div
+          class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
+        >
           <div class="flex justify-between items-start mb-4">
             <div>
               <p class="text-blue-100 text-sm font-medium">总兑换积分</p>
-              <p class="text-4xl font-bold mt-3 tracking-tight">{{ Number(256789).toLocaleString() }}</p>
+              <p class="text-4xl font-bold mt-3 tracking-tight">
+                {{ Number(256789).toLocaleString() }}
+              </p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-400 bg-opacity-30 backdrop-blur-sm flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+            <div
+              class="w-12 h-12 rounded-xl bg-blue-400 bg-opacity-30 backdrop-blur-sm flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300"
+            >
               <font-awesome-icon icon="coins" class="text-2xl" />
             </div>
           </div>
@@ -62,13 +83,19 @@
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group">
+        <div
+          class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
+        >
           <div class="flex justify-between items-start mb-4">
             <div>
               <p class="text-green-100 text-sm font-medium">订单总量</p>
-              <p class="text-4xl font-bold mt-3 tracking-tight">{{ Number(1438).toLocaleString() }}</p>
+              <p class="text-4xl font-bold mt-3 tracking-tight">
+                {{ Number(1438).toLocaleString() }}
+              </p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-green-400 bg-opacity-30 backdrop-blur-sm flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+            <div
+              class="w-12 h-12 rounded-xl bg-green-400 bg-opacity-30 backdrop-blur-sm flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300"
+            >
               <font-awesome-icon icon="shopping-cart" class="text-2xl" />
             </div>
           </div>
@@ -78,13 +105,19 @@
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group">
+        <div
+          class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
+        >
           <div class="flex justify-between items-start mb-4">
             <div>
               <p class="text-purple-100 text-sm font-medium">客单积分</p>
-              <p class="text-4xl font-bold mt-3 tracking-tight">{{ Number(178.5).toLocaleString() }}</p>
+              <p class="text-4xl font-bold mt-3 tracking-tight">
+                {{ Number(178.5).toLocaleString() }}
+              </p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-purple-400 bg-opacity-30 backdrop-blur-sm flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+            <div
+              class="w-12 h-12 rounded-xl bg-purple-400 bg-opacity-30 backdrop-blur-sm flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300"
+            >
               <font-awesome-icon icon="receipt" class="text-2xl" />
             </div>
           </div>
@@ -94,13 +127,19 @@
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group">
+        <div
+          class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
+        >
           <div class="flex justify-between items-start mb-4">
             <div>
               <p class="text-orange-100 text-sm font-medium">新增会员</p>
-              <p class="text-4xl font-bold mt-3 tracking-tight">{{ Number(246).toLocaleString() }}</p>
+              <p class="text-4xl font-bold mt-3 tracking-tight">
+                {{ Number(246).toLocaleString() }}
+              </p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-orange-400 bg-opacity-30 backdrop-blur-sm flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+            <div
+              class="w-12 h-12 rounded-xl bg-orange-400 bg-opacity-30 backdrop-blur-sm flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300"
+            >
               <font-awesome-icon icon="user-plus" class="text-2xl" />
             </div>
           </div>
@@ -130,8 +169,14 @@
               <option value="month">月度统计</option>
               <option value="day">日统计</option>
             </select>
-            <font-awesome-icon icon="calendar-alt" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" />
-            <font-awesome-icon icon="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <font-awesome-icon
+              icon="calendar-alt"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors"
+            />
+            <font-awesome-icon
+              icon="chevron-down"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
           <div class="relative group">
             <select
@@ -143,8 +188,14 @@
                 {{ store.name }}
               </option>
             </select>
-            <font-awesome-icon icon="store" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" />
-            <font-awesome-icon icon="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <font-awesome-icon
+              icon="store"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors"
+            />
+            <font-awesome-icon
+              icon="chevron-down"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
         </div>
       </div>
@@ -328,4 +379,4 @@ const pickupData = ref({
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #64748b;
 }
-</style> 
+</style>

@@ -3,7 +3,8 @@ import type {
   OperationLog,
   SystemLog,
   LoginLog,
-  LogQueryParams
+  LogQueryParams,
+  OperationLogResponse
 } from '@/types/api/admin/log'
 import type { ApiResponse, PaginationResponse, PaginationParams } from '@/types/api/common'
 import type { RequestConfig } from '../types'
@@ -11,7 +12,9 @@ import type { RequestConfig } from '../types'
 export const logApi = {
   // 操作日志
   getOperationLogs(params: PaginationParams & LogQueryParams) {
-    return request.get<ApiResponse<PaginationResponse<OperationLog>>>('/admin/logs/operation', { params })
+    return request.get<ApiResponse<PaginationResponse<OperationLog>>>('/operation-log', {
+      params
+    })
   },
 
   getOperationLogDetail(id: number) {
@@ -63,7 +66,9 @@ export const logApi = {
 
   // 清理日志
   cleanOperationLogs(beforeDate: string) {
-    return request.delete<ApiResponse<void>>('/admin/logs/operation/clean', { params: { beforeDate } })
+    return request.delete<ApiResponse<void>>('/admin/logs/operation/clean', {
+      params: { beforeDate }
+    })
   },
 
   cleanSystemLogs(beforeDate: string) {
@@ -72,5 +77,17 @@ export const logApi = {
 
   cleanLoginLogs(beforeDate: string) {
     return request.delete<ApiResponse<void>>('/admin/logs/login/clean', { params: { beforeDate } })
+  },
+
+  // 获取新的操作日志（对接新接口）
+  getNewOperationLogs(params: {
+    pageNumber?: number
+    pageSize?: number
+    content?: string
+    status?: string
+    startTime?: string
+    endTime?: string
+  }) {
+    return request.post<any, OperationLogResponse>('/operation-log', params)
   }
-} 
+}
