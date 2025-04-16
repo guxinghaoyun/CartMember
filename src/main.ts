@@ -5,6 +5,9 @@ import { ElMessage } from 'element-plus'
 import 'element-plus/dist/index.css'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
+// 导入认证存储适配器，确保它在应用初始化前加载
+import './utils/authStorage'
+
 // Font Awesome 配置
 import '@fortawesome/fontawesome-svg-core/styles.css'
 import { config } from '@fortawesome/fontawesome-svg-core'
