@@ -8,6 +8,7 @@ import type {
   OrderQueryParams
 } from '@/types/api/user/shopping'
 import type { ApiResponse, PaginationResponse, PaginationParams } from '@/types/api/common'
+import { storeInfoUtils } from '@/utils/storeInfo'
 
 // 后端API返回的商品格式
 interface BackendProduct {
@@ -52,47 +53,9 @@ const getCategoryFromTypeId = (typeId: number): string => {
   return categories[typeId] || ''
 }
 
-// 获取当前登录用户的shopId
+// 获取当前登录用户的shopId - 使用工具方法
 const getCurrentUserShopId = (): number => {
-  try {
-    // 1. 首先尝试从shopInfo中获取店铺ID
-    let shopId = 0
-    const shopInfoStr = localStorage.getItem('shopInfo')
-    if (shopInfoStr) {
-      const shopInfo = JSON.parse(shopInfoStr)
-      shopId = shopInfo.id
-      console.log('从shopInfo获取到shopId:', shopId)
-      return shopId
-    }
-
-    // 2. 如果没有店铺ID，尝试从用户信息中获取
-    if (!shopId) {
-      const userInfoStr = localStorage.getItem('user')
-      if (userInfoStr) {
-        const userInfo = JSON.parse(userInfoStr)
-        shopId = userInfo.shopId || userInfo.id || 0
-        console.log('从user信息获取到shopId:', shopId)
-        return shopId
-      }
-    }
-
-    // 3. 最后尝试从userInfo中获取
-    if (!shopId) {
-      const userInfoStr = localStorage.getItem('userInfo')
-      if (userInfoStr) {
-        const userInfo = JSON.parse(userInfoStr)
-        shopId = userInfo.id || 0
-        console.log('从userInfo获取到shopId:', shopId)
-        return shopId
-      }
-    }
-  } catch (error) {
-    console.error('获取用户shopId失败:', error)
-  }
-
-  // 如果获取失败，返回默认值6
-  console.log('获取用户shopId失败，使用默认值')
-  return 0
+  return storeInfoUtils.getShopId()
 }
 
 // 购买商品请求参数接口

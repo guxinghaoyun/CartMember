@@ -358,6 +358,7 @@ import { pickupApi } from '@/api/user/pickup'
 import { operatorApi } from '@/api/user/operator'
 import { memberApi } from '@/api/user/member'
 import ProductImage from '@/components/common/ProductImage.vue'
+import { storeInfoUtils } from '@/utils/storeInfo'
 
 interface Props {
   visible: boolean
@@ -795,6 +796,16 @@ onUnmounted(() => {
     timeoutRef.value = null
   }
 })
+
+// 获取当前店铺ID
+const getShopId = (): number => {
+  return storeInfoUtils.getShopId()
+}
+
+// 获取当前操作员名称
+const getOperatorName = (): string => {
+  return storeInfoUtils.getOperatorName()
+}
 </script>
 
 <style scoped>

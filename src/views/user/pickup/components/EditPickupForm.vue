@@ -372,7 +372,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import dayjs from 'dayjs'
@@ -385,6 +385,7 @@ import type {
 } from '@/types/api/user/pickup'
 import type { ApiResponse } from '@/types/api/common'
 import { pickupApi } from '@/api/user/pickup'
+import { storeInfoUtils } from '@/utils/storeInfo'
 
 interface Props {
   visible: boolean
@@ -422,7 +423,32 @@ const formRef = ref<FormInstance>()
 const loading = ref(false)
 
 // 操作员列表
-const operators = ['李海燕', '王建国', '张晓芳', '刘明亮', '赵雪梅', '李四', '张三', '王五', '孟森']
+const operators = ref<string[]>([])
+
+// 获取操作员列表
+const fetchOperators = () => {
+  try {
+    const staffList = storeInfoUtils.getStaffList()
+    if (staffList && staffList.length > 0) {
+      // 将员工信息转换为姓名数组
+      operators.value = staffList.map(staff => staff.name)
+    } else {
+      // 如果没有找到操作员，显示警告
+      operators.value = []
+      ElMessage.warning('未找到操作员列表，请确认店铺信息是否正确')
+      console.warn('未找到操作员列表')
+    }
+  } catch (error) {
+    console.error('获取操作员列表失败:', error)
+    operators.value = []
+    ElMessage.warning('获取操作员列表失败')
+  }
+}
+
+// 在组件挂载时获取操作员列表
+onMounted(() => {
+  fetchOperators()
+})
 
 // 表单数据
 const form = ref<PickupFormData>({

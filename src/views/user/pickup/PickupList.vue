@@ -178,18 +178,25 @@
             <font-awesome-icon icon="rotate" />
           </button>
 
-          <div class="relative hidden sm:block w-64 lg:w-80" ref="filterRef">
+          <div class="relative hidden sm:block w-64 lg:w-80">
             <input
               type="text"
               v-model="searchQuery"
               placeholder="搜索订单号/会员"
               @keyup.enter="handleSearch"
-              class="pl-10 pr-4 py-2 border rounded-full w-full focus:ring-2 focus:ring-blue-500 outline-none transition-all duration-300"
+              class="pl-10 pr-10 py-2 border rounded-full w-full focus:ring-2 focus:ring-blue-500 outline-none transition-all duration-300"
             />
             <font-awesome-icon
               icon="magnifying-glass"
               class="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400"
             />
+            <button
+              class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-colors duration-200 rounded-full hover:bg-blue-50"
+              @click="handleSearch"
+              title="搜索"
+            >
+              <font-awesome-icon icon="search" />
+            </button>
           </div>
 
           <div class="relative" ref="filterRef">
@@ -207,114 +214,12 @@
                 {{ activeFilters }}
               </span>
             </button>
-            <!-- 筛选面板 -->
-            <div
-              v-if="showFilter"
-              class="absolute right-0 top-14 w-64 sm:w-96 bg-white rounded-2xl shadow-xl p-6 z-50 border animate-fade-in"
-              style="max-height: 80vh; overflow-y: auto"
-              @click.stop
-            >
-              <div class="space-y-4">
-                <!-- 提货方式筛选 -->
-                <div>
-                  <div class="text-sm font-medium mb-2 flex items-center">
-                    <font-awesome-icon icon="cube" class="text-gray-400 mr-2" />
-                    提货方式
-                  </div>
-                  <div class="flex flex-wrap gap-2">
-                    <button
-                      v-for="type in deliveryTypes"
-                      :key="type.value"
-                      class="px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 flex items-center"
-                      :class="
-                        filters.deliveryType === type.value
-                          ? 'bg-blue-50 text-blue-500 border border-blue-200'
-                          : 'text-gray-500 hover:bg-gray-50 border border-gray-200'
-                      "
-                      @click="filters.deliveryType = type.value"
-                    >
-                      <font-awesome-icon :icon="type.icon" class="mr-2" />
-                      {{ type.label }}
-                    </button>
-                  </div>
-                </div>
-                <!-- 时间范围筛选 -->
-                <div>
-                  <div class="text-sm font-medium mb-2 flex items-center">
-                    <font-awesome-icon icon="calendar-alt" class="text-gray-400 mr-2" />
-                    时间范围
-                  </div>
-                  <el-date-picker
-                    v-model="filters.dateRange"
-                    type="daterange"
-                    range-separator="至"
-                    start-placeholder="开始日期"
-                    end-placeholder="结束日期"
-                    :shortcuts="dateShortcuts"
-                    class="!w-full"
-                    :popper-options="{ strategy: 'fixed' }"
-                  />
-                </div>
-                <!-- 操作员筛选 -->
-                <div>
-                  <div class="text-sm font-medium mb-2 flex items-center">
-                    <font-awesome-icon icon="user-cog" class="text-gray-400 mr-2" />
-                    操作员
-                  </div>
-                  <el-select
-                    v-model="filters.operator"
-                    placeholder="选择操作员"
-                    class="!w-full"
-                    popper-class="operator-select-dropdown"
-                    :popper-options="{ strategy: 'fixed' }"
-                    size="large"
-                  >
-                    <el-option value="" label="全部操作员">
-                      <div class="flex items-center space-x-2">
-                        <div class="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center">
-                          <font-awesome-icon icon="users" class="text-gray-400" />
-                        </div>
-                        <span>全部操作员</span>
-                      </div>
-                    </el-option>
-                    <el-option v-for="op in operators" :key="op" :value="op" :label="op">
-                      <div class="flex items-center space-x-2">
-                        <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
-                          <font-awesome-icon icon="user" class="text-blue-400" />
-                        </div>
-                        <span>{{ op }}</span>
-                      </div>
-                    </el-option>
-                  </el-select>
-                </div>
-                <!-- 筛选按钮 -->
-                <div class="flex justify-end space-x-2 pt-4 border-t">
-                  <button
-                    class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 flex items-center"
-                    @click="resetFilters"
-                  >
-                    <font-awesome-icon icon="rotate" class="mr-2" />
-                    重置
-                  </button>
-                  <button
-                    class="px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 flex items-center"
-                    @click="applyFilters"
-                  >
-                    <font-awesome-icon icon="check" class="mr-2" />
-                    应用筛选
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
 
-          <button
-            class="h-10 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 sm:px-4 py-2 flex items-center space-x-1 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-sm"
-            @click="handleNewPickup"
-          >
-            <font-awesome-icon icon="plus" class="text-xs" />
-            <span class="hidden sm:inline">新增提货单</span>
-          </button>
+          <el-button type="primary" class="h-10 flex items-center" @click="handleNewPickup">
+            <font-awesome-icon icon="plus" class="mr-1" />
+            新增提货单
+          </el-button>
         </div>
       </div>
     </div>
@@ -544,6 +449,115 @@
   <AddPickupForm v-model:visible="addVisible" @submit="handleAddSubmit" />
 
   <EditPickupForm v-model:visible="editVisible" :edit-data="editData" @submit="handleEditSubmit" />
+
+  <!-- 筛选面板 - 相对于筛选按钮定位 -->
+  <teleport to="body">
+    <div v-if="showFilter" class="fixed inset-0 z-40" @click.self="showFilter = false">
+      <div
+        class="absolute bg-white rounded-2xl shadow-xl p-6 z-50 border animate-fade-in"
+        style="max-height: 80vh; overflow-y: auto; width: 320px; right: 180px; top: 270px"
+        @click.stop
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-gray-800">筛选条件</h3>
+          <button class="text-gray-400 hover:text-gray-600" @click="showFilter = false">
+            <font-awesome-icon icon="xmark" />
+          </button>
+        </div>
+        <div class="space-y-4">
+          <!-- 提货方式筛选 -->
+          <div>
+            <div class="text-sm font-medium mb-2 flex items-center">
+              <font-awesome-icon icon="cube" class="text-gray-400 mr-2" />
+              提货方式
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="type in deliveryTypes"
+                :key="type.value"
+                class="px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 flex items-center"
+                :class="
+                  filters.deliveryType === type.value
+                    ? 'bg-blue-50 text-blue-500 border border-blue-200'
+                    : 'text-gray-500 hover:bg-gray-50 border border-gray-200'
+                "
+                @click="filters.deliveryType = type.value"
+              >
+                <font-awesome-icon :icon="type.icon" class="mr-2" />
+                {{ type.label }}
+              </button>
+            </div>
+          </div>
+          <!-- 时间范围筛选 -->
+          <div>
+            <div class="text-sm font-medium mb-2 flex items-center">
+              <font-awesome-icon icon="calendar-alt" class="text-gray-400 mr-2" />
+              时间范围
+            </div>
+            <el-date-picker
+              v-model="filters.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :shortcuts="dateShortcuts"
+              class="!w-full"
+              :popper-options="{ strategy: 'fixed' }"
+            />
+          </div>
+          <!-- 操作员筛选 -->
+          <div>
+            <div class="text-sm font-medium mb-2 flex items-center">
+              <font-awesome-icon icon="user-cog" class="text-gray-400 mr-2" />
+              操作员
+            </div>
+            <el-select
+              v-model="filters.operator"
+              placeholder="选择操作员"
+              class="!w-full"
+              popper-class="operator-select-dropdown"
+              :popper-options="{ strategy: 'fixed' }"
+              size="large"
+            >
+              <el-option value="" label="全部操作员">
+                <div class="flex items-center space-x-2">
+                  <div class="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center">
+                    <font-awesome-icon icon="users" class="text-gray-400" />
+                  </div>
+                  <span>全部操作员</span>
+                </div>
+              </el-option>
+              <el-option v-for="op in operators" :key="op" :value="op" :label="op">
+                <div class="flex items-center space-x-2">
+                  <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <font-awesome-icon icon="user" class="text-blue-400" />
+                  </div>
+                  <span>{{ op }}</span>
+                </div>
+              </el-option>
+            </el-select>
+          </div>
+          <!-- 筛选按钮 -->
+          <div class="flex justify-end space-x-2 pt-4 border-t">
+            <button
+              class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 flex items-center"
+              @click="resetFilters"
+            >
+              <font-awesome-icon icon="rotate" class="mr-2" />
+              重置
+            </button>
+            <button
+              class="px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 flex items-center"
+              @click="applyFilters"
+            >
+              <font-awesome-icon icon="check" class="mr-2" />
+              应用筛选
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </teleport>
 </template>
 
 <script lang="ts" setup>

@@ -401,6 +401,7 @@ import { operatorApi } from '@/api/user/operator'
 import { shoppingApi } from '@/api/user/shopping'
 import { rechargeApi } from '@/api/user/recharge'
 import ProductImage from '@/components/common/ProductImage.vue'
+import { storeInfoUtils } from '@/utils/storeInfo'
 
 const router = useRouter()
 
@@ -604,29 +605,22 @@ const handleKeyDown = (e: KeyboardEvent) => {
 // 获取操作员列表
 const fetchOperators = async () => {
   try {
-    // 从localStorage中获取店铺信息
-    const shopInfoStr = localStorage.getItem('shopInfo')
-    if (!shopInfoStr) {
-      console.error('没有找到店铺信息')
-      return
-    }
+    // 使用storeInfoUtils获取操作员列表
+    const staffList = storeInfoUtils.getStaffList()
 
-    const shopInfo = JSON.parse(shopInfoStr)
-
-    // 从users数组中获取操作员列表
-    if (!shopInfo.users || !Array.isArray(shopInfo.users)) {
-      console.error('店铺信息中没有找到操作员列表')
+    if (!staffList || staffList.length === 0) {
+      console.error('没有找到操作员列表')
       return
     }
 
     // 将用户数据转换为操作员数据格式
-    operators.value = shopInfo.users.map((user: any) => ({
-      id: user.id?.toString() || '',
-      name: user.name || '',
-      role: user.position || (user.manager ? '店长' : '店员')
+    operators.value = staffList.map(staff => ({
+      id: Number(staff.id) || 0,
+      name: staff.name || '',
+      role: staff.position || (staff.manager ? '店长' : '店员')
     }))
 
-    console.log('从本地存储获取的操作员列表:', operators.value)
+    console.log('操作员列表:', operators.value)
   } catch (error) {
     console.error('获取操作员列表失败:', error)
     ElMessage.error('获取操作员列表失败')

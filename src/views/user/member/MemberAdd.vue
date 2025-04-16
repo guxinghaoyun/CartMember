@@ -41,14 +41,26 @@
             <!-- IC卡号 -->
             <el-form-item label="IC卡号" prop="icNumber" class="!mb-0">
               <div class="flex space-x-2">
-                <el-input v-model="form.icNumber" placeholder="请输入IC卡号" class="!w-full" />
+                <el-input
+                  v-model="form.icNumber"
+                  placeholder="请输入IC卡号"
+                  class="!w-full"
+                  ref="cardInputRef"
+                  readonly
+                />
                 <el-button
                   type="primary"
                   class="whitespace-nowrap !bg-indigo-500 hover:!bg-indigo-600"
                   @click="handleReadCard"
+                  :loading="isReadingCard"
+                  :disabled="isReadingCard"
                 >
-                  <font-awesome-icon icon="id-card" class="mr-1" />
-                  读取卡号
+                  <font-awesome-icon
+                    :icon="isReadingCard ? 'spinner' : 'id-card'"
+                    class="mr-1"
+                    :class="{ 'fa-spin': isReadingCard }"
+                  />
+                  {{ isReadingCard ? '读取中...' : '读取卡号' }}
                 </el-button>
               </div>
             </el-form-item>
@@ -225,12 +237,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import type { FormInstance, FormRules, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import type { Member, CreateMemberRequest } from '@/types/api/user/member'
 import { memberApi } from '@/api/user/member'
 import MemberCardImage from '@/components/common/MemberCardImage.vue'
+import { cardApi } from '@/api/admin/card'
 
 interface Props {
   visible: boolean
@@ -277,16 +290,136 @@ const rules: FormRules = {
   backPicture: [{ required: true, message: '请上传IC卡背面图片', trigger: 'change' }]
 }
 
+// 新增 IC卡号输入相关变量
+const tempCardNo = ref('') // 临时存储读取到的内部卡号
+const isReadingCard = ref(false) // 是否正在读卡状态
+const timeoutRef = ref<number | null>(null) // 读卡超时计时器
+const cardInputRef = ref<HTMLInputElement | null>(null) // 卡号输入框引用
+
 // 读取IC卡
 const handleReadCard = () => {
-  // TODO: 实现读卡逻辑
-  form.value.icNumber =
-    '8800 2233 ' +
-    Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, '0')
-  ElMessage.success('IC卡读取成功')
+  // 清空卡号（不更新form.icNumber以保持输入框不变）
+  tempCardNo.value = ''
+
+  // 设置读卡状态
+  isReadingCard.value = true
+
+  ElMessage.info('请将IC卡放在读卡器上...')
+
+  // 聚焦输入框，等待读卡器模拟键盘输入
+  if (cardInputRef.value) {
+    cardInputRef.value.focus()
+  }
+
+  // 设置一个超时，如果10秒内没有读到卡，自动关闭读卡状态
+  if (timeoutRef.value) {
+    clearTimeout(timeoutRef.value)
+  }
+
+  timeoutRef.value = window.setTimeout(() => {
+    if (isReadingCard.value && !tempCardNo.value) {
+      isReadingCard.value = false
+      ElMessage.warning('读卡超时，请重试')
+    }
+    timeoutRef.value = null
+  }, 10000)
 }
+
+// 处理键盘输入事件
+const handleKeyDown = (e: KeyboardEvent) => {
+  // 如果正在读卡
+  if (isReadingCard.value) {
+    // 接受字母E和数字输入
+    if (/^\d$/.test(e.key) || e.key.toUpperCase() === 'E') {
+      tempCardNo.value += e.key.toUpperCase() // 存储到临时变量中，不显示在输入框
+      console.log('读取到卡号字符:', e.key, '当前卡号:', tempCardNo.value)
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      // 当按下回车或Tab键时，认为卡号输入完成，结束读卡并触发查询
+      if (tempCardNo.value) {
+        processCardNumber(tempCardNo.value)
+      }
+    }
+    e.preventDefault() // 阻止默认行为
+  }
+}
+
+// 处理完整的卡号
+const processCardNumber = async (cardNumber: string) => {
+  console.log('读取到完整IC卡号:', cardNumber)
+
+  try {
+    // 关闭读卡状态
+    isReadingCard.value = false
+
+    // 清除超时计时器
+    if (timeoutRef.value) {
+      clearTimeout(timeoutRef.value)
+      timeoutRef.value = null
+    }
+
+    // 查询IC卡状态
+    const response = await cardApi.getList({
+      page: 1,
+      pageSize: 1,
+      keyword: cardNumber
+    })
+
+    // 检查卡片是否存在及状态
+    const apiResponse = response as unknown as {
+      records: Array<{
+        id: number
+        internalNumber: string
+        status: string
+        membershipName?: string
+      }>
+      totalRecords: number
+    }
+
+    if (apiResponse.totalRecords > 0) {
+      const card = apiResponse.records[0]
+
+      // 检查卡片状态
+      if (card.status === '正常' && card.membershipName) {
+        // 卡已激活且绑定了会员
+        ElMessage.error('此卡已激活并绑定会员，无法用于新增会员')
+        // 不更新输入框显示
+        return
+      } else if (card.status === '停用') {
+        // 卡已停用
+        ElMessage.warning('此卡已停用，请先启用后再绑定会员')
+        // 不更新输入框显示
+        return
+      } else {
+        // 卡可用（未激活或正常但未绑定会员）
+        // 只有成功时才更新输入框显示的卡号
+        form.value.icNumber = cardNumber
+        ElMessage.success('IC卡读取成功')
+      }
+    } else {
+      // 卡片不存在
+      ElMessage.error('未找到此IC卡，请先初始化卡片')
+      // 不更新输入框显示
+    }
+  } catch (error) {
+    console.error('获取卡片信息失败:', error)
+    ElMessage.error('读取IC卡失败，请重试')
+    // 不更新输入框显示
+  }
+}
+
+// 组件挂载时添加键盘事件监听
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyDown)
+})
+
+// 组件卸载时移除键盘事件监听
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown)
+  if (timeoutRef.value) {
+    clearTimeout(timeoutRef.value)
+    timeoutRef.value = null
+  }
+})
 
 // 处理图片变更
 const handleImageChange = async (file: UploadFile, side: 'frontPicture' | 'backPicture') => {
@@ -426,54 +559,42 @@ const handleClose = () => {
 
 <style scoped>
 /* 输入框样式 */
-:deep(.el-input__wrapper),
-:deep(.el-textarea__inner),
+:deep(.el-input .el-input__wrapper),
+:deep(.el-textarea .el-textarea__inner),
 :deep(.el-select .el-input__wrapper) {
   box-shadow: none !important;
   border: 1px solid #e5e7eb !important;
   background-color: white !important;
+  outline: none !important;
+  padding: 0 12px !important;
 }
 
-:deep(.el-input__wrapper:hover),
-:deep(.el-textarea__inner:hover),
+:deep(.el-input .el-input__wrapper:hover),
+:deep(.el-textarea .el-textarea__inner:hover),
 :deep(.el-select .el-input__wrapper:hover) {
   border-color: #d1d5db !important;
 }
 
-:deep(.el-input__wrapper.is-focus),
-:deep(.el-textarea__inner:focus),
+:deep(.el-input .el-input__wrapper.is-focus),
+:deep(.el-textarea .el-textarea__inner:focus),
 :deep(.el-select .el-input__wrapper.is-focus) {
   border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
-/* Dialog 样式 */
-:deep(.el-dialog) {
-  border-radius: 12px !important;
-  box-shadow:
-    0 20px 25px -5px rgb(0 0 0 / 0.1),
-    0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+/* 直接移除原生焦点样式 */
+:deep(input:focus),
+:deep(textarea:focus) {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-:deep(.el-dialog__header) {
-  margin-right: 0 !important;
-  padding: 16px 20px !important;
-  border-bottom: 1px solid #e5e7eb !important;
-}
-
-:deep(.el-dialog__title) {
-  font-weight: 600 !important;
-  font-size: 1.125rem !important;
-  line-height: 1.75rem !important;
-}
-
-:deep(.el-dialog__body) {
-  padding: 20px !important;
-}
-
-:deep(.el-dialog__footer) {
-  padding: 12px 20px !important;
-  border-top: 1px solid #e5e7eb !important;
+/* 确保所有输入框统一样式 */
+:deep(.el-input__inner) {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 /* Radio 按钮样式 */
@@ -519,5 +640,34 @@ const handleClose = () => {
   color: #374151 !important;
   font-weight: 500 !important;
   padding-right: 12px !important;
+}
+
+/* Dialog 样式 */
+:deep(.el-dialog) {
+  border-radius: 12px !important;
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+}
+
+:deep(.el-dialog__header) {
+  margin-right: 0 !important;
+  padding: 16px 20px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+:deep(.el-dialog__title) {
+  font-weight: 600 !important;
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px !important;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 12px 20px !important;
+  border-top: 1px solid #e5e7eb !important;
 }
 </style>

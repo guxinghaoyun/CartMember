@@ -6,6 +6,8 @@ import type { ApiResponse } from '@/types/api/common'
 import type { Member as MemberType } from '@/types/api/user/member'
 import type { Operator } from '@/types/api/user/operator'
 import { ElMessage } from 'element-plus'
+import { ref, computed } from 'vue'
+import { storeInfoUtils } from '@/utils/storeInfo'
 
 // 从shopping.ts导入结账接口类型
 import type { PurchaseProductsRequest, PurchaseProductItem } from '@/api/user/shopping'
@@ -154,25 +156,24 @@ export const useCartStore = defineStore('cart', {
     // 新增的方法，用于获取操作员列表
     async fetchOperators(): Promise<Operator[]> {
       try {
-        // 从localStorage中获取店铺信息
-        const shopInfoStr = localStorage.getItem('shopInfo')
-        if (!shopInfoStr) {
-          console.error('No shop info found in localStorage')
+        // 使用storeInfoUtils获取操作员列表
+        const staffList = storeInfoUtils.getStaffList()
+
+        if (!staffList || staffList.length === 0) {
+          console.error('No operators found')
           return []
         }
 
-        const shopInfo = JSON.parse(shopInfoStr)
-
         // 将用户数据转换为操作员数据格式
-        this.operators = shopInfo.users.map((user: any) => ({
-          id: user.id?.toString() || '',
-          name: user.name || '',
-          role: user.position || (user.manager ? '店长' : '店员')
+        this.operators = staffList.map(staff => ({
+          id: Number(staff.id) || 0,
+          name: staff.name || '',
+          role: staff.position || (staff.manager ? '店长' : '店员')
         }))
 
         return this.operators
       } catch (error) {
-        console.error('Failed to fetch operators from localStorage:', error)
+        console.error('Failed to fetch operators:', error)
         return []
       }
     },
@@ -218,6 +219,53 @@ export const useCartStore = defineStore('cart', {
         console.error('Checkout failed:', error)
         ElMessage.error(error instanceof Error ? error.message : '支付失败，请重试')
         return false
+      }
+    },
+
+    // 当客户更换时重置状态
+    async changeMember(cardNumber: string) {
+      try {
+        // 通过API获取会员信息
+        const response = await memberApi.getMemberByInterICNumber(cardNumber)
+
+        if (response.code === 200 && response.data) {
+          const memberData = response.data
+
+          // 将会员信息保存到state中
+          this.member = {
+            id: memberData.id,
+            name: memberData.name,
+            points: memberData.remainingPoints,
+            icNumber: memberData.icNumber,
+            icStatus: memberData.icStatus
+          }
+
+          // 计算会员折扣
+          this.calculateMemberDiscount()
+
+          // 返回会员数据以便调用者使用
+          return memberData
+        } else {
+          ElMessage.error(response.message || '未找到会员信息')
+          return null
+        }
+      } catch (error) {
+        console.error('获取会员信息失败:', error)
+        ElMessage.error('获取会员信息失败')
+        return null
+      }
+    },
+
+    // 结账前准备数据
+    async prepareCheckoutData() {
+      // 使用storeInfoUtils获取店铺信息
+      const shopInfo = storeInfoUtils.getShopInfo()
+      const shopId = storeInfoUtils.getShopId()
+
+      if (!shopId) {
+        console.error('未找到店铺信息')
+        ElMessage.error('未找到店铺信息，无法结账')
+        return null
       }
     }
   },

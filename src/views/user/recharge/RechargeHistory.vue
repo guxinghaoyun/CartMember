@@ -321,6 +321,7 @@ import type {
 } from '@/types/api/user/recharge'
 import type { ApiResponse } from '@/types/api/common'
 import type { AxiosResponse } from 'axios'
+import { storeInfoUtils } from '@/utils/storeInfo'
 
 const router = useRouter()
 
@@ -619,6 +620,24 @@ const formatDateTime = (dateTimeStr: string) => {
   }
 
   return dateTimeStr
+}
+
+// 获取查询参数
+const getQueryParams = () => {
+  const shopId = storeInfoUtils.getShopId()
+
+  if (!shopId) {
+    ElMessage.warning('未找到店铺信息，将显示所有数据')
+  }
+
+  return {
+    pageNumber: queryParams.value.page,
+    pageSize: queryParams.value.pageSize,
+    shopId: shopId || undefined,
+    beginTime: dateRange.value && dateRange.value.length === 2 ? dateRange.value[0] : undefined,
+    endTime: dateRange.value && dateRange.value.length === 2 ? dateRange.value[1] : undefined,
+    keyword: queryParams.value.keyword || undefined
+  }
 }
 
 onMounted(() => {

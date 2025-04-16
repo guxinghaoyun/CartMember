@@ -253,6 +253,7 @@ import { useCartStore } from '@/types/api/user/cart'
 import type { Operator } from '@/types/api/user/operator'
 import type { CartStoreItem } from '@/types/api/user/cart'
 import ProductImage from '@/components/common/ProductImage.vue'
+import { storeInfoUtils } from '@/utils/storeInfo'
 
 // 本地定义操作员类型以确保与实际使用保持一致
 interface ShopOperator {
@@ -627,6 +628,11 @@ const handleDiscountBlur = (e: FocusEvent) => {
   if (!input.value) {
     discountAmount.value = 0
   }
+}
+
+// 获取当前登录用户所在的店铺ID
+const getCurrentShopId = (): number => {
+  return storeInfoUtils.getShopId()
 }
 </script>
 

@@ -13,6 +13,7 @@ import type {
 } from '@/types/api/user/member'
 import type { ApiResponse, PaginationResponse, PaginationParams } from '@/types/api/common'
 import axios from 'axios'
+import { storeInfoUtils } from '@/utils/storeInfo'
 
 // 前端使用的分页响应格式
 interface FrontendPaginationResponse<T> {
@@ -116,22 +117,8 @@ export const memberApi = {
   // 获取会员列表
   async getMembers(params: PaginationParams & MemberQueryParams) {
     try {
-      // 从localStorage获取当前店铺ID
-      let shopId = 0
-      const shopInfoStr = localStorage.getItem('shopInfo')
-      if (shopInfoStr) {
-        const shopInfo = JSON.parse(shopInfoStr)
-        shopId = shopInfo.id
-      }
-
-      // 如果没有店铺ID，尝试从用户信息中获取
-      if (!shopId) {
-        const userInfoStr = localStorage.getItem('user')
-        if (userInfoStr) {
-          const userInfo = JSON.parse(userInfoStr)
-          shopId = userInfo.shopId || 0
-        }
-      }
+      // 使用storeInfoUtils获取店铺ID
+      const shopId = storeInfoUtils.getShopId()
 
       if (!shopId) {
         console.warn('获取会员列表：未找到店铺ID')
@@ -189,22 +176,8 @@ export const memberApi = {
   // 获取会员详情
   async getMemberById(id: number) {
     try {
-      // 从localStorage获取当前店铺ID
-      let shopId = 0
-      const shopInfoStr = localStorage.getItem('shopInfo')
-      if (shopInfoStr) {
-        const shopInfo = JSON.parse(shopInfoStr)
-        shopId = shopInfo.id
-      }
-
-      // 如果没有店铺ID，尝试从用户信息中获取
-      if (!shopId) {
-        const userInfoStr = localStorage.getItem('user')
-        if (userInfoStr) {
-          const userInfo = JSON.parse(userInfoStr)
-          shopId = userInfo.shopId || 0
-        }
-      }
+      // 使用storeInfoUtils获取店铺ID
+      const shopId = storeInfoUtils.getShopId()
 
       if (!shopId) {
         console.warn('获取会员详情：未找到店铺ID')
@@ -275,22 +248,9 @@ export const memberApi = {
   createMember(data: CreateMemberRequest) {
     console.log('新增会员数据打印', data)
     try {
-      // 从localStorage获取当前店铺ID
-      let shopId = 0
-      const shopInfoStr = localStorage.getItem('shopInfo')
-      if (shopInfoStr) {
-        const shopInfo = JSON.parse(shopInfoStr)
-        shopId = shopInfo.id
-      }
+      // 使用storeInfoUtils获取店铺ID
+      const shopId = storeInfoUtils.getShopId()
 
-      // 如果没有店铺ID，尝试从用户信息中获取
-      if (!shopId) {
-        const userInfoStr = localStorage.getItem('user')
-        if (userInfoStr) {
-          const userInfo = JSON.parse(userInfoStr)
-          shopId = userInfo.shopId || 0
-        }
-      }
       const formData = new FormData()
 
       // 添加会员基本信息
@@ -336,7 +296,7 @@ export const memberApi = {
     }
   },
 
-  // 更新会员
+  // 更新会员信息
   updateMember(id: string, data: UpdateMemberRequest) {
     try {
       const formData = new FormData()

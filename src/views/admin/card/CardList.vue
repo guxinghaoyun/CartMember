@@ -310,7 +310,7 @@ const loading = ref(false)
 const showInitCard = ref(false)
 const searchQuery = ref('')
 const currentPage = ref(1)
-const pageSize = ref(6)
+const pageSize = ref(10)
 const total = ref(0)
 
 // 卡片数据
@@ -326,9 +326,9 @@ const transformCardData = (card: Card): Card => {
     surfaceNumber: card.cardNumber || 'N/A', // 将cardNumber映射为surfaceNumber
     initTime: card.createTime || 'N/A', // 将createTime映射为initTime
     status: statusValue, // 映射状态
-    store: card.shopName || '未分配', // 默认店铺为未分配
-    memberName: card.membershipName || '未绑定', // 默认会员名为未绑定
-    memberPhone: card.membershipPhone || '--' // 默认电话为空
+    store: (card as any).shopName || '未分配', // 使用类型断言访问shopName
+    memberName: (card as any).membershipName || card.memberName || '未绑定', // 使用类型断言访问membershipName
+    memberPhone: (card as any).membershipPhone || card.memberPhone || '--' // 使用类型断言访问membershipPhone
   }
 }
 
@@ -410,15 +410,34 @@ const toggleCardStatus = async (card: Card) => {
 
   try {
     if (card.status === '正常') {
+      // 停用卡片前先进行确认
+      await ElMessageBox.confirm('确定要停用此卡片吗？停用后卡片将无法使用。', '停用确认', {
+        confirmButtonText: '确认停用',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+
       await cardApi.disable(card.id, '手动停用')
       card.status = '停用'
       ElMessage.success('卡片已停用')
     } else {
+      // 启用卡片前先进行确认
+      await ElMessageBox.confirm('确定要启用此卡片吗？', '启用确认', {
+        confirmButtonText: '确认启用',
+        cancelButtonText: '取消',
+        type: 'info'
+      })
+
       await cardApi.activate(card.id, 0) // 0 表示不绑定会员
       card.status = '正常'
       ElMessage.success('卡片已启用')
     }
   } catch (error) {
+    // 如果是用户取消操作，不显示错误信息
+    if (error === 'cancel' || (error as any)?.message === 'cancel') {
+      return
+    }
+
     console.error('Failed to toggle card status:', error)
     ElMessage.error('操作失败')
     // 恢复原状态
