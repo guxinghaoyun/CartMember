@@ -4,6 +4,10 @@ FROM node:18-alpine AS build-stage
 # 设置工作目录
 WORKDIR /app
 
+# 设置npm使用淘宝镜像
+RUN npm config set registry https://registry.npmmirror.com
+
+
 # 复制 package.json 和 package-lock.json
 COPY package*.json ./
 
@@ -14,7 +18,7 @@ RUN npm install
 COPY . .
 
 # 构建项目
-RUN npm run build-only
+RUN npx vite build
 
 # 生产阶段
 FROM nginx:stable-alpine AS production-stage
