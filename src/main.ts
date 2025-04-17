@@ -1,3 +1,6 @@
+// 首先导入日志控制模块，确保尽早拦截console方法
+import './utils/logger'
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'

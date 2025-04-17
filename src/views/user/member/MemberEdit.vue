@@ -18,11 +18,11 @@
         </h3>
         <div class="bg-gray-50 rounded-lg p-5">
           <div class="space-y-4">
-            <el-form-item label="姓名" prop="name" class="!mb-0">
-              <el-input v-model="form.name" placeholder="请输入会员姓名" />
+            <el-form-item label="会员姓名" prop="name" class="!mb-0">
+              <el-input v-model="form.name" placeholder="请输入会员姓名" class="!w-full" />
             </el-form-item>
-            <el-form-item label="手机号" prop="phone" class="!mb-0">
-              <el-input v-model="form.phone" placeholder="请输入手机号码" />
+            <el-form-item label="手机号码" prop="phone" class="!mb-0">
+              <el-input v-model="form.phone" placeholder="请输入手机号码" class="!w-full" />
             </el-form-item>
           </div>
         </div>
@@ -556,51 +556,42 @@ const getOperatorName = (): string => {
 
 <style scoped>
 /* 输入框样式 */
-:deep(.el-input__wrapper),
-:deep(.el-textarea__inner) {
+:deep(.el-input .el-input__wrapper),
+:deep(.el-textarea .el-textarea__inner),
+:deep(.el-select .el-input__wrapper) {
   box-shadow: none !important;
   border: 1px solid #e5e7eb !important;
   background-color: white !important;
+  outline: none !important;
+  padding: 0 12px !important;
 }
 
-:deep(.el-input__wrapper:hover),
-:deep(.el-textarea__inner:hover) {
+:deep(.el-input .el-input__wrapper:hover),
+:deep(.el-textarea .el-textarea__inner:hover),
+:deep(.el-select .el-input__wrapper:hover) {
   border-color: #d1d5db !important;
 }
 
-:deep(.el-input__wrapper.is-focus),
-:deep(.el-textarea__inner:focus) {
+:deep(.el-input .el-input__wrapper.is-focus),
+:deep(.el-textarea .el-textarea__inner:focus),
+:deep(.el-select .el-input__wrapper.is-focus) {
   border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
-/* Dialog 样式 */
-:deep(.el-dialog) {
-  border-radius: 12px !important;
-  box-shadow:
-    0 20px 25px -5px rgb(0 0 0 / 0.1),
-    0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+/* 直接移除原生焦点样式 */
+:deep(input:focus),
+:deep(textarea:focus) {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-:deep(.el-dialog__header) {
-  margin-right: 0 !important;
-  padding: 16px 20px !important;
-  border-bottom: 1px solid #e5e7eb !important;
-}
-
-:deep(.el-dialog__title) {
-  font-weight: 600 !important;
-  font-size: 1.125rem !important;
-  line-height: 1.75rem !important;
-}
-
-:deep(.el-dialog__body) {
-  padding: 20px !important;
-}
-
-:deep(.el-dialog__footer) {
-  padding: 12px 20px !important;
-  border-top: 1px solid #e5e7eb !important;
+/* 确保所有输入框统一样式 */
+:deep(.el-input__inner) {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 /* Radio 按钮样式 */
@@ -646,5 +637,34 @@ const getOperatorName = (): string => {
   color: #374151 !important;
   font-weight: 500 !important;
   padding-right: 12px !important;
+}
+
+/* Dialog 样式 */
+:deep(.el-dialog) {
+  border-radius: 12px !important;
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+}
+
+:deep(.el-dialog__header) {
+  margin-right: 0 !important;
+  padding: 16px 20px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+:deep(.el-dialog__title) {
+  font-weight: 600 !important;
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px !important;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 12px 20px !important;
+  border-top: 1px solid #e5e7eb !important;
 }
 </style>

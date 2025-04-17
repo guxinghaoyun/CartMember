@@ -114,6 +114,6 @@ export async function login(params: LoginParams): Promise<LoginResponse> {
   } catch (error) {
     // 这里可以根据不同的错误类型进行处理
     console.error('登录失败', error)
-    throw new Error('登录失败，请检查网络连接或联系管理员')
+    throw new Error('登录失败，密码错误，请检查网络连接或联系管理员')
   }
 }
