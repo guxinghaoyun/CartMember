@@ -104,13 +104,23 @@
               v-model="searchQuery"
               type="text"
               placeholder="搜索店铺名称/店长"
-              class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
+              class="pl-10 pr-9 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
+              @input="handleSearch"
             />
             <font-awesome-icon
               icon="search"
               class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
+            <button
+              v-if="searchQuery"
+              @click="clearSearch"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              title="清空搜索"
+            >
+              <font-awesome-icon icon="times-circle" />
+            </button>
           </div>
+
           <button
             class="!rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white px-6 py-2 flex items-center gap-2 justify-center"
             @click="handleAddStore"
@@ -294,7 +304,7 @@
         class="flex flex-col sm:flex-row sm:justify-between sm:items-center px-6 py-4 bg-gray-50 gap-4"
       >
         <div class="text-sm text-gray-600">
-          共 {{ stores.length }} 条数据，每页显示 {{ pageSize }} 条
+          共 {{ filteredStores.length }} 条数据，每页显示 {{ pageSize }} 条
         </div>
         <div class="flex items-center gap-3">
           <button
@@ -364,7 +374,7 @@ const showAddStore = ref(false)
 const editingStore = ref<any>(null)
 const searchQuery = ref('')
 const currentPage = ref(1)
-const pageSize = ref(6)
+const pageSize = ref(9)
 const total = ref(0)
 const isViewMode = ref(false)
 
@@ -381,14 +391,20 @@ const storeStatusCounts = ref<{ [key in StoreStatus]: number }>({
   renovating: 0
 })
 
+// 筛选后的店铺列表
+const filteredStores = ref<Store[]>([])
+
 // 获取店铺列表
 const fetchStores = async () => {
   try {
     console.log('开始获取店铺列表...')
     loading.value = true
+    // 请求所有数据，使用大页面尺寸
     const params = {
-      page: currentPage.value,
-      pageSize: pageSize.value,
+      // page: currentPage.value,
+      // pageSize: pageSize.value,
+      page: 1,
+      pageSize: 1000, // 设置足够大的页面尺寸，以获取所有数据
       keyword: searchQuery.value || undefined,
       status: undefined as StoreStatus | undefined
     }
@@ -400,8 +416,14 @@ const fetchStores = async () => {
     // 检查响应结构并提取数据
     if (response?.code === 200 && response.data) {
       // 分页数据直接从返回结果中获取
-      stores.value = response.data.items || []
-      total.value = response.data.total || 0
+      // 类型转换以解决类型错误
+      type StoreResponse = {
+        items?: Store[]
+        total?: number
+      }
+      const responseData = response.data as StoreResponse
+      stores.value = responseData.items || []
+      total.value = responseData.total || 0
       console.log(`成功获取${stores.value.length}个店铺, 总数:${total.value}`)
 
       // 如果当前页没有数据但总数不为0，尝试回退到最后一页
@@ -504,24 +526,13 @@ const getStaffCount = (store: Store) => {
   return store.staffList.filter(staff => staff.position !== '店长').length
 }
 
-// 筛选后的店铺列表
-const filteredStores = computed(() => {
-  return stores.value
-})
-
 // 分页数据
-const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
-const paginatedStores = computed(() => stores.value)
-
-// 方法
-const validatePageNumber = () => {
-  let page = parseInt(currentPage.value as unknown as string)
-  if (isNaN(page)) page = 1
-  if (page < 1) page = 1
-  if (page > totalPages.value) page = totalPages.value
-  currentPage.value = page
-  fetchStores()
-}
+const totalPages = computed(() => Math.ceil(filteredStores.value.length / pageSize.value))
+const paginatedStores = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredStores.value.slice(start, end)
+})
 
 const handleViewDetails = async (store: Store) => {
   loading.value = true
@@ -629,11 +640,6 @@ const handleStoreSubmit = async (formData: IStoreForm) => {
   }
 }
 
-// 监听分页和搜索变化
-watch([currentPage, pageSize, searchQuery], () => {
-  fetchStores()
-})
-
 // 添加店铺按钮点击事件
 const handleAddStore = () => {
   // 清空编辑状态，确保是新增模式
@@ -646,14 +652,46 @@ onMounted(() => {
   fetchStores()
 })
 
-// 处理分页响应
-const handlePaginationResponse = (response: any) => {
-  stores.value = response.list || []
-  total.value = response.total || 0
-  // 如果当前页面为空但总数不为0，回到上一页
-  if (stores.value.length === 0 && total.value > 0 && currentPage.value > 1) {
-    currentPage.value--
-    fetchStores()
+// 搜索店铺
+const handleSearch = () => {
+  currentPage.value = 1 // 重置到第一页
+  if (!searchQuery.value) {
+    filteredStores.value = stores.value
+  } else {
+    const query = searchQuery.value.toLowerCase()
+    filteredStores.value = stores.value.filter(
+      (store: Store) =>
+        store.name.toLowerCase().includes(query) ||
+        (store.manager && store.manager.toLowerCase().includes(query))
+    )
+  }
+}
+
+// 清空搜索
+const clearSearch = () => {
+  searchQuery.value = ''
+  filteredStores.value = stores.value
+}
+
+// 监视stores变化，更新filteredStores
+watch(
+  stores,
+  newStores => {
+    filteredStores.value = newStores
+    handleSearch() // 应用当前搜索条件
+  },
+  { immediate: true }
+)
+
+// 验证页码
+const validatePageNumber = () => {
+  const page = parseInt(currentPage.value as unknown as string)
+  if (isNaN(page)) {
+    currentPage.value = 1
+  } else if (page < 1) {
+    currentPage.value = 1
+  } else if (page > totalPages.value) {
+    currentPage.value = totalPages.value || 1
   }
 }
 </script>

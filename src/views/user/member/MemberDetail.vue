@@ -77,7 +77,8 @@
                 <div v-if="member?.frontPicture" class="space-y-2">
                   <div class="text-sm text-gray-500">正面</div>
                   <div
-                    class="border border-gray-200 rounded-lg p-2 bg-white h-[190px] flex items-center justify-center"
+                    class="border border-gray-200 rounded-lg p-2 bg-white h-[190px] flex items-center justify-center cursor-pointer"
+                    @click="showImagePreview(member?.frontPicture)"
                   >
                     <member-card-image
                       :member-id="member.id"
@@ -90,7 +91,8 @@
                 <div v-if="member?.backPicture" class="space-y-2">
                   <div class="text-sm text-gray-500">背面</div>
                   <div
-                    class="border border-gray-200 rounded-lg p-2 bg-white h-[190px] flex items-center justify-center"
+                    class="border border-gray-200 rounded-lg p-2 bg-white h-[190px] flex items-center justify-center cursor-pointer"
+                    @click="showImagePreview(member?.backPicture)"
                   >
                     <member-card-image
                       :member-id="member.id"
@@ -172,9 +174,28 @@
       </div>
     </template>
   </el-dialog>
+
+  <!-- 图片预览弹窗 -->
+  <el-dialog
+    v-model="previewVisible"
+    title="IC卡照片预览"
+    width="500px"
+    class="image-preview-dialog"
+  >
+    <div class="flex justify-center">
+      <member-card-image
+        :member-id="member?.id || 0"
+        :image-uuid="previewImageUuid"
+        alt="IC卡照片"
+        mode="contain"
+        class="w-full object-contain max-h-[400px]"
+      />
+    </div>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 import type { Member } from '@/types/api/user/member'
 import MemberCardImage from '@/components/common/MemberCardImage.vue'
 
@@ -193,6 +214,17 @@ const emit = defineEmits<Emits>()
 // 关闭弹窗
 const handleClose = () => {
   emit('update:visible', false)
+}
+
+// 图片预览
+const previewVisible = ref(false)
+const previewImageUuid = ref('')
+
+// 显示图片预览
+const showImagePreview = (imageUuid: string | undefined) => {
+  if (!imageUuid) return
+  previewImageUuid.value = imageUuid
+  previewVisible.value = true
 }
 </script>
 
@@ -224,5 +256,19 @@ const handleClose = () => {
 :deep(.el-dialog__footer) {
   padding: 12px 20px !important;
   border-top: 1px solid #e5e7eb !important;
+}
+
+:deep(.image-preview-dialog) {
+  .el-dialog__header {
+    padding: 16px 16px 0;
+  }
+
+  .el-dialog__body {
+    padding: 24px;
+  }
+
+  .el-dialog__footer {
+    padding: 16px;
+  }
 }
 </style>

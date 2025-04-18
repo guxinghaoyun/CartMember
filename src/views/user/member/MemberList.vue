@@ -134,8 +134,8 @@
       >
         <div class="text-gray-600">
           <font-awesome-icon icon="list-ul" class="mr-2" />
-          显示 {{ (currentPage - 1) * pageSize + 1 }} -
-          {{ Math.min(currentPage * pageSize, total) }} 条，共 {{ total }} 条
+          显示 {{ filteredMembers.length ? 1 : 0 }} - {{ filteredMembers.length }} 条，共
+          {{ filteredMembers.length }} 条
         </div>
         <div class="flex items-center space-x-1">
           <button
@@ -234,8 +234,8 @@ const fetchMembers = async () => {
   }
 }
 
-// 监听搜索和分页变化
-watch([searchQuery, currentPage], () => {
+// 仅监听分页变化触发API请求
+watch(currentPage, () => {
   fetchMembers()
 })
 
@@ -245,9 +245,26 @@ onMounted(() => {
 })
 
 // 计算属性
-const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
+const totalPages = computed(() => Math.ceil(filteredMembers.value.length / pageSize.value) || 1)
 
-const paginatedMembers = computed(() => members.value)
+// 在本地对会员列表进行搜索过滤
+const filteredMembers = computed(() => {
+  if (!searchQuery.value.trim()) return members.value
+
+  const keyword = searchQuery.value.toLowerCase().trim()
+  return members.value.filter(
+    member =>
+      member.name?.toLowerCase().includes(keyword) ||
+      member.phone?.toLowerCase().includes(keyword) ||
+      member.icNumber?.toLowerCase().includes(keyword)
+  )
+})
+
+// 分页后的会员列表，使用过滤后的数据
+const paginatedMembers = computed(() => filteredMembers.value)
+
+// 更新本地搜索的总数
+const localTotal = computed(() => filteredMembers.value.length)
 
 // 方法
 const handlePageChange = (page: number) => {

@@ -81,20 +81,22 @@
               v-model="searchQuery"
               type="text"
               placeholder="搜索会员姓名/手机号/卡号"
-              class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-80"
-              @keyup.enter="handleSearch"
+              class="pl-10 pr-9 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-80"
+              @input="handleSearch"
             />
             <font-awesome-icon
               icon="search"
               class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
+            <button
+              v-if="searchQuery"
+              @click="clearSearch"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              title="清空搜索"
+            >
+              <font-awesome-icon icon="times-circle" />
+            </button>
           </div>
-          <button
-            class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            @click="handleSearch"
-          >
-            搜索
-          </button>
         </div>
       </div>
 
@@ -392,6 +394,20 @@ const averagePoints = computed(() => {
 const filteredMembers = computed(() => {
   return members.value
 })
+
+// 清空搜索
+const clearSearch = () => {
+  searchQuery.value = ''
+  currentPage.value = 1
+  updateDisplayedMembers()
+}
+
+// 刷新会员列表
+const refreshMembers = () => {
+  searchQuery.value = ''
+  currentPage.value = 1
+  loadMembers()
+}
 </script>
 
 <style scoped>

@@ -90,12 +90,21 @@
               v-model="searchQuery"
               type="text"
               placeholder="搜索卡号/会员姓名/手机号"
-              class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
+              class="pl-10 pr-9 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
+              @input="handleSearch"
             />
             <font-awesome-icon
               icon="search"
               class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
+            <button
+              v-if="searchQuery"
+              @click="clearSearch"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              title="清空搜索"
+            >
+              <font-awesome-icon icon="times-circle" />
+            </button>
           </div>
           <button
             class="!rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white px-6 py-2 flex items-center gap-2 justify-center"
@@ -310,11 +319,12 @@ const loading = ref(false)
 const showInitCard = ref(false)
 const searchQuery = ref('')
 const currentPage = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(9)
 const total = ref(0)
 
 // 卡片数据
 const cards = ref<Card[]>([])
+const filteredCards = ref<Card[]>([])
 
 // 将后端返回的数据转换为前端使用的格式
 const transformCardData = (card: Card): Card => {
@@ -353,7 +363,8 @@ const fetchCards = async () => {
     cards.value = apiResponse.records.map(card => transformCardData(card))
     total.value = apiResponse.totalRecords
 
-    console.log('总记录数:', total.value)
+    // 初始化搜索后的显示数据
+    updateDisplayedCards()
   } catch (error) {
     console.error('Failed to fetch cards:', error)
     ElMessage.error('获取卡片列表失败')
@@ -362,9 +373,33 @@ const fetchCards = async () => {
   }
 }
 
+// 更新显示的卡片列表（本地搜索和分页）
+const updateDisplayedCards = () => {
+  // 根据搜索关键词过滤卡片
+  const filtered = cards.value.filter(card => {
+    if (!searchQuery.value) return true
+
+    const query = searchQuery.value.toLowerCase()
+    return (
+      (card.cardNumber && card.cardNumber.toLowerCase().includes(query)) ||
+      (card.memberName && card.memberName.toLowerCase().includes(query)) ||
+      (card.memberPhone && card.memberPhone.includes(query))
+    )
+  })
+
+  // 更新过滤后的卡片数量
+  filteredCards.value = filtered
+  total.value = filtered.length
+}
+
 // 计算属性
 const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
-const paginatedCards = computed(() => cards.value)
+const paginatedCards = computed(() => {
+  // 根据当前页码和每页显示数量，对过滤后的卡片进行分页
+  const startIndex = (currentPage.value - 1) * pageSize.value
+  const endIndex = startIndex + pageSize.value
+  return filteredCards.value.slice(startIndex, endIndex)
+})
 
 // 方法
 const validatePageNumber = () => {
@@ -373,7 +408,7 @@ const validatePageNumber = () => {
   if (page < 1) page = 1
   if (page > totalPages.value) page = totalPages.value
   currentPage.value = page
-  fetchCards()
+  updateDisplayedCards()
 }
 
 const getStatusIcon = (status: CardStatus | string) => {
@@ -442,6 +477,11 @@ const toggleCardStatus = async (card: Card) => {
     ElMessage.error('操作失败')
     // 恢复原状态
     fetchCards()
+
+    console.error('Failed to toggle card status:', error)
+    ElMessage.error('操作失败')
+    // 恢复原状态 - 使用本地数据刷新显示
+    updateDisplayedCards()
   }
 }
 
@@ -449,9 +489,10 @@ const handleCardInit = async (formData: CardForm) => {
   showInitCard.value = false
 }
 
-// 监听分页和搜索变化
-watch([currentPage, pageSize, searchQuery], () => {
-  fetchCards()
+// 监听分页参数变化
+watch([currentPage, pageSize], () => {
+  // 不再需要重新请求数据，只需要更新分页显示
+  updateDisplayedCards()
 })
 
 // 在组件挂载时获取卡片列表
@@ -463,5 +504,18 @@ onMounted(() => {
 const formatDate = (date: string | undefined): string => {
   if (!date) return '' // 处理undefined情况
   return date.split('T')[0] // 只返回日期部分
+}
+
+// 搜索处理
+const handleSearch = () => {
+  currentPage.value = 1 // 搜索时重置为第一页
+  updateDisplayedCards()
+}
+
+// 清空搜索
+const clearSearch = () => {
+  searchQuery.value = ''
+  currentPage.value = 1
+  updateDisplayedCards()
 }
 </script>

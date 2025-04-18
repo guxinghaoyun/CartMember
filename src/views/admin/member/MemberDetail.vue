@@ -193,7 +193,8 @@
                     <div class="grid grid-cols-2 gap-3 max-w-[700px]">
                       <div class="space-y-1">
                         <div
-                          class="aspect-[1.586/1] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200"
+                          class="aspect-[1.586/1] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200 cursor-pointer"
+                          @click="showImagePreview(memberInfo.frontPicture)"
                         >
                           <MemberCardImage
                             :member-id="memberInfo.id"
@@ -224,7 +225,8 @@
                       </div>
                       <div class="space-y-1">
                         <div
-                          class="aspect-[1.586/1] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200"
+                          class="aspect-[1.586/1] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200 cursor-pointer"
+                          @click="showImagePreview(memberInfo.backPicture)"
                         >
                           <MemberCardImage
                             :member-id="memberInfo.id"
@@ -938,6 +940,24 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 图片预览弹窗 -->
+    <el-dialog
+      v-model="previewVisible"
+      title="IC卡照片预览"
+      width="500px"
+      class="image-preview-dialog"
+    >
+      <div class="flex justify-center">
+        <MemberCardImage
+          :member-id="memberInfo.id"
+          :image-uuid="previewImageUuid"
+          alt="IC卡照片"
+          mode="contain"
+          class="w-full object-contain max-h-[400px]"
+        />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -1383,6 +1403,17 @@ const handleImageChange = async (file: UploadFile, type: 'front' | 'back') => {
   }
 }
 
+// 图片预览
+const previewVisible = ref(false)
+const previewImageUuid = ref('')
+
+// 显示图片预览
+const showImagePreview = (imageUuid: string | undefined) => {
+  if (!imageUuid) return
+  previewImageUuid.value = imageUuid
+  previewVisible.value = true
+}
+
 // 在组件挂载时获取会员详情
 onMounted(() => {
   fetchMemberDetail()
@@ -1539,6 +1570,20 @@ watch(showAdjustPointsDialog, newVal => {
     padding: 0.5rem 0.75rem;
     border-radius: 0.375rem;
     margin: 2px 0;
+  }
+}
+
+:deep(.image-preview-dialog) {
+  .el-dialog__header {
+    padding: 16px 16px 0;
+  }
+
+  .el-dialog__body {
+    padding: 24px;
+  }
+
+  .el-dialog__footer {
+    padding: 16px;
   }
 }
 </style>
