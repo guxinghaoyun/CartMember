@@ -160,5 +160,10 @@ export const rechargeApi = {
         responseType: 'blob'
       }
     )
+  },
+
+  // 删除充值记录
+  deleteRechargeRecord(id: number) {
+    return request.delete<ApiResponse<void>>(`/recharge/${id}`)
   }
 }

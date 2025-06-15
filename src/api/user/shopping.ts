@@ -203,7 +203,10 @@ export const shoppingApi = {
 
   // 购买商品(结账)API
   purchaseProducts(requestData: PurchaseProductsRequest) {
-    return request.post<ApiResponse<any>>('/shops/{shopId}/products/purchase', requestData)
+    return request.post<ApiResponse<any>>(
+      `/shops/${getCurrentUserShopId()}/products/purchase`,
+      requestData
+    )
   }
 }
 

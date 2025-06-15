@@ -21,6 +21,16 @@ export const statisticsApi = {
     return request.get<ApiResponse<SalesStatistics>>('/admin/statistics/sales', { params })
   },
 
+  // 获取销售趋势数据（管理员版本，包含所有店铺数据）
+  getSalesTrend() {
+    return request.get('/dashboard/sales-trend')
+  },
+
+  // 获取商品分类销售数据（管理员版本，包含所有店铺数据）
+  getProductClassification() {
+    return request.get('/dashboard/product-classification')
+  },
+
   // 会员统计
   getMemberStatistics(params: StatisticsQueryParams) {
     return request.get<ApiResponse<MemberStatistics>>('/admin/statistics/members', { params })
@@ -72,4 +82,4 @@ export const statisticsApi = {
     }
     return request.get<Blob>('/admin/statistics/stores/export', config)
   }
-} 
+}

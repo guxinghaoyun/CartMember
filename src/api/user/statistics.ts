@@ -4,7 +4,9 @@ import type {
   ConsumptionStatistics,
   PointsStatistics,
   MemberLevelProgress,
-  UserStatisticsQueryParams
+  UserStatisticsQueryParams,
+  SalesTrendData,
+  ProductClassificationData
 } from '@/types/api/user/statistics'
 import type { ApiResponse } from '@/types/api/common'
 import type { RequestConfig } from '../types'
@@ -12,12 +14,14 @@ import type { RequestConfig } from '../types'
 export const userStatisticsApi = {
   // 获取用户概览统计
   getOverview() {
-    return request.get<ApiResponse<UserOverview>>('/user/statistics/overview')
+    return request.get<ApiResponse<UserOverview>>('/dashboard/sales-trend')
   },
 
   // 获取消费统计
   getConsumptionStatistics(params: UserStatisticsQueryParams) {
-    return request.get<ApiResponse<ConsumptionStatistics>>('/user/statistics/consumption', { params })
+    return request.get<ApiResponse<ConsumptionStatistics>>('/user/statistics/consumption', {
+      params
+    })
   },
 
   // 获取积分统计
@@ -52,26 +56,40 @@ export const userStatisticsApi = {
 
   // 获取消费建议
   getConsumptionSuggestions() {
-    return request.get<ApiResponse<{
-      suggestions: string[]
-      recommendedProducts: {
-        id: number
-        name: string
-        reason: string
-      }[]
-    }>>('/user/statistics/consumption/suggestions')
+    return request.get<
+      ApiResponse<{
+        suggestions: string[]
+        recommendedProducts: {
+          id: number
+          name: string
+          reason: string
+        }[]
+      }>
+    >('/user/statistics/consumption/suggestions')
   },
 
   // 获取积分优化建议
   getPointsOptimizationTips() {
-    return request.get<ApiResponse<{
-      tips: string[]
-      upcomingActivities: {
-        id: number
-        name: string
-        points: number
-        startTime: string
-      }[]
-    }>>('/user/statistics/points/optimization-tips')
+    return request.get<
+      ApiResponse<{
+        tips: string[]
+        upcomingActivities: {
+          id: number
+          name: string
+          points: number
+          startTime: string
+        }[]
+      }>
+    >('/user/statistics/points/optimization-tips')
+  },
+
+  // 获取销售趋势数据
+  getSalesTrend() {
+    return request.get<SalesTrendData>('/dashboard/sales-trend')
+  },
+
+  // 获取商品分类销售数据
+  getProductClassification() {
+    return request.get<ProductClassificationData>('/dashboard/product-classification')
   }
-} 
+}

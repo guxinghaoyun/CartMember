@@ -221,6 +221,13 @@
               >
                 <font-awesome-icon icon="fa-solid fa-print" />
               </button>
+              <button
+                class="w-9 h-9 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-all duration-300"
+                @click="handleDelete(item)"
+                title="删除记录"
+              >
+                <font-awesome-icon icon="fa-solid fa-trash" />
+              </button>
             </div>
           </template>
         </DataTable>
@@ -302,6 +309,49 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 删除确认对话框 -->
+    <el-dialog v-model="showDeleteDialog" title="删除确认" width="400px">
+      <div class="text-center py-4">
+        <div
+          class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center"
+        >
+          <font-awesome-icon
+            icon="fa-solid fa-exclamation-triangle"
+            class="text-red-500 text-2xl"
+          />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">确认删除充值记录？</h3>
+        <p class="text-gray-500 mb-4">
+          您即将删除会员
+          <span class="font-medium text-gray-900">{{ recordToDelete?.membershipName }}</span>
+          的充值记录，此操作不可撤销。
+        </p>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+          <div class="flex items-center">
+            <font-awesome-icon icon="fa-solid fa-info-circle" class="text-yellow-600 mr-2" />
+            <span class="text-sm text-yellow-800">删除后将无法恢复该充值记录</span>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-center space-x-3">
+          <button
+            @click="showDeleteDialog = false"
+            class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+          >
+            取消
+          </button>
+          <button
+            @click="confirmDelete"
+            :disabled="deleteLoading"
+            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ deleteLoading ? '删除中...' : '确认删除' }}
+          </button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -343,6 +393,9 @@ const dateRange = ref<DateModelType[]>([])
 const selectedRecord = ref<RechargeHistory | null>(null)
 const showDetailDialog = ref(false)
 const shopId = ref(0)
+const showDeleteDialog = ref(false)
+const recordToDelete = ref<RechargeHistory | null>(null)
+const deleteLoading = ref(false)
 
 // 从localStorage获取shopId
 const getShopIdFromLocalStorage = () => {
@@ -499,6 +552,31 @@ const handleViewDetail = async (id: number) => {
 const handlePrint = (record: RechargeHistory) => {
   // TODO: 实现打印逻辑
   ElMessage.success('正在打印充值凭证')
+}
+
+const handleDelete = (record: RechargeHistory) => {
+  recordToDelete.value = record
+  showDeleteDialog.value = true
+}
+
+const confirmDelete = async () => {
+  if (!recordToDelete.value) {
+    ElMessage.error('未选择要删除的记录')
+    return
+  }
+
+  deleteLoading.value = true
+  try {
+    await rechargeApi.deleteRechargeRecord(recordToDelete.value.id)
+    ElMessage.success('充值记录删除成功')
+    showDeleteDialog.value = false
+    fetchRecords()
+  } catch (error) {
+    console.error('Failed to delete recharge record:', error)
+    ElMessage.error('删除充值记录失败')
+  } finally {
+    deleteLoading.value = false
+  }
 }
 
 // 获取充值记录列表

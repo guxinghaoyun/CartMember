@@ -80,9 +80,23 @@ export interface MemberLevelProgress {
   }[]
 }
 
+// 销售趋势数据
+export interface SalesTrendData {
+  weekData: Record<string, number>
+  monthData: Record<string, number>
+  yearData: Record<string, number>
+}
+
+// 商品分类销售数据
+export interface ProductClassificationData {
+  weekData: Record<string, Record<string, number>> | null
+  monthData: Record<string, Record<string, number>> | null
+  yearData: Record<string, Record<string, number>>
+}
+
 // 统计查询参数
 export interface UserStatisticsQueryParams {
   startDate: string
   endDate: string
   timeUnit?: 'day' | 'week' | 'month'
-} 
+}

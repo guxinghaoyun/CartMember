@@ -1304,7 +1304,7 @@ const fetchOrders = async () => {
 
     console.log('发送订单列表请求:', pagination, requestBody)
     const response = await pickupApi.getOrders(pagination, requestBody)
-    console.log('接收到订单列表响应response-------:', response)
+    console.log('接收到订单列表响应response:', response)
 
     // 处理响应数据
     if (response) {

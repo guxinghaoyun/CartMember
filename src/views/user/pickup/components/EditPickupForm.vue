@@ -167,102 +167,7 @@
 
       <!-- 右侧商品区域 -->
       <div class="flex-1 space-y-6">
-        <!-- 会员可提商品 -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
-          <div class="flex items-center justify-between mb-3">
-            <h4 class="text-sm font-medium text-gray-700 flex items-center">
-              <div
-                class="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-lg flex items-center justify-center mr-2"
-              >
-                <font-awesome-icon icon="box-open" class="text-blue-500 text-sm" />
-              </div>
-              可提商品
-            </h4>
-            <span class="text-xs bg-blue-50 text-blue-500 px-3 py-1.5 rounded-full">
-              {{ memberProducts.length }} 件商品可提
-            </span>
-          </div>
-          <div
-            class="h-[300px] overflow-y-auto custom-scrollbar bg-gray-50/50 rounded-xl border border-gray-100/50"
-          >
-            <div class="space-y-2 p-3">
-              <div
-                v-if="memberProducts.length === 0"
-                class="h-[280px] flex items-center justify-center text-gray-400"
-              >
-                <div class="text-center">
-                  <div
-                    class="w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-3"
-                  >
-                    <font-awesome-icon icon="box-open" class="text-gray-300 text-2xl" />
-                  </div>
-                  <div>暂无可提商品</div>
-                </div>
-              </div>
-              <template v-else>
-                <div
-                  v-for="product in memberProducts"
-                  :key="product.id"
-                  class="flex items-center justify-between bg-white p-4 rounded-xl hover:bg-gray-50 transition-all duration-200 border border-gray-100 hover:shadow-sm group"
-                >
-                  <div class="flex items-center space-x-4">
-                    <el-image
-                      :src="product.image"
-                      class="w-12 h-12 object-cover rounded-xl flex-shrink-0 border border-gray-100"
-                      fit="cover"
-                    >
-                      <template #error>
-                        <div
-                          class="w-12 h-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center"
-                        >
-                          <font-awesome-icon icon="image" class="text-gray-300 text-xl" />
-                        </div>
-                      </template>
-                    </el-image>
-                    <div class="min-w-0">
-                      <div
-                        class="text-sm font-medium text-gray-800 truncate group-hover:text-blue-600 transition-colors duration-200"
-                      >
-                        {{ product.name }}
-                      </div>
-                      <div class="text-xs text-gray-500 mt-1 flex items-center space-x-3">
-                        <span class="flex items-center">
-                          <font-awesome-icon icon="barcode" class="text-gray-400 mr-1" />
-                          {{ product.sku }}
-                        </span>
-                        <span class="flex items-center">
-                          <font-awesome-icon icon="cube" class="text-gray-400 mr-1" />
-                          可提: {{ product.availableQuantity }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 space-x-1"
-                    :class="[
-                      isProductAdded(product.id)
-                        ? 'bg-green-50 text-green-600 cursor-not-allowed'
-                        : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                    ]"
-                    :disabled="isProductAdded(product.id)"
-                    @click="addToPickupList(product)"
-                  >
-                    <template v-if="isProductAdded(product.id)">
-                      <font-awesome-icon icon="check" class="text-green-500" />
-                      <span>已添加</span>
-                    </template>
-                    <template v-else>
-                      <font-awesome-icon icon="plus" class="text-blue-500" />
-                      <span>添加</span>
-                    </template>
-                  </button>
-                </div>
-              </template>
-            </div>
-          </div>
-        </div>
-
-        <!-- 已选商品 -->
+        <!-- 订单商品 -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
           <div class="flex items-center justify-between">
             <h4 class="text-sm font-medium text-gray-700 flex items-center">
@@ -271,7 +176,7 @@
               >
                 <font-awesome-icon icon="shopping-cart" class="text-blue-500 text-sm" />
               </div>
-              已选商品
+              订单商品
             </h4>
             <div class="flex items-center space-x-4 text-sm">
               <span class="text-gray-500 flex items-center">
@@ -289,12 +194,12 @@
           </div>
 
           <div
-            class="h-[300px] overflow-y-auto custom-scrollbar bg-gray-50/50 rounded-xl border border-gray-100/50"
+            class="h-[620px] overflow-y-auto custom-scrollbar bg-gray-50/50 rounded-xl border border-gray-100/50"
           >
             <div class="space-y-2 p-3">
               <div
                 v-if="form.items.length === 0"
-                class="h-[280px] flex items-center justify-center text-gray-400"
+                class="h-[600px] flex items-center justify-center text-gray-400"
               >
                 <div class="text-center">
                   <div
@@ -302,7 +207,7 @@
                   >
                     <font-awesome-icon icon="shopping-cart" class="text-gray-300 text-2xl" />
                   </div>
-                  <div>请添加提货商品</div>
+                  <div>暂无订单商品</div>
                 </div>
               </div>
               <template v-else>
@@ -330,27 +235,16 @@
                     >
                       {{ item.name }}
                     </div>
-                    <div class="text-xs text-gray-500 mt-1 flex items-center">
-                      <font-awesome-icon icon="barcode" class="text-gray-400 mr-1" />
-                      {{ item.sku }}
+                    <div class="text-xs text-gray-500 mt-1 flex items-center space-x-3">
+                      <span class="flex items-center">
+                        <font-awesome-icon icon="barcode" class="text-gray-400 mr-1" />
+                        {{ item.sku }}
+                      </span>
+                      <span class="flex items-center">
+                        <font-awesome-icon icon="cube" class="text-gray-400 mr-1" />
+                        数量: {{ item.quantity }}
+                      </span>
                     </div>
-                  </div>
-                  <div class="flex items-center space-x-3">
-                    <el-input-number
-                      v-model="item.quantity"
-                      :min="1"
-                      :max="item.maxQuantity || 99"
-                      size="small"
-                      class="flex-shrink-0"
-                      @change="handleQuantityChange(item, $event)"
-                    />
-                    <button
-                      class="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
-                      type="button"
-                      @click.prevent="removeItem(index)"
-                    >
-                      <font-awesome-icon icon="times" />
-                    </button>
                   </div>
                 </div>
               </template>
@@ -380,7 +274,6 @@ import type {
   PickupOrder,
   PickupOrderItem,
   UpdatePickupOrderRequest,
-  MemberPickupProduct,
   PickupMethod
 } from '@/types/api/user/pickup'
 import type { ApiResponse } from '@/types/api/common'
@@ -458,9 +351,6 @@ const form = ref<PickupFormData>({
   items: []
 })
 
-// 会员可提商品列表
-const memberProducts = ref<MemberPickupProduct[]>([])
-
 // 计算总数量
 const totalQuantity = computed(() => {
   return form.value.items.reduce((total, item) => total + item.quantity, 0)
@@ -476,43 +366,6 @@ const disabledHours = () => {
   return Array.from({ length: 24 })
     .map((_, i) => i)
     .filter(h => h < 9 || h > 21)
-}
-
-// 检查商品是否已添加到提货列表
-const isProductAdded = (productId: number) => {
-  return form.value.items.some(item => item.id === productId)
-}
-
-// 添加到提货列表
-const addToPickupList = (product: MemberPickupProduct) => {
-  if (!isProductAdded(product.id)) {
-    form.value.items.push({
-      id: product.id,
-      name: product.name,
-      sku: product.sku,
-      image: product.image,
-      quantity: 1,
-      maxQuantity: product.availableQuantity,
-      originalQuantity: product.availableQuantity // 保存原始可提数量
-    })
-    // 更新可提商品的可提数量
-    const memberProduct = memberProducts.value.find(p => p.id === product.id)
-    if (memberProduct) {
-      memberProduct.availableQuantity = product.availableQuantity - 1
-    }
-    ElMessage.success(`已添加商品：${product.name}`)
-  }
-}
-
-// 移除商品
-const removeItem = (index: number) => {
-  const removedItem = form.value.items[index]
-  // 恢复可提商品的可提数量
-  const memberProduct = memberProducts.value.find(p => p.id === removedItem.id)
-  if (memberProduct) {
-    memberProduct.availableQuantity = removedItem.originalQuantity
-  }
-  form.value.items.splice(index, 1)
 }
 
 // 表单校验规则
@@ -562,17 +415,6 @@ watch(
           : []
       }
       form.value = formData
-
-      // 初始化可提商品列表 - 使用现有商品作为可提商品
-      if (Array.isArray(apiData.items)) {
-        memberProducts.value = apiData.items.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          sku: item.sku || '无编码',
-          image: item.image || '',
-          availableQuantity: (item.maxQuantity || 99) - item.quantity
-        }))
-      }
     }
   },
   { immediate: true, deep: true }
@@ -678,32 +520,6 @@ const handleClose = () => {
   if (formRef.value) {
     formRef.value.resetFields()
   }
-  memberProducts.value = []
-}
-
-// 修改商品数量时检查限制
-const handleQuantityChange = (item: PickupOrderItem, value: number) => {
-  const memberProduct = memberProducts.value.find(p => p.id === item.id)
-  if (!memberProduct) return
-
-  // 检查新数量是否超过原始可提数量
-  if (value > item.originalQuantity) {
-    item.quantity = item.originalQuantity
-    memberProduct.availableQuantity = 0
-    ElMessage.warning(`该商品最多可提 ${item.originalQuantity} 件`)
-    return
-  }
-
-  // 确保数量不小于1
-  if (value < 1) {
-    item.quantity = 1
-    memberProduct.availableQuantity = item.originalQuantity - 1
-    return
-  }
-
-  // 更新可提商品的可提数量
-  memberProduct.availableQuantity = item.originalQuantity - value
-  item.quantity = value
 }
 </script>
 
